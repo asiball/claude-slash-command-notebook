@@ -38,7 +38,7 @@
 
 ```bash
 ./setup-sample.sh        # 1. サンプルプロジェクトを work/sample-project に再構築
-./run-headless.sh        # 2. §1 のヘッドレス実測(init/recap/compact/code-review/security-review/verify)
+./run-headless.sh        # 2. §1 のヘッドレス実測(init/recap/compact/explain/doctor/code-review/security-review/verify。レビュー系のみ sonnet、他は haiku)
 ./capture-ui.sh          # 3. §2 の画面をカラー付きで採取(tmux 110×42 → work/tui-color/*.ansi)
 ./capture-skill-a.sh     # 4. §1 の端末画面 前半(init/recap/compact/explain。対話モードで別回実行)
 ./capture-skill-b.sh     # 5. §1 の端末画面 後半(code-review/security-review/doctor。4 の tmux セッションを引き継ぐ)
