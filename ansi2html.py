@@ -6,7 +6,7 @@ import re, html, sys
 
 import os
 SP = os.environ.get('SP', os.path.join(os.path.dirname(os.path.abspath(__file__)), 'work'))
-HTML_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'slash-command-notebook.html')
+HTML_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'index.html')
 CAP = f'{SP}/tui-color'
 
 DEFAULT_FG = '#D9D4CA'

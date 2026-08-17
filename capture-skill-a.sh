@@ -40,8 +40,8 @@ wait_idle() { # wait_idle <min_sec> <max_sec>
     cur=$(tmux capture-pane -t $S -p)
     if [ "$cur" = "$prev" ]; then same=$((same+1)); else same=0; fi
     prev="$cur"
-    if [ $elapsed -ge $1 ] && [ $same -ge 3 ] && ! echo "$cur" | grep -q "esc to interrupt"; then break; fi
-    [ $elapsed -ge $2 ] && break
+    if [ $elapsed -ge $mins ] && [ $same -ge 3 ] && ! echo "$cur" | grep -q "esc to interrupt"; then break; fi
+    [ $elapsed -ge $maxs ] && break
   done
 }
 
