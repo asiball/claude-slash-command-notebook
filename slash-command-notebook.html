@@ -63,6 +63,21 @@
     --chip-mid-ink: #D9B45C;
   }
 
+  /* 端末キャプチャ用の等幅フォント(自己ホスト)。
+     罫線(U+2500-)・ブロック要素(U+2588-259F)を収録しており、閲覧環境の
+     フォント差で AA が崩れないようにする。Google Fonts 配信はサブセット化で
+     この範囲を落とすため、woff2 をリポジトリ同梱で配信する(fonts/OFL.txt)。 */
+  @font-face {
+    font-family: "JetBrains Mono";
+    src: url("fonts/JetBrainsMono-Regular.woff2") format("woff2");
+    font-weight: 400; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: "JetBrains Mono";
+    src: url("fonts/JetBrainsMono-Bold.woff2") format("woff2");
+    font-weight: 700; font-style: normal; font-display: swap;
+  }
+
   * { box-sizing: border-box; }
   html { scroll-behavior: smooth; }
   body {
@@ -76,7 +91,7 @@
   }
   main { max-width: 860px; margin: 0 auto; }
   code, pre, .mono {
-    font-family: ui-monospace, "Cascadia Code", "SF Mono", Menlo, Consolas, monospace;
+    font-family: "JetBrains Mono", ui-monospace, "Cascadia Code", "SF Mono", Menlo, Consolas, monospace;
   }
   a { color: var(--accent-ink); }
   :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
@@ -99,7 +114,7 @@
       padding-left: 1.2rem;
     }
     .toc-title {
-      font-family: ui-monospace, Menlo, Consolas, monospace;
+      font-family: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
       font-size: .66rem; letter-spacing: .14em; text-transform: uppercase;
       color: var(--muted); margin: 0 0 .5rem;
     }
@@ -112,7 +127,7 @@
     .toc .toc-h:hover { color: var(--accent-ink); }
     .toc-cmds { display: flex; flex-wrap: wrap; gap: .15rem .55rem; padding-bottom: .15rem; }
     .toc-cmds a {
-      font-family: ui-monospace, Menlo, Consolas, monospace;
+      font-family: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
       font-size: .7rem; color: var(--muted);
     }
     .toc-cmds a:hover { color: var(--accent-ink); }
@@ -125,7 +140,7 @@
     margin: 0; padding: .6rem 0;
     background: var(--bg);
     border-bottom: 1px solid var(--line);
-    font-family: ui-monospace, Menlo, Consolas, monospace;
+    font-family: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
   }
   .topnav .brand {
     font-size: .78rem; font-weight: 700; letter-spacing: .05em;
@@ -143,7 +158,7 @@
   /* ---------- header ---------- */
   .page-head { padding: 3rem 0 1.75rem; border-bottom: 2px solid var(--ink); }
   .eyebrow {
-    font-family: ui-monospace, "Cascadia Code", "SF Mono", Menlo, Consolas, monospace;
+    font-family: "JetBrains Mono", ui-monospace, "Cascadia Code", "SF Mono", Menlo, Consolas, monospace;
     font-size: .72rem; letter-spacing: .16em; text-transform: uppercase;
     color: var(--accent); margin: 0 0 .8rem;
   }
@@ -154,7 +169,7 @@
   .page-head p { max-width: 42em; color: var(--muted); margin: .3rem 0; }
   .meta-chips { display: flex; flex-wrap: wrap; gap: .45rem; margin-top: 1.1rem; }
   .meta-chips span {
-    font-family: ui-monospace, Menlo, Consolas, monospace;
+    font-family: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
     font-size: .7rem; color: var(--muted);
     border: 1px solid var(--line); border-radius: 999px;
     padding: .2em .75em; background: var(--surface);
@@ -168,7 +183,7 @@
     padding-bottom: .4rem; border-bottom: 1px solid var(--line);
   }
   h2 .sec-no {
-    color: var(--accent); font-family: ui-monospace, Menlo, Consolas, monospace;
+    color: var(--accent); font-family: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
     font-size: .82em; margin-right: .55em;
   }
   .sec-lede { color: var(--muted); max-width: 46em; margin: .75rem 0 1.9rem; font-size: .95rem; }
@@ -196,7 +211,7 @@
     border-radius: 8px 8px 0 0;
   }
   .in-label {
-    font-family: ui-monospace, Menlo, Consolas, monospace;
+    font-family: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
     font-size: .66rem; letter-spacing: .12em; text-transform: uppercase;
     color: var(--accent-ink); font-weight: 700;
     background: var(--accent-soft);
@@ -251,7 +266,7 @@
     padding: .85rem 1rem;
   }
   .out-label {
-    font-family: ui-monospace, Menlo, Consolas, monospace;
+    font-family: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
     font-size: .66rem; letter-spacing: .12em; text-transform: uppercase;
     color: var(--out-ink); font-weight: 700; padding-top: .25rem;
   }
@@ -284,7 +299,7 @@
     padding: .45rem .85rem;
     background: #211E19;
     border-bottom: 1px solid #383429;
-    font-family: ui-monospace, Menlo, Consolas, monospace;
+    font-family: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
     font-size: .7rem; color: #9A9384; letter-spacing: .08em;
   }
   .term-bar::before {
@@ -298,6 +313,7 @@
     margin: 0; padding: .85rem 1rem;
     font-size: .72rem; line-height: 1.55;
     overflow-x: auto; color: inherit;
+    font-variant-ligatures: none; /* 実端末の見た目に合わせ合字を無効化 */
   }
 
   /* ---------- catalog ---------- */
@@ -331,7 +347,7 @@
   .prov h2 {
     font-size: .78rem; margin: 0 0 .6rem; color: var(--ink);
     border: none; padding: 0;
-    font-family: ui-monospace, Menlo, Consolas, monospace;
+    font-family: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
     letter-spacing: .12em; text-transform: uppercase;
   }
   .prov ul { padding-left: 1.3em; margin: .4em 0; }
@@ -422,12 +438,14 @@
     </div>
     <div class="cell-body">
       <p class="cell-lede">§1 の各コマンドは、この最小 Python プロジェクトに対して実行した。</p>
-      <p class="cell-desc">デモ用に <code>divide()</code> のゼロ除算、<code>average()</code> の空リスト、<code>user_db.py</code> の SQL インジェクション・コマンドインジェクション・ハードコードされたパスワードを意図的に含めてある。なお §1 の実測には「初期状態」と「user_db.py 追加後」の2時点が混在する(各セルの注記を参照)。</p>
+      <p class="cell-desc">デモ用に <code>divide()</code> のゼロ除算、<code>average()</code> の空リスト、<code>user_db.py</code> の SQL インジェクション・コマンドインジェクション・ハードコードされたパスワードを意図的に含めてある。なお §1 の実測には「初期状態」と「user_db.py 追加後」の2時点が混在する(各セルの注記を参照)。git は <code>main</code> → <code>feature/user-db</code> のブランチ構成で、隣に bare リモート <code>sample-remote.git</code> を持つ(<code>/security-review</code> のプロンプト展開に origin が必要なため)。</p>
       <div class="out-content"><pre><code>sample-project/
 ├── README.md
 ├── src/
 │   ├── calc.py        # add / divide (ゼロ除算チェックなし) / average (空リストで例外)
 │   └── user_db.py     # SQLインジェクション / ハードコードされたパスワード / コマンドインジェクション
+├── tests/
+│   └── test_calc.py   # /verify 用の unittest(意図的に未コミットのまま置いてある)
 └── .claude/commands/explain.md   # カスタムコマンドのデモ用定義</code></pre></div>
     </div>
   </article>

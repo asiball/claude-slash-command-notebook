@@ -5,6 +5,32 @@
 - 公開ページ (GitHub Pages): https://asiball.github.io/claude-slash-command-notebook/
 - ページソース: `slash-command-notebook.html` が正本。`index.html` は `wrap-index.py` で生成した Pages 用ラッパー
 
+## フォルダ構成
+
+```
+.
+├── README.md
+├── slash-command-notebook.html   # ページ本体(正本。編集はこちらに行う)
+├── index.html                    # GitHub Pages 用の生成物(wrap-index.py で再生成。直接編集しない)
+├── wrap-index.py                 # slash-command-notebook.html → index.html を生成
+├── fonts/                        # 端末キャプチャ表示用の等幅フォント JetBrains Mono(woff2 自己ホスト。OFL.txt 同梱)
+├── setup-sample.sh               # デモ用サンプルプロジェクトを work/sample-project に再構築
+├── run-headless.sh               # §1 のヘッドレス実測 → work/out/*.out
+├── capture-ui.sh                 # §2 の画面採取 → work/tui-color/*.ansi
+├── capture-skill-a.sh            # §1 の端末画面 前半 → work/tui2/
+├── capture-skill-b.sh            # §1 の端末画面 後半 → work/tui2/
+├── ansi2html.py                  # ANSI→HTML 変換とセル差し替え
+└── work/                         # 一時成果物(git 管理外。丸ごと削除して再実行してよい)
+    ├── sample-project/           # デモ対象(ページ §1 冒頭の Setup セルの構成と対応)
+    ├── sample-project-2/         # 「端末画面(実測)」用のクリーンコピー
+    ├── sample-remote.git/        # sample-project の bare リモート(/security-review 用)
+    ├── out/                      # §1 ヘッドレス出力
+    ├── tui-color/                # §2 ANSI キャプチャ
+    └── tui2/                     # §1 端末画面キャプチャ
+```
+
+`work/` 配下は `setup-sample.sh` 以降の各スクリプトが生成するもので、リポジトリにはコミットされない(`.gitignore` 済み)。
+
 ## 前提
 
 - Claude Code CLI(ログイン済み)、tmux、python3、git
@@ -29,6 +55,7 @@ python3 ansi2html.py     # 6. ANSI→HTML 変換し、既存セルのトリミ�
 
 - §1 の Out(ヘッドレス出力)は `work/out/*.out` から**手動で**セルに反映する(出力は非決定的なので、本文の注記・要旨・実測値も合わせて見直すこと)。
 - 編集は `slash-command-notebook.html` に対して行い、`python3 wrap-index.py` で `index.html` を再生成してから push する(main への push で GitHub Pages に反映される)。
+- 端末キャプチャ(AA を含む)の表示は `fonts/` の JetBrains Mono(woff2)を等幅フォントとして自己ホストして固定している。罫線(U+2500〜)・ブロック要素(U+2588〜259F)を収録したフォントであることが要件で、Google Fonts 配信はサブセット化でこの範囲を落とすため使わない。
 
 ## 更新時の注意(ページ内の整合)
 
