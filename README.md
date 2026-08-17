@@ -3,16 +3,14 @@
 「Slash Command Notebook」(Claude Code スラッシュコマンドの実測リファレンス)を再生成するための一式。
 
 - 公開ページ (GitHub Pages): https://asiball.github.io/claude-slash-command-notebook/
-- ページソース: `slash-command-notebook.html` が正本。`index.html` は `wrap-index.py` で生成した Pages 用ラッパー
+- ページソース: `index.html` が正本(GitHub Pages がリポジトリ直下からそのまま配信する。編集はこのファイルに直接行う)
 
 ## フォルダ構成
 
 ```
 .
 ├── README.md
-├── slash-command-notebook.html   # ページ本体(正本。編集はこちらに行う)
-├── index.html                    # GitHub Pages 用の生成物(wrap-index.py で再生成。直接編集しない)
-├── wrap-index.py                 # slash-command-notebook.html → index.html を生成
+├── index.html                    # ページ本体(正本。GitHub Pages がそのまま配信)
 ├── fonts/                        # 端末キャプチャ表示用の等幅フォント JetBrains Mono(woff2 自己ホスト。OFL.txt 同梱)
 ├── setup-sample.sh               # デモ用サンプルプロジェクトを work/sample-project に再構築
 ├── run-headless.sh               # §1 のヘッドレス実測 → work/out/*.out
@@ -54,7 +52,7 @@ python3 ansi2html.py     # 6. ANSI→HTML 変換し、既存セルのトリミ�
 ## HTML の更新と公開
 
 - §1 の Out(ヘッドレス出力)は `work/out/*.out` から**手動で**セルに反映する(出力は非決定的なので、本文の注記・要旨・実測値も合わせて見直すこと)。
-- 編集は `slash-command-notebook.html` に対して行い、`python3 wrap-index.py` で `index.html` を再生成してから push する(main への push で GitHub Pages に反映される)。
+- 編集は `index.html` に対して直接行い、push する(main への push で GitHub Pages に反映される)。`ansi2html.py` の差し替え先も `index.html`。
 - 端末キャプチャ(AA を含む)の表示は `fonts/` の JetBrains Mono(woff2)を等幅フォントとして自己ホストして固定している。罫線(U+2500〜)・ブロック要素(U+2588〜259F)を収録したフォントであることが要件で、Google Fonts 配信はサブセット化でこの範囲を落とすため使わない。
 
 ## 更新時の注意(ページ内の整合)
