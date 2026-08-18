@@ -7,6 +7,8 @@ SP="$BASE/work"
 CAP="$SP/tui2"
 S=ccskill
 
+tmux has-session -t "$S" 2>/dev/null || { echo "session $S not found: run capture-skill-a.sh first" >&2; exit 1; }
+
 type_cmd() {
   tmux send-keys -t $S -l "$1"
   local n=0; until tmux capture-pane -t $S -p | grep -qF "❯ $1"; do n=$((n+1)); [ $n -gt 10 ] && break; sleep 0.5; done
