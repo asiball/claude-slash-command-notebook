@@ -111,7 +111,7 @@
     .toc {
       display: block;
       position: fixed; top: 4.5rem;
-      left: calc(50% + 475px);
+      left: min(calc(100% - 230px), calc(50% + 560px));
       width: 200px;
       max-height: calc(100vh - 6rem);
       overflow-y: auto;
@@ -137,6 +137,17 @@
       font-size: .7rem; color: var(--muted);
     }
     .toc-cmds a:hover { color: var(--accent-ink); }
+    /* スクロール位置と同期して現在地をハイライト(scrollspy)。
+       padding とマイナス margin を相殺させ、背景帯が付いても文字位置がずれないようにする */
+    .toc a.active {
+      color: var(--accent-ink);
+      background: var(--accent-soft);
+      border-radius: 5px;
+      padding: .08em .45em;
+      margin-left: -.45em;
+    }
+    .toc .toc-cmds a.active { color: var(--accent-ink); font-weight: 700; }
+    .toc .toc-h.active { color: var(--accent-ink); }
   }
   .toc-cmds a .toc-tag {
     font-family: system-ui, sans-serif;
@@ -255,21 +266,29 @@
   .in-label {
     font-family: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
     font-size: .66rem; letter-spacing: .12em; text-transform: uppercase;
-    color: var(--accent-ink); font-weight: 700;
-    background: var(--accent-soft);
-    padding: .18em .7em; border-radius: 999px;
+    color: var(--accent-ink); font-weight: 700; padding-top: .25rem;
   }
-  .cell-head .typed { font-size: .95rem; font-weight: 600; margin: 0; }
+  .cell-head .typed { font-size: 1.05rem; font-weight: 600; margin: 0; }
+  .cell:not(.setup) .cell-head .typed::before {
+    content: "❯ "; color: var(--accent); font-weight: 700;
+    font-family: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+  }
   .cell-meta { margin-left: auto; font-size: .74rem; color: var(--muted); font-variant-numeric: tabular-nums; }
   .cell-body { padding: 1rem 1.1rem 1.2rem; border-left: 3px solid transparent; }
   .cell-desc { margin: 0 0 .95rem; color: var(--muted); font-size: .92rem; max-width: 46em; }
 
   .cell.setup .cell-head { border-left-color: var(--line); }
-  .cell.setup .in-label { background: var(--chip-ui-bg); color: var(--chip-ui-ink); }
+  .head-badge {
+    font-family: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+    font-size: .66rem; letter-spacing: .12em; text-transform: uppercase;
+    font-weight: 700; background: var(--chip-ui-bg); color: var(--chip-ui-ink);
+    padding: .18em .7em; border-radius: 999px;
+  }
 
   /* カスタムコマンドのセルは紫アクセントで組み込みコマンドと区別する */
   .cell.custom .cell-head { border-left-color: var(--chip-skill-ink); }
-  .cell.custom .in-label { background: var(--chip-skill-bg); color: var(--chip-skill-ink); }
+  .cell.custom .in-block { border-left-color: var(--chip-skill-ink); background: var(--chip-skill-bg); }
+  .cell.custom .in-block .in-label { color: var(--chip-skill-ink); }
 
   .term-note {
     font-size: .8rem; color: var(--muted);
@@ -301,6 +320,16 @@
   }
   details.prompt .term { border: none; border-radius: 0 0 5px 5px; box-shadow: none; }
   details.prompt .term pre { white-space: pre; font-size: .72rem; line-height: 1.55; padding: .85rem 1rem; }
+
+  .in-block {
+    display: grid; grid-template-columns: auto 1fr; gap: .9rem;
+    border-left: 3px solid var(--accent);
+    background: var(--accent-soft);
+    border-radius: 0 6px 6px 0;
+    padding: .7rem 1rem;
+    margin: 0 0 .9rem;
+  }
+  .in-block .in-cmd { font-size: .88rem; font-weight: 600; min-width: 0; overflow-x: auto; white-space: pre-wrap; word-break: break-word; }
 
   /* output block */
   .out-block {
@@ -516,7 +545,7 @@
   <!-- CELL:sample-project -->
   <article class="cell setup" id="cell-sample-project">
     <div class="cell-head">
-      <span class="in-label">Setup</span>
+      <span class="head-badge">Setup</span>
       <h3 class="typed"><code>sample-project/</code></h3>
       <span class="cell-meta">実行対象のプロジェクト</span>
     </div>
@@ -537,13 +566,13 @@
   <!-- CELL:init -->
   <article class="cell" id="cell-init">
     <div class="cell-head">
-      <span class="in-label">In</span>
       <h3 class="typed"><code>/init</code></h3>
       <span class="cell-meta">model: haiku · 2026-08-17 実測</span>
     </div>
     <div class="cell-body">
       <p class="cell-lede">プロジェクトを解析して、Claude Code 向けのプロジェクトガイド <code>CLAUDE.md</code> を自動生成する。</p>
       <p class="cell-desc">内部では定型の指示プロンプト(コードベースを解析し、ビルド/テストコマンドとアーキテクチャの要点だけを書け、という内容)が注入される。この実測は <code>user_db.py</code> を追加する前の初期状態に対して実行したため、出力は calc.py のみに言及している。</p>
+      <div class="in-block"><span class="in-label">In</span><code class="in-cmd">/init</code></div>
       <div class="out-block">
         <span class="out-label">Out</span>
         <div class="out-content">
@@ -590,13 +619,13 @@
   <!-- CELL:btw -->
   <article class="cell" id="cell-btw">
     <div class="cell-head">
-      <span class="in-label">In</span>
-      <h3 class="typed"><code>/btw pythonのGILとは?一文で</code></h3>
+      <h3 class="typed"><code>/btw</code></h3>
       <span class="cell-meta">model: haiku · 画面実測 · 2026-08-17</span>
     </div>
     <div class="cell-body">
       <p class="cell-lede">今の会話の文脈に残さずに、サイド質問へ即答してもらう。</p>
       <p class="cell-desc">回答は専用のオーバーレイに表示され、メインの会話コンテキストには追加されない(<code>c</code> でコピー、<code>f</code> で別セッションへ分岐)。モデル呼び出しがセッション外で行われる中間形のコマンド。</p>
+      <div class="in-block"><span class="in-label">In</span><code class="in-cmd">/btw pythonのGILとは?一文で</code></div>
       <div class="term"><div class="term-bar">claude — /btw</div><pre>    <span style="color:#FFD700;font-weight:700">/btw </span><span style="color:#949494">pythonのGILとは?一文で</span>
 
       Python の Global Interpreter Lock（GIL）は、複数のスレッドが同時に Python
@@ -610,13 +639,13 @@
   <!-- CELL:code-review -->
   <article class="cell" id="cell-code-review">
     <div class="cell-head">
-      <span class="in-label">In</span>
-      <h3 class="typed"><code>/code-review low</code></h3>
+      <h3 class="typed"><code>/code-review</code></h3>
       <span class="cell-meta">model: sonnet · 2026-08-17 実測</span>
     </div>
     <div class="cell-body">
       <p class="cell-lede">現在の diff をバグの観点でレビューする(引数でレビュー強度 low〜max を指定できる)。</p>
       <p class="cell-desc">実行の仕組みが特徴的で、メインセッションには結果だけが返り、レビュー本体は<strong>サブエージェント</strong>(本体の会話とは別コンテキストで動く子エージェント)として走る。Out 冒頭の "(see above)" は、端末上で先に表示される指摘一覧を指す(本ページには未掲載)。この実測は user_db.py をコミットする前(untracked)の時点、/security-review はコミット後の時点で実行しており、同じファイルでも diff 上の扱いが異なる。</p>
+      <div class="in-block"><span class="in-label">In</span><code class="in-cmd">/code-review low</code></div>
       <div class="out-block">
         <span class="out-label">Out</span>
         <div class="out-content">
@@ -648,8 +677,7 @@
   <!-- CELL:compact -->
   <article class="cell" id="cell-compact">
     <div class="cell-head">
-      <span class="in-label">In</span>
-      <h3 class="typed"><code>/compact 日本語で要点のみ</code></h3>
+      <h3 class="typed"><code>/compact</code></h3>
       <span class="cell-meta">2026-08-17 実測</span>
     </div>
     <div class="cell-body">
@@ -684,6 +712,7 @@ error messages, or content you generated), read the full transcript at:
 Continue the conversation from where it left off without asking the user any
 further questions. Resume directly — do not acknowledge the summary, …</pre>
       </details>
+      <div class="in-block"><span class="in-label">In</span><code class="in-cmd">/compact 日本語で要点のみ</code></div>
       <div class="out-block">
         <span class="out-label">Out</span>
         <div class="out-content">
@@ -713,13 +742,13 @@ further questions. Resume directly — do not acknowledge the summary, …</pre>
   <!-- CELL:doctor -->
   <article class="cell" id="cell-doctor">
     <div class="cell-head">
-      <span class="in-label">In</span>
       <h3 class="typed"><code>/doctor</code></h3>
       <span class="cell-meta">model: haiku · 2026-08-17 実測</span>
     </div>
     <div class="cell-body">
       <p class="cell-lede">Claude Code のセットアップ全体を健全性チェックし、改善案を提案する。</p>
       <p class="cell-desc">注入プロンプトは全44,667字と実測中最大(それだけコンテキストを消費する)。Check 0〜9(インストール健全性 / 未使用スキル・プラグイン検出 / CLAUDE.md の重複排除と削減 / 遅いフック / バージョン確認 / 権限モード提案 など)を読み取り専用で実行してから、変更をまとめて確認する多段構造になっている。</p>
+      <div class="in-block"><span class="in-label">In</span><code class="in-cmd">/doctor</code></div>
       <div class="out-block">
         <span class="out-label">Out</span>
         <div class="out-content">
@@ -767,13 +796,13 @@ Enter to select · ↑/↓ to navigate · Esc to cancel</pre></div>
   <!-- CELL:recap -->
   <article class="cell" id="cell-recap">
     <div class="cell-head">
-      <span class="in-label">In</span>
       <h3 class="typed"><code>/recap</code></h3>
       <span class="cell-meta">model: haiku · 2026-08-17 実測</span>
     </div>
     <div class="cell-body">
       <p class="cell-lede">現在のセッションの内容を、1行のサマリーにまとめて表示する。</p>
       <p class="cell-desc">会話には追加されないローカルコマンドとして即時実行(応答ターンを消費せず処理)され、要約生成はセッション外で行われるためトランスクリプトには結果だけが残る。/init セッションを <code>--resume</code>(過去セッションの続きから再開)して実行した。</p>
+      <div class="in-block"><span class="in-label">In</span><code class="in-cmd">/recap</code></div>
       <div class="out-block">
         <span class="out-label">Out</span>
         <div class="out-content">
@@ -792,13 +821,13 @@ Enter to select · ↑/↓ to navigate · Esc to cancel</pre></div>
   <!-- CELL:security-review -->
   <article class="cell" id="cell-security-review">
     <div class="cell-head">
-      <span class="in-label">In</span>
       <h3 class="typed"><code>/security-review</code></h3>
       <span class="cell-meta">model: sonnet · 2026-08-17 実測</span>
     </div>
     <div class="cell-body">
       <p class="cell-lede">現在のブランチの変更(diff)をセキュリティ観点でレビューし、脆弱性を報告する。</p>
       <p class="cell-desc">レビュー対象は diff だけなので、既存コード側の SQL インジェクションは対象外。注入プロンプトは全11,140字(その分コンテキストを消費する)で、<code>git status</code> / <code>git diff</code> の結果が CLI 側で展開されて埋め込まれ、「サブタスクで脆弱性を検出→並列サブタスクで偽陽性を除去→確信度8未満を棄却」という多段の手順まで指示している。なお <code>origin</code> リモートのないリポジトリでは、プロンプト展開時の <code>git log origin/HEAD...</code> が失敗しコマンド自体が実行されない(実測で確認。本デモは origin を用意したうえで実行している)。</p>
+      <div class="in-block"><span class="in-label">In</span><code class="in-cmd">/security-review</code></div>
       <div class="out-block">
         <span class="out-label">Out</span>
         <div class="out-content">
@@ -848,13 +877,13 @@ Enter to select · ↑/↓ to navigate · Esc to cancel</pre></div>
   <!-- CELL:verify -->
   <article class="cell" id="cell-verify">
     <div class="cell-head">
-      <span class="in-label">In</span>
       <h3 class="typed"><code>/verify</code></h3>
       <span class="cell-meta">model: haiku · 2026-08-17 実測</span>
     </div>
     <div class="cell-body">
       <p class="cell-lede">直近の変更が「主張どおり動くか」を、実際にコードを動かして検証する。</p>
       <p class="cell-desc">直近コミットの内容をクレームとして取り出し、テストや直接実行で裏取りして PASS/FAIL を判定する。実測では関数を直接呼び出す8ステップの検証を行い、コマンドインジェクションを実際に実行して実証したうえで PASS(懸念2件付き)を返した。</p>
+      <div class="in-block"><span class="in-label">In</span><code class="in-cmd">/verify</code></div>
       <div class="out-block">
         <span class="out-label">Out</span>
         <div class="out-content">
@@ -875,8 +904,7 @@ Enter to select · ↑/↓ to navigate · Esc to cancel</pre></div>
   <!-- CELL:explain -->
   <article class="cell custom" id="cell-explain">
     <div class="cell-head">
-      <span class="in-label">In</span>
-      <h3 class="typed"><code>/explain divide</code></h3>
+      <h3 class="typed"><code>/explain</code></h3>
       <span class="chip skill">custom</span>
       <span class="cell-meta">model: haiku · カスタムコマンド · 2026-08-17 実測</span>
     </div>
@@ -900,6 +928,7 @@ allowed-tools: Bash(ls:*)
 
 Explain what the function `$ARGUMENTS` does, in two sentences, and point out any risk.</pre>
       </details>
+      <div class="in-block"><span class="in-label">In</span><code class="in-cmd">/explain divide</code></div>
       <div class="out-block">
         <span class="out-label">Out</span>
         <div class="out-content">
@@ -922,7 +951,7 @@ Explain what the function `$ARGUMENTS` does, in two sentences, and point out any
 
   <!-- CELL:clear-ui -->
   <article class="cell" id="cell-clear-ui">
-    <div class="cell-head"><span class="in-label">In</span><h3 class="typed"><code>/clear</code></h3><span class="cell-meta">画面実測 · 2026-08-17</span></div>
+    <div class="cell-head"><h3 class="typed"><code>/clear</code></h3><span class="cell-meta">画面実測 · 2026-08-17</span></div>
     <div class="cell-body">
       <p class="cell-lede">会話をリセットし、空のコンテキストで新しい会話を始める。</p>
       <p class="cell-desc">画面にはヘッダと空のプロンプトだけが残る。</p>
@@ -939,7 +968,7 @@ Explain what the function `$ARGUMENTS` does, in two sentences, and point out any
 
   <!-- CELL:config-ui -->
   <article class="cell" id="cell-config-ui">
-    <div class="cell-head"><span class="in-label">In</span><h3 class="typed"><code>/config</code></h3><span class="cell-meta">画面実測 · 2026-08-17</span></div>
+    <div class="cell-head"><h3 class="typed"><code>/config</code></h3><span class="cell-meta">画面実測 · 2026-08-17</span></div>
     <div class="cell-body">
       <p class="cell-lede">Claude Code の設定を確認・変更する。</p>
       <p class="cell-desc">検索付きの設定一覧(Settings タブ)が開き、テーマ・自動コンパクト・権限モードなどをその場で変更できる(画面は抜粋)。</p>
@@ -974,7 +1003,7 @@ Explain what the function `$ARGUMENTS` does, in two sentences, and point out any
 
   <!-- CELL:context-ui -->
   <article class="cell" id="cell-context-ui">
-    <div class="cell-head"><span class="in-label">In</span><h3 class="typed"><code>/context</code></h3><span class="cell-meta">画面実測 · 2026-08-17</span></div>
+    <div class="cell-head"><h3 class="typed"><code>/context</code></h3><span class="cell-meta">画面実測 · 2026-08-17</span></div>
     <div class="cell-body">
       <p class="cell-lede">コンテキスト(モデルに渡る作業記憶)の使用状況を可視化する。</p>
       <p class="cell-desc">グリッドとカテゴリ別内訳が、ダイアログではなく会話ログにインライン描画される。</p>
@@ -1008,7 +1037,7 @@ Explain what the function `$ARGUMENTS` does, in two sentences, and point out any
 
   <!-- CELL:effort-ui -->
   <article class="cell" id="cell-effort-ui">
-    <div class="cell-head"><span class="in-label">In</span><h3 class="typed"><code>/effort</code></h3><span class="cell-meta">画面実測 · 2026-08-17</span></div>
+    <div class="cell-head"><h3 class="typed"><code>/effort</code></h3><span class="cell-meta">画面実測 · 2026-08-17</span></div>
     <div class="cell-body">
       <p class="cell-lede">モデルの推論の「努力レベル」を調整する。</p>
       <p class="cell-desc">Faster〜Smarter のスライダー(low / medium / high / xhigh / max)を ←/→ で動かし、Enter で確定する。</p>
@@ -1024,7 +1053,7 @@ Explain what the function `$ARGUMENTS` does, in two sentences, and point out any
 
   <!-- CELL:goal-ui -->
   <article class="cell" id="cell-goal-ui">
-    <div class="cell-head"><span class="in-label">In</span><h3 class="typed"><code>/goal calc モジュールの全テストが通ること</code></h3><span class="cell-meta">画面実測 · 2026-08-17</span></div>
+    <div class="cell-head"><h3 class="typed"><code>/goal</code></h3><span class="cell-meta">画面実測 · 2026-08-17</span></div>
     <div class="cell-body">
       <p class="cell-lede">達成条件(ゴール)を設定し、Claude がターンをまたいで自律的に動けるようにする。</p>
       <p class="cell-desc">ゴールの設定自体はハーネス処理で、その後の動作は通常のモデルターンとして走る。実測では、設定した直後に Claude が自分からテスト実行に動き出し、Bash 権限の確認まで進んだ(下図)。新しめの機能で、挙動はバージョンによって変わりやすい。<code>/goal clear</code> で解除できる。</p>
@@ -1057,7 +1086,7 @@ Explain what the function `$ARGUMENTS` does, in two sentences, and point out any
 
   <!-- CELL:help-ui -->
   <article class="cell" id="cell-help-ui">
-    <div class="cell-head"><span class="in-label">In</span><h3 class="typed"><code>/help</code></h3><span class="cell-meta">画面実測 · 2026-08-17</span></div>
+    <div class="cell-head"><h3 class="typed"><code>/help</code></h3><span class="cell-meta">画面実測 · 2026-08-17</span></div>
     <div class="cell-body">
       <p class="cell-lede">ヘルプとキーボードショートカットの一覧を表示する。</p>
       <p class="cell-desc">Commands / Custom commands タブでコマンド一覧も参照できる。</p>
@@ -1082,7 +1111,7 @@ Explain what the function `$ARGUMENTS` does, in two sentences, and point out any
 
   <!-- CELL:mcp-ui -->
   <article class="cell" id="cell-mcp-ui">
-    <div class="cell-head"><span class="in-label">In</span><h3 class="typed"><code>/mcp</code></h3><span class="cell-meta">画面実測 · 2026-08-17</span></div>
+    <div class="cell-head"><h3 class="typed"><code>/mcp</code></h3><span class="cell-meta">画面実測 · 2026-08-17</span></div>
     <div class="cell-body">
       <p class="cell-lede">MCP サーバー(外部ツール連携)の接続を管理する。</p>
       <p class="cell-desc">一覧と接続状態が表示され、選択して有効化/無効化や認証ができる。</p>
@@ -1099,7 +1128,7 @@ Explain what the function `$ARGUMENTS` does, in two sentences, and point out any
 
   <!-- CELL:memory-ui -->
   <article class="cell" id="cell-memory-ui">
-    <div class="cell-head"><span class="in-label">In</span><h3 class="typed"><code>/memory</code></h3><span class="cell-meta">画面実測 · 2026-08-17</span></div>
+    <div class="cell-head"><h3 class="typed"><code>/memory</code></h3><span class="cell-meta">画面実測 · 2026-08-17</span></div>
     <div class="cell-body">
       <p class="cell-lede">CLAUDE.md とメモリ(自動記憶)ファイルを管理する。</p>
       <p class="cell-desc">ユーザー指示(<code>~/.claude/CLAUDE.md</code>)・プロジェクト指示(<code>./CLAUDE.md</code>)の編集と、自動メモリフォルダを開く操作を選べる。Auto-memory の有効/無効もここで確認できる。</p>
@@ -1119,7 +1148,7 @@ Explain what the function `$ARGUMENTS` does, in two sentences, and point out any
 
   <!-- CELL:model-ui -->
   <article class="cell" id="cell-model-ui">
-    <div class="cell-head"><span class="in-label">In</span><h3 class="typed"><code>/model</code></h3><span class="cell-meta">画面実測 · 2026-08-17</span></div>
+    <div class="cell-head"><h3 class="typed"><code>/model</code></h3><span class="cell-meta">画面実測 · 2026-08-17</span></div>
     <div class="cell-body">
       <p class="cell-lede">使用するモデルを切り替える。</p>
       <p class="cell-desc">選択画面が開き、Enter で新しいデフォルトとして保存、<code>s</code> でこのセッションのみ、Esc でキャンセル。努力レベル(effort)もここで調整できる。</p>
@@ -1141,7 +1170,7 @@ Explain what the function `$ARGUMENTS` does, in two sentences, and point out any
 
   <!-- CELL:permissions-ui -->
   <article class="cell" id="cell-permissions-ui">
-    <div class="cell-head"><span class="in-label">In</span><h3 class="typed"><code>/permissions</code></h3><span class="cell-meta">画面実測 · 2026-08-17</span></div>
+    <div class="cell-head"><h3 class="typed"><code>/permissions</code></h3><span class="cell-meta">画面実測 · 2026-08-17</span></div>
     <div class="cell-body">
       <p class="cell-lede">ツール実行の権限ルールを管理する。</p>
       <p class="cell-desc">Allow / Ask / Deny / Workspace のタブを横断でき、最近拒否した操作からルールを作ることもできる(一覧が空なのは、この計測環境ではルール未設定のため)。</p>
@@ -1160,7 +1189,7 @@ Explain what the function `$ARGUMENTS` does, in two sentences, and point out any
 
   <!-- CELL:plan-ui -->
   <article class="cell" id="cell-plan-ui">
-    <div class="cell-head"><span class="in-label">In</span><h3 class="typed"><code>/plan</code></h3><span class="cell-meta">画面実測 · 2026-08-17</span></div>
+    <div class="cell-head"><h3 class="typed"><code>/plan</code></h3><span class="cell-meta">画面実測 · 2026-08-17</span></div>
     <div class="cell-body">
       <p class="cell-lede">編集を保留してまず計画を立てる「プランモード」に切り替える。</p>
       <p class="cell-desc">ダイアログは開かず、確認メッセージとステータスバーの表示が変わる(shift+tab でも切り替え可能)。</p>
@@ -1176,7 +1205,7 @@ Explain what the function `$ARGUMENTS` does, in two sentences, and point out any
 
   <!-- CELL:resume-ui -->
   <article class="cell" id="cell-resume-ui">
-    <div class="cell-head"><span class="in-label">In</span><h3 class="typed"><code>/resume</code></h3><span class="cell-meta">画面実測 · 2026-08-17</span></div>
+    <div class="cell-head"><h3 class="typed"><code>/resume</code></h3><span class="cell-meta">画面実測 · 2026-08-17</span></div>
     <div class="cell-body">
       <p class="cell-lede">過去のセッションを選んで、その会話に復帰する。</p>
       <p class="cell-desc">一覧では検索・プレビュー・リネームができ、各行に経過時間・ブランチ・サイズが出る。</p>
@@ -1202,7 +1231,7 @@ Explain what the function `$ARGUMENTS` does, in two sentences, and point out any
 
   <!-- CELL:rewind-ui -->
   <article class="cell" id="cell-rewind-ui">
-    <div class="cell-head"><span class="in-label">In</span><h3 class="typed"><code>/rewind</code></h3><span class="cell-meta">画面実測 · 2026-08-17</span></div>
+    <div class="cell-head"><h3 class="typed"><code>/rewind</code></h3><span class="cell-meta">画面実測 · 2026-08-17</span></div>
     <div class="cell-body">
       <p class="cell-lede">コードと会話を、チェックポイント時点まで巻き戻す。</p>
       <p class="cell-desc">チェックポイント選択画面が開く。このセッションはまだ編集がないため巻き戻し先なし。</p>
@@ -1216,7 +1245,7 @@ Explain what the function `$ARGUMENTS` does, in two sentences, and point out any
 
   <!-- CELL:status-ui -->
   <article class="cell" id="cell-status-ui">
-    <div class="cell-head"><span class="in-label">In</span><h3 class="typed"><code>/status</code></h3><span class="cell-meta">画面実測 · 2026-08-17</span></div>
+    <div class="cell-head"><h3 class="typed"><code>/status</code></h3><span class="cell-meta">画面実測 · 2026-08-17</span></div>
     <div class="cell-body">
       <p class="cell-lede">セッションの現在状態をまとめて表示する。</p>
       <p class="cell-desc">設定パネルの Status タブが開き、バージョン、セッションID、cwd、ログイン情報、モデル、MCP 接続数などを一覧できる。</p>
@@ -1242,7 +1271,7 @@ Explain what the function `$ARGUMENTS` does, in two sentences, and point out any
 
   <!-- CELL:tasks-ui -->
   <article class="cell" id="cell-tasks-ui">
-    <div class="cell-head"><span class="in-label">In</span><h3 class="typed"><code>/tasks</code></h3><span class="cell-meta">画面実測 · 2026-08-17</span></div>
+    <div class="cell-head"><h3 class="typed"><code>/tasks</code></h3><span class="cell-meta">画面実測 · 2026-08-17</span></div>
     <div class="cell-body">
       <p class="cell-lede">バックグラウンドで走っている作業を一覧する。</p>
       <p class="cell-desc">応答を中断せず即時実行されるタイプのコマンド(一覧が空なのは、この計測セッションでは何も走らせていないため)。</p>
@@ -1256,7 +1285,7 @@ Explain what the function `$ARGUMENTS` does, in two sentences, and point out any
 
   <!-- CELL:usage-ui -->
   <article class="cell" id="cell-usage-ui">
-    <div class="cell-head"><span class="in-label">In</span><h3 class="typed"><code>/usage</code></h3><span class="cell-meta">画面実測 · 2026-08-17</span></div>
+    <div class="cell-head"><h3 class="typed"><code>/usage</code></h3><span class="cell-meta">画面実測 · 2026-08-17</span></div>
     <div class="cell-body">
       <p class="cell-lede">トークン使用量と、プランのレート上限の消費状況を表示する。</p>
       <p class="cell-desc">設定パネルの Usage タブが開く。セッションのコスト・トークン量に加え、セッション枠/週間枠の消費率と、何が使用量に効いているかの分析まで表示される(画面は起動直後のセッションのため Total cost 等はゼロ)。</p>
@@ -1377,6 +1406,75 @@ Explain what the function `$ARGUMENTS` does, in two sentences, and point out any
     </ul>
   </section>
 </main>
+
+<script>
+(function () {
+  // 右側フローティング TOC のスクロールスパイ。
+  // TOC のリンク先要素はページ内で TOC と同じ順に並ぶ前提(top の単調増加)で早期打ち切りする。
+  var toc = document.querySelector('.toc');
+  if (!toc) return;
+  var wide = matchMedia('(min-width: 1420px)');
+  var items = Array.prototype.slice.call(toc.querySelectorAll('a[href^="#"]'))
+    .map(function (a) {
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      return el ? { link: a, target: el } : null;
+    })
+    .filter(Boolean);
+  if (!items.length) return;
+  var active = null;
+
+  function sectionHead(link) {
+    var wrap = link.closest('.toc-cmds');
+    var el = wrap && wrap.previousElementSibling;
+    return (el && el.classList.contains('toc-h')) ? el : null;
+  }
+
+  function keepVisible(link) {
+    var t = toc.getBoundingClientRect();
+    var l = link.getBoundingClientRect();
+    if (l.top < t.top + 8) toc.scrollTop += l.top - (t.top + 8);
+    else if (l.bottom > t.bottom - 8) toc.scrollTop += l.bottom - (t.bottom - 8);
+  }
+
+  function update() {
+    if (!wide.matches) return;
+    // アンカー先頭は scroll-margin-top(3.6rem)の位置に止まるため、判定線はその少し下に置く
+    var line = 90;
+    var current = null;
+    for (var i = 0; i < items.length; i++) {
+      if (items[i].target.getBoundingClientRect().top <= line) current = items[i];
+      else break;
+    }
+    if (innerHeight + pageYOffset >= document.documentElement.scrollHeight - 2) {
+      current = items[items.length - 1];
+    }
+    if (current === active) return;
+    if (active) {
+      active.link.classList.remove('active');
+      var oldHead = sectionHead(active.link);
+      if (oldHead) oldHead.classList.remove('active');
+    }
+    active = current;
+    if (active) {
+      active.link.classList.add('active');
+      var head = sectionHead(active.link);
+      if (head) head.classList.add('active');
+      keepVisible(active.link);
+    }
+  }
+
+  var ticking = false;
+  function onScroll() {
+    if (ticking) return;
+    ticking = true;
+    requestAnimationFrame(function () { ticking = false; update(); });
+  }
+  addEventListener('scroll', onScroll, { passive: true });
+  addEventListener('resize', onScroll);
+  wide.addEventListener('change', onScroll);
+  update();
+})();
+</script>
 
 </body>
 </html>
