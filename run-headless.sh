@@ -17,8 +17,8 @@ cd "$P"
 [ -f CLAUDE.md ] && mv CLAUDE.md CLAUDE.md.bak
 claude -p "/init" --model "$MODEL" --permission-mode acceptEdits < /dev/null > "$OUT/init.out" 2>&1
 
-# /init セッションIDを特定(--resume 用)
-PROJ_DIR=$(ls -td ~/.claude/projects/*sample-project* | head -1)
+# /init セッションIDを特定(--resume 用)。sample-project-2 に誤マッチしないよう末尾を固定する。
+PROJ_DIR=$(ls -td ~/.claude/projects/*-sample-project | head -1)
 SID=$(ls -t "$PROJ_DIR"/*.jsonl | head -1 | xargs -n1 basename | sed 's/\.jsonl//')
 echo "init session: $SID"
 
@@ -35,7 +35,13 @@ claude -p "/explain divide" --model "$MODEL" --allowedTools "$TOOLS" < /dev/null
 P4=$!
 claude -p "/doctor" --model "$MODEL" --allowedTools 'Bash,Read,Grep,Glob' < /dev/null > "$OUT/doctor.out" 2>&1 &
 P5=$!
-wait $P1 $P2 $P3 $P4 $P5
+for pid in $P1 $P2 $P3 $P4 $P5; do
+  wait "$pid" || echo "FAILED: pid $pid" >&2
+done
 
 echo "=== done ==="; ls -la "$OUT"
-echo "注: /compact の要約と compact_boundary は $PROJ_DIR/$SID.jsonl から抽出する"
+# --resume は元セッションをフォークして新しいセッションIDの jsonl を作るため、
+# /compact の要約と compact_boundary は resume 後に新規作成された最新の jsonl から抽出する
+LATEST_JSONL=$(ls -t "$PROJ_DIR"/*.jsonl | head -1)
+echo "注: /compact の要約と compact_boundary は resume 後に新規作成された最新の jsonl から抽出する"
+echo "latest jsonl: $LATEST_JSONL"

@@ -1,7 +1,7 @@
 #!/bin/bash
+set -u
 BASE="$(cd "$(dirname "$0")" && pwd)"
 # Capture Skill-command TUI screens (part A): /init, /recap, /compact, /explain
-set -u
 SP="$BASE/work"
 DIR="$SP/sample-project-2"
 CAP="$SP/tui2"
@@ -11,19 +11,21 @@ tmux kill-session -t $S 2>/dev/null
 
 # クリーンコピーを作成(CLAUDE.md を除去し、/code-review 用の未コミット変更 percent() を追加)
 rm -rf "$DIR"
-cp -r "$SP/sample-project" "$DIR"
-rm -f "$DIR/CLAUDE.md"
+cp -r "$SP/sample-project" "$DIR" || { echo "cp -r sample-project -> $DIR failed" >&2; exit 1; }
+rm -f "$DIR"/CLAUDE.md*
 printf '\ndef percent(part, total):\n    return part / total * 100\n' >> "$DIR/src/calc.py"
 
-tmux new-session -d -s $S -x 110 -y 42 -c "$DIR"
+tmux new-session -d -s $S -x 110 -y 42 -c "$DIR" || { echo "tmux new-session failed" >&2; exit 1; }
 tmux send-keys -t $S "claude --model haiku --permission-mode acceptEdits --allowedTools 'Bash,Read,Grep,Glob'" Enter
 
 # wait for startup / trust prompt
 n=0
 until tmux capture-pane -t $S -p | grep -qE "Try \"|trust|Trust"; do n=$((n+1)); [ $n -gt 40 ] && break; sleep 1; done
+[ $n -gt 40 ] && echo "WARN: timed out waiting for claude startup" >&2
 if tmux capture-pane -t $S -p | grep -qi trust; then
   tmux send-keys -t $S Enter
   n=0; until tmux capture-pane -t $S -p | grep -q "Try \""; do n=$((n+1)); [ $n -gt 20 ] && break; sleep 1; done
+  [ $n -gt 20 ] && echo "WARN: timed out waiting for trust prompt confirmation" >&2
 fi
 tmux capture-pane -t $S -p > "$CAP/startup.txt"
 

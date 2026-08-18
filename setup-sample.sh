@@ -5,7 +5,10 @@ set -eu
 BASE="$(cd "$(dirname "$0")" && pwd)"
 W="$BASE/work"
 P="$W/sample-project"
-rm -rf "$W"
+# 消すのはサンプルプロジェクト本体・そのコピー(sample-project-2)・bare リモートのみ。
+# work/out, work/tui-color, work/tui2 の採取済みキャプチャは残す。
+mkdir -p "$W"
+rm -rf "$P" "$W/sample-project-2" "$W/sample-remote.git"
 mkdir -p "$P/src" "$P/.claude/commands" "$P/tests"
 cd "$P"
 
@@ -26,7 +29,7 @@ if __name__ == "__main__":
     print(add(1, 2))
 EOF
 
-git init -q && git add -A && git commit -qm "initial sample project"
+git init -qb main && git add -A && git -c user.name=demo -c user.email=demo@example.com commit -qm "initial sample project"
 
 cat > src/user_db.py <<'EOF'
 import sqlite3
@@ -65,12 +68,14 @@ allowed-tools: Bash(ls:*)
 Explain what the function `$ARGUMENTS` does, in two sentences, and point out any risk.
 EOF
 
-git add -A && git commit -qm "add custom command, user_db, average"
+git add -A && git -c user.name=demo -c user.email=demo@example.com commit -qm "add custom command, user_db, average"
 
 # origin(bare) を用意 — /security-review はこれが無いとプロンプト展開に失敗する
 git clone -q --bare . ../sample-remote.git
 git remote add origin ../sample-remote.git
 git fetch -q origin
+# git init -qb main で既定ブランチ名を固定済みなので通常は main 側で成立するが、
+# 環境差(clone 元の HEAD 検出失敗など)に備えて master へのフォールバックを残す。
 git remote set-head origin main 2>/dev/null || git remote set-head origin master
 
 git checkout -qb feature/user-db
@@ -85,7 +90,7 @@ def ping_host(host):
     import os
     os.system("ping -c 1 " + host)
 EOF
-git add -A && git commit -qm "add login and ping helpers"
+git add -A && git -c user.name=demo -c user.email=demo@example.com commit -qm "add login and ping helpers"
 
 # /verify 用テスト(未コミットのまま置く)
 cat > tests/test_calc.py <<'EOF'

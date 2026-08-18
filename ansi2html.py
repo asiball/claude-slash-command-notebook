@@ -2,7 +2,7 @@
 """Convert ANSI tmux captures to colored HTML spans and splice them into
 the notebook's §2 terminal cells, preserving each cell's existing crop
 boundaries and masking emails / session IDs."""
-import re, html, sys
+import re, html
 
 import os
 SP = os.environ.get('SP', os.path.join(os.path.dirname(os.path.abspath(__file__)), 'work'))
@@ -31,8 +31,7 @@ class St:
     def __init__(self):
         self.fg = None; self.bg = None
         self.bold = False; self.dim = False; self.italic = False; self.rev = False
-    def key(self):
-        return (self.fg, self.bg, self.bold, self.dim, self.italic, self.rev)
+        self.ul = False; self.strike = False
     def css(self):
         fg = self.fg or DEFAULT_FG
         bg = self.bg
@@ -44,6 +43,9 @@ class St:
         if self.bold: rules.append('font-weight:700')
         if self.dim: rules.append('opacity:.72')
         if self.italic: rules.append('font-style:italic')
+        if self.ul or self.strike:
+            deco = ' '.join(d for d, on in (('underline', self.ul), ('line-through', self.strike)) if on)
+            rules.append(f'text-decoration:{deco}')
         return ';'.join(rules)
 
 def apply_sgr(st, params):
@@ -55,10 +57,14 @@ def apply_sgr(st, params):
         elif p == 1: st.bold = True
         elif p == 2: st.dim = True
         elif p == 3: st.italic = True
+        elif p == 4: st.ul = True
         elif p == 7: st.rev = True
+        elif p == 9: st.strike = True
         elif p == 22: st.bold = st.dim = False
         elif p == 23: st.italic = False
+        elif p == 24: st.ul = False
         elif p == 27: st.rev = False
+        elif p == 29: st.strike = False
         elif 30 <= p <= 37: st.fg = BASIC[p - 30]
         elif p == 38 and i + 2 < len(ps) and ps[i+1] == 5: st.fg = x256(ps[i+2]); i += 2
         elif p == 38 and i + 4 < len(ps) and ps[i+1] == 2:
@@ -80,24 +86,19 @@ MASKS = [
     (re.compile(r"Welcome back \S+!"), 'Welcome back ****!'),
 ]
 
-def mask(t):
-    for rx, rep in MASKS:
-        t = rx.sub(rep, t)
-    return t
-
 def parse_line(line):
-    """Return list of (text, St-key, css) spans for one raw line."""
+    """Return list of (text, css) spans for one raw line."""
     spans = []
     st = St()
     pos = 0
     for m in ANSI_RE.finditer(line):
         if m.start() > pos:
-            spans.append((line[pos:m.start()], st.key(), st.css()))
+            spans.append((line[pos:m.start()], st.css()))
         if m.group(1) is not None:
             apply_sgr(st, m.group(1))
         pos = m.end()
     if pos < len(line):
-        spans.append((line[pos:], st.key(), st.css()))
+        spans.append((line[pos:], st.css()))
     return spans
 
 def line_plain(line):
@@ -106,17 +107,26 @@ def line_plain(line):
 def render(lines):
     out = []
     for raw in lines:
+        # 1文字ごとに css を持たせ、マスクは行全体の平文に対して適用する。
+        # スタイル境界をまたぐメールアドレス等もマスクを逃れないようにするため。
+        chars = []
+        for text, css in parse_line(raw):
+            chars.extend((ch, css) for ch in text)
+        for rx, rep in MASKS:
+            plain = ''.join(ch for ch, _ in chars)
+            for m in reversed(list(rx.finditer(plain))):
+                css = chars[m.start()][1]
+                chars[m.start():m.end()] = [(ch, css) for ch in rep]
         parts = []
         prev_css = None
         buf = ''
-        for text, key, css in parse_line(raw):
-            text = mask(text)
+        for ch, css in chars:
             if css == prev_css:
-                buf += text
+                buf += ch
                 continue
             if buf:
                 parts.append((prev_css, buf))
-            prev_css, buf = css, text
+            prev_css, buf = css, ch
         if buf:
             parts.append((prev_css, buf))
         seg = ''
@@ -125,6 +135,8 @@ def render(lines):
             seg += f'<span style="{css}">{esc}</span>' if css else esc
         out.append(seg.rstrip())
     return '\n'.join(out)
+
+TAG_RE = re.compile(r'<[^>]+>')
 
 def tolerant_eq(old, new):
     o, n = old.strip(), line_plain(new).strip()
@@ -140,7 +152,9 @@ def splice(doc, label, cap_lines):
     if not m:
         print(f'  !! cell not found: {label}')
         return doc
-    old_lines = [html.unescape(l) for l in m.group(1).split('\n')]
+    # 前回実行で埋め込んだ <span> タグを剥がしてから比較する(冪等性のため)。
+    # タグ除去→unescape の順が重要: 端末出力由来の「&lt;span」等をタグと誤認しない。
+    old_lines = [html.unescape(TAG_RE.sub('', l)) for l in m.group(1).split('\n')]
     old_first = next((l for l in old_lines if l.strip()), None)
     old_last = next((l for l in reversed(old_lines) if l.strip()), None)
     start = next((i for i, l in enumerate(cap_lines) if tolerant_eq(old_first, l)), None)
@@ -162,13 +176,13 @@ CELLS = {
     '/resume': 'resume', '/tasks': 'tasks', '/rewind': 'rewind', '/plan': 'plan', '/clear': 'clear',
 }
 
-doc = open(HTML_PATH).read()
+doc = open(HTML_PATH, encoding='utf-8').read()
 for label, name in CELLS.items():
     try:
-        raw = open(f'{CAP}/{name}.ansi').read().rstrip('\n').split('\n')
+        raw = open(f'{CAP}/{name}.ansi', encoding='utf-8').read().rstrip('\n').split('\n')
     except FileNotFoundError:
         print(f'  !! capture missing: {name}')
         continue
     doc = splice(doc, label, raw)
-open(HTML_PATH, 'w').write(doc)
+open(HTML_PATH, 'w', encoding='utf-8').write(doc)
 print('written', len(doc))
