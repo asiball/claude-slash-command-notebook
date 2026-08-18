@@ -133,12 +133,19 @@
     }
     .toc .toc-h:first-of-type { margin-top: 0; }
     .toc .toc-h:hover { color: var(--accent-ink); }
-    .toc-cmds { display: flex; flex-wrap: wrap; gap: .15rem .55rem; padding-bottom: .15rem; }
+    .toc-cmds { display: flex; flex-direction: column; gap: .12rem; padding-bottom: .15rem; }
     .toc-cmds a {
       font-family: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
       font-size: .7rem; color: var(--muted);
     }
     .toc-cmds a:hover { color: var(--accent-ink); }
+    .toc-cmds a .toc-tag {
+      font-family: system-ui, sans-serif;
+      font-size: .58rem; font-weight: 650; letter-spacing: .06em;
+      color: var(--chip-skill-ink); background: var(--chip-skill-bg);
+      border-radius: 999px; padding: .05em .5em; margin-left: .35em;
+      vertical-align: .08em;
+    }
   }
 
   /* ---------- sticky nav ---------- */
@@ -232,6 +239,10 @@
 
   .cell.setup .cell-head { border-left-color: var(--line); }
   .cell.setup .in-label { background: var(--chip-ui-bg); color: var(--chip-ui-ink); }
+
+  /* カスタムコマンドのセルは紫アクセントで組み込みコマンドと区別する */
+  .cell.custom .cell-head { border-left-color: var(--chip-skill-ink); }
+  .cell.custom .in-label { background: var(--chip-skill-bg); color: var(--chip-skill-ink); }
 
   .term-note {
     font-size: .8rem; color: var(--muted);
@@ -337,6 +348,9 @@
     color: var(--muted); font-weight: 650; background: var(--code-bg);
   }
   td code { white-space: nowrap; font-size: .92em; }
+  td a.cmd { text-decoration: none; }
+  td a.cmd code { color: var(--accent-ink); }
+  td a.cmd:hover code { text-decoration: underline; }
   .chip {
     display: inline-block; font-size: .66rem; font-weight: 650;
     letter-spacing: .06em; border-radius: 999px; padding: .12em .6em;
@@ -390,33 +404,33 @@
     <a class="toc-h" href="#demos">§1 実行デモ</a>
     <div class="toc-cmds">
       <a href="#cell-init">/init</a>
-      <a href="#cell-security-review">/security-review</a>
-      <a href="#cell-code-review">/code-review</a>
-      <a href="#cell-explain">/explain</a>
-      <a href="#cell-compact">/compact</a>
-      <a href="#cell-recap">/recap</a>
-      <a href="#cell-doctor">/doctor</a>
-      <a href="#cell-verify">/verify</a>
       <a href="#cell-btw">/btw</a>
+      <a href="#cell-code-review">/code-review</a>
+      <a href="#cell-compact">/compact</a>
+      <a href="#cell-doctor">/doctor</a>
+      <a href="#cell-recap">/recap</a>
+      <a href="#cell-security-review">/security-review</a>
+      <a href="#cell-verify">/verify</a>
+      <a href="#cell-explain">/explain<span class="toc-tag">custom</span></a>
     </div>
     <a class="toc-h" href="#tui">§2 画面実測</a>
     <div class="toc-cmds">
-      <a href="#cell-model-ui">/model</a>
-      <a href="#cell-context-ui">/context</a>
-      <a href="#cell-status-ui">/status</a>
-      <a href="#cell-usage-ui">/usage</a>
-      <a href="#cell-permissions-ui">/permissions</a>
-      <a href="#cell-mcp-ui">/mcp</a>
-      <a href="#cell-config-ui">/config</a>
-      <a href="#cell-resume-ui">/resume</a>
-      <a href="#cell-tasks-ui">/tasks</a>
-      <a href="#cell-rewind-ui">/rewind</a>
-      <a href="#cell-plan-ui">/plan</a>
-      <a href="#cell-help-ui">/help</a>
       <a href="#cell-clear-ui">/clear</a>
+      <a href="#cell-config-ui">/config</a>
+      <a href="#cell-context-ui">/context</a>
       <a href="#cell-effort-ui">/effort</a>
-      <a href="#cell-memory-ui">/memory</a>
       <a href="#cell-goal-ui">/goal</a>
+      <a href="#cell-help-ui">/help</a>
+      <a href="#cell-mcp-ui">/mcp</a>
+      <a href="#cell-memory-ui">/memory</a>
+      <a href="#cell-model-ui">/model</a>
+      <a href="#cell-permissions-ui">/permissions</a>
+      <a href="#cell-plan-ui">/plan</a>
+      <a href="#cell-resume-ui">/resume</a>
+      <a href="#cell-rewind-ui">/rewind</a>
+      <a href="#cell-status-ui">/status</a>
+      <a href="#cell-tasks-ui">/tasks</a>
+      <a href="#cell-usage-ui">/usage</a>
     </div>
     <a class="toc-h" href="#catalog">§3 早見表</a>
     <a class="toc-h" href="#prov">取得方法</a>
@@ -435,7 +449,7 @@
   </header>
 
   <h2 id="demos"><span class="sec-no">§1</span>実行デモ — プロンプトと出力の実測</h2>
-  <p class="sec-lede">デモ用サンプルプロジェクト(Python 製の小さな電卓。意図的にバグと脆弱性を仕込んである)に対して <code>claude -p "/コマンド"</code> でヘッドレス実行(対話 UI なしで1回だけ実行するモード)して最終出力を Out に採取した。セルは、プロジェクト立ち上げ→レビュー→カスタムコマンド→セッション操作→環境診断、最後に追補(/verify・/btw)の順。多くのセル末尾に付けた「端末画面(実測)」は対話モードでの<strong>別回の実行</strong>のため、Out と内容が一致しないことがある。</p>
+  <p class="sec-lede">デモ用サンプルプロジェクト(Python 製の小さな電卓。意図的にバグと脆弱性を仕込んである)に対して <code>claude -p "/コマンド"</code> でヘッドレス実行(対話 UI なしで1回だけ実行するモード)して最終出力を Out に採取した。セルは Setup と <code>/init</code> を先頭に置き、以降はアルファベット順。カスタムコマンドの <code>/explain</code> だけは組み込みコマンドと区別するため末尾に置いた。多くのセル末尾に付けた「端末画面(実測)」は対話モードでの<strong>別回の実行</strong>のため、Out と内容が一致しないことがある。</p>
 
   <!-- CELL:sample-project -->
   <article class="cell setup" id="cell-sample-project">
@@ -511,59 +525,23 @@
     </div>
   </article>
 
-  <!-- CELL:security-review -->
-  <article class="cell" id="cell-security-review">
+  <!-- CELL:btw -->
+  <article class="cell" id="cell-btw">
     <div class="cell-head">
       <span class="in-label">In</span>
-      <code class="typed">/security-review</code>
-      <span class="cell-meta">model: sonnet · 2026-08-17 実測</span>
+      <code class="typed">/btw pythonのGILとは?一文で</code>
+      <span class="cell-meta">model: haiku · 画面実測 · 2026-08-17</span>
     </div>
     <div class="cell-body">
-      <p class="cell-lede">現在のブランチの変更(diff)をセキュリティ観点でレビューし、脆弱性を報告する。</p>
-      <p class="cell-desc">レビュー対象は diff だけなので、既存コード側の SQL インジェクションは対象外。注入プロンプトは全11,140字(その分コンテキストを消費する)で、<code>git status</code> / <code>git diff</code> の結果が CLI 側で展開されて埋め込まれ、「サブタスクで脆弱性を検出→並列サブタスクで偽陽性を除去→確信度8未満を棄却」という多段の手順まで指示している。なお <code>origin</code> リモートのないリポジトリでは、プロンプト展開時の <code>git log origin/HEAD...</code> が失敗しコマンド自体が実行されない(実測で確認。本デモは origin を用意したうえで実行している)。</p>
-      <div class="out-block">
-        <span class="out-label">Out</span>
-        <div class="out-content">
-          <p class="gist">要旨: High 2件(コマンドインジェクション、認証バイパス)を確信度 8/10 で報告。</p>
-          <p>Both findings scored 8/10 confidence — above the ≥8 threshold — so both are retained.</p>
-          <p><strong># Vuln 1: Command Injection: <code>src/user_db.py:18</code></strong></p>
-          <ul>
-            <li>Severity: High / Category: <code>command_injection</code></li>
-            <li>Description: <code>ping_host()</code> concatenates the <code>host</code> argument directly into a string passed to <code>os.system()</code>, which executes via the shell. Any shell metacharacters in <code>host</code> allow arbitrary command execution.</li>
-            <li>Exploit Scenario: A caller invoking <code>ping_host("8.8.8.8; rm -rf /")</code> causes arbitrary commands to run with the process's privileges.</li>
-            <li>Recommendation: Use <code>subprocess.run(["ping", "-c", "1", host], shell=False)</code> and validate that <code>host</code> matches a legitimate hostname/IP format before use.</li>
-          </ul>
-          <p><strong># Vuln 2: Authentication Bypass: <code>src/user_db.py:15</code></strong></p>
-          <ul>
-            <li>Severity: High / Category: <code>authentication_bypass</code></li>
-            <li>Description: <code>login(name, password)</code> never checks <code>name</code> — it only compares <code>password</code> against a single hardcoded constant. Anyone who knows this one value is authenticated as any username, including <code>admin</code>.</li>
-            <li>Exploit Scenario: An attacker calls <code>login("admin", "hunter2")</code> and is authenticated as the admin account regardless of the actual credential-to-user mapping.</li>
-            <li>Recommendation: Store per-user hashed credentials (e.g., bcrypt/argon2) and validate against the specific <code>name</code>'s stored hash. Use a constant-time comparison (<code>hmac.compare_digest</code>) instead of <code>==</code>.</li>
-          </ul>
-        </div>
-      </div>
-      <p class="term-note"><strong>端末画面(実測)</strong>— プロンプトの指示どおり「検出用サブエージェント→偽陽性フィルタ」の多段実行になる様子(別回の実行では3件検出)</p>
-      <div class="term"><div class="term-bar">claude — /security-review(実行中 → 完了)</div><pre>❯ /security-review
-● I'll perform a security review of the changes on this branch. Let me start by
-  identifying vulnerabilities and then validating them against false-positive
-  filters.
-● Agent(Identify security vulnerabilities in the new code)
-  ⎿  Backgrounded agent (↓ to manage · ctrl+o to expand)
-✻ Waiting for 1 background agent to finish
-  ● main
-  ◯ general-purpose  Identify security vulnerabilities in the new code      4s
+      <p class="cell-lede">今の会話の文脈に残さずに、サイド質問へ即答してもらう。</p>
+      <p class="cell-desc">回答は専用のオーバーレイに表示され、メインの会話コンテキストには追加されない(<code>c</code> でコピー、<code>f</code> で別セッションへ分岐)。モデル呼び出しがセッション外で行われる中間形のコマンド。</p>
+      <div class="term"><div class="term-bar">claude — /btw</div><pre>    <span style="color:#FFD700;font-weight:700">/btw </span><span style="color:#949494">pythonのGILとは?一文で</span>
 
-  · · · 約2分後 · · ·
+      Python の Global Interpreter Lock（GIL）は、複数のスレッドが同時に Python
+      バイトコードを実行することを防ぎ、マルチスレッドでも CPU
+      バウンドなタスクの並列実行を制限する仕組みです。
 
-  Vuln 3: Command Injection — Remote Code Execution — src/user_db.py:18-20
-  - Severity: HIGH
-  - Category: command_injection
-  - Recommendation: Replace os.system() with subprocess.run() using shell=False
-  ---
-  Summary: Three HIGH-severity vulnerabilities identified. The hardcoded
-  password and broken authentication enable unauthorized admin access, and the
-  command injection enables remote code execution.
-✻ Crunched for 1m 31s</pre></div>
+    <span style="color:#949494">↑/↓ to scroll · c to copy · f to fork · Esc to close</span></pre></div>
     </div>
   </article>
 
@@ -602,50 +580,6 @@
   2. src/user_db.py:20 — ping_host() command injection from unsanitized host
      parameter
 ✻ Cogitated for 12s</pre></div>
-    </div>
-  </article>
-
-  <!-- CELL:explain -->
-  <article class="cell" id="cell-explain">
-    <div class="cell-head">
-      <span class="in-label">In</span>
-      <code class="typed">/explain divide</code>
-      <span class="cell-meta">model: haiku · カスタムコマンド · 2026-08-17 実測</span>
-    </div>
-    <div class="cell-body">
-      <p class="cell-lede"><code>.claude/commands/</code> に定義ファイルを置くだけで作れる、自作(カスタム)コマンドの実例。</p>
-      <p class="cell-desc"><code>explain.md</code> を置くと <code>/explain</code> が使えるようになる。定義中の <code>$ARGUMENTS</code>・<code>!`シェル`</code>・<code>@ファイル</code> は、モデルに渡る前に CLI 側で展開される。</p>
-      <details class="prompt">
-        <summary><strong>コマンド定義</strong>(.claude/commands/explain.md)</summary>
-        <pre>---
-description: Explain a function in this codebase
-argument-hint: [function-name]
-allowed-tools: Bash(ls:*)
----
-
-## Context
-
-- Current files: !`ls src/`
-- Source: @src/calc.py
-
-## Task
-
-Explain what the function `$ARGUMENTS` does, in two sentences, and point out any risk.</pre>
-      </details>
-      <div class="out-block">
-        <span class="out-label">Out</span>
-        <div class="out-content">
-          <p>The <code>divide</code> function takes two numbers and returns their quotient by performing a simple division operation <code>a / b</code>.</p>
-          <p><strong>Risk:</strong> The function lacks validation for division by zero, which will raise a <code>ZeroDivisionError</code> if <code>b</code> is 0. This is already noted in the code comment and documented in CLAUDE.md as a known issue that should be addressed if the utility expands to production use.</p>
-        </div>
-      </div>
-      <p class="term-note"><strong>端末画面(実測)</strong>— 対話モードでの別回の実行(この回は日本語で応答)</p>
-      <div class="term"><div class="term-bar">claude — /explain divide</div><pre>❯ /explain divide
-  ⎿  Read src/calc.py (15 lines)
-● divide() 関数は 2 つの数値を受け取り、最初の数値を 2
-  番目の数値で割った結果を返します。シンプルな算術演算で、戻り値は浮動小数点数です。
-  ⚠️  リスク: ゼロチェックがないため、b が 0 の場合に ZeroDivisionError が発生します。
-✻ Sautéed for 3s</pre></div>
     </div>
   </article>
 
@@ -714,31 +648,6 @@ further questions. Resume directly — do not acknowledge the summary, …</pre>
     </div>
   </article>
 
-  <!-- CELL:recap -->
-  <article class="cell" id="cell-recap">
-    <div class="cell-head">
-      <span class="in-label">In</span>
-      <code class="typed">/recap</code>
-      <span class="cell-meta">model: haiku · 2026-08-17 実測</span>
-    </div>
-    <div class="cell-body">
-      <p class="cell-lede">現在のセッションの内容を、1行のサマリーにまとめて表示する。</p>
-      <p class="cell-desc">会話には追加されないローカルコマンドとして即時実行(応答ターンを消費せず処理)され、要約生成はセッション外で行われるためトランスクリプトには結果だけが残る。/init セッションを <code>--resume</code>(過去セッションの続きから再開)して実行した。</p>
-      <div class="out-block">
-        <span class="out-label">Out</span>
-        <div class="out-content">
-          <p class="gist">要旨: 「CLAUDE.md を作成して完了」というセッションの1行サマリー。</p>
-          <p>Created a CLAUDE.md file documenting this Python calculator project's structure, quick commands, and known issues. The file is complete and ready for future Claude instances to use.</p>
-        </div>
-      </div>
-      <p class="term-note"><strong>端末画面(実測)</strong>— 会話ログに <code>⎿</code> 付きの1行サマリーが即時表示される(別回の実行)</p>
-      <div class="term"><div class="term-bar">claude — /recap</div><pre>❯ /recap
-  ⎿  Created CLAUDE.md documenting this sample-calc project: calculator functions,
-     user database module, security issues, and custom commands. Ready to review
-     or commit to the feature/user-db branch.</pre></div>
-    </div>
-  </article>
-
   <!-- CELL:doctor -->
   <article class="cell" id="cell-doctor">
     <div class="cell-head">
@@ -793,6 +702,87 @@ Enter to select · ↑/↓ to navigate · Esc to cancel</pre></div>
     </div>
   </article>
 
+  <!-- CELL:recap -->
+  <article class="cell" id="cell-recap">
+    <div class="cell-head">
+      <span class="in-label">In</span>
+      <code class="typed">/recap</code>
+      <span class="cell-meta">model: haiku · 2026-08-17 実測</span>
+    </div>
+    <div class="cell-body">
+      <p class="cell-lede">現在のセッションの内容を、1行のサマリーにまとめて表示する。</p>
+      <p class="cell-desc">会話には追加されないローカルコマンドとして即時実行(応答ターンを消費せず処理)され、要約生成はセッション外で行われるためトランスクリプトには結果だけが残る。/init セッションを <code>--resume</code>(過去セッションの続きから再開)して実行した。</p>
+      <div class="out-block">
+        <span class="out-label">Out</span>
+        <div class="out-content">
+          <p class="gist">要旨: 「CLAUDE.md を作成して完了」というセッションの1行サマリー。</p>
+          <p>Created a CLAUDE.md file documenting this Python calculator project's structure, quick commands, and known issues. The file is complete and ready for future Claude instances to use.</p>
+        </div>
+      </div>
+      <p class="term-note"><strong>端末画面(実測)</strong>— 会話ログに <code>⎿</code> 付きの1行サマリーが即時表示される(別回の実行)</p>
+      <div class="term"><div class="term-bar">claude — /recap</div><pre>❯ /recap
+  ⎿  Created CLAUDE.md documenting this sample-calc project: calculator functions,
+     user database module, security issues, and custom commands. Ready to review
+     or commit to the feature/user-db branch.</pre></div>
+    </div>
+  </article>
+
+  <!-- CELL:security-review -->
+  <article class="cell" id="cell-security-review">
+    <div class="cell-head">
+      <span class="in-label">In</span>
+      <code class="typed">/security-review</code>
+      <span class="cell-meta">model: sonnet · 2026-08-17 実測</span>
+    </div>
+    <div class="cell-body">
+      <p class="cell-lede">現在のブランチの変更(diff)をセキュリティ観点でレビューし、脆弱性を報告する。</p>
+      <p class="cell-desc">レビュー対象は diff だけなので、既存コード側の SQL インジェクションは対象外。注入プロンプトは全11,140字(その分コンテキストを消費する)で、<code>git status</code> / <code>git diff</code> の結果が CLI 側で展開されて埋め込まれ、「サブタスクで脆弱性を検出→並列サブタスクで偽陽性を除去→確信度8未満を棄却」という多段の手順まで指示している。なお <code>origin</code> リモートのないリポジトリでは、プロンプト展開時の <code>git log origin/HEAD...</code> が失敗しコマンド自体が実行されない(実測で確認。本デモは origin を用意したうえで実行している)。</p>
+      <div class="out-block">
+        <span class="out-label">Out</span>
+        <div class="out-content">
+          <p class="gist">要旨: High 2件(コマンドインジェクション、認証バイパス)を確信度 8/10 で報告。</p>
+          <p>Both findings scored 8/10 confidence — above the ≥8 threshold — so both are retained.</p>
+          <p><strong># Vuln 1: Command Injection: <code>src/user_db.py:18</code></strong></p>
+          <ul>
+            <li>Severity: High / Category: <code>command_injection</code></li>
+            <li>Description: <code>ping_host()</code> concatenates the <code>host</code> argument directly into a string passed to <code>os.system()</code>, which executes via the shell. Any shell metacharacters in <code>host</code> allow arbitrary command execution.</li>
+            <li>Exploit Scenario: A caller invoking <code>ping_host("8.8.8.8; rm -rf /")</code> causes arbitrary commands to run with the process's privileges.</li>
+            <li>Recommendation: Use <code>subprocess.run(["ping", "-c", "1", host], shell=False)</code> and validate that <code>host</code> matches a legitimate hostname/IP format before use.</li>
+          </ul>
+          <p><strong># Vuln 2: Authentication Bypass: <code>src/user_db.py:15</code></strong></p>
+          <ul>
+            <li>Severity: High / Category: <code>authentication_bypass</code></li>
+            <li>Description: <code>login(name, password)</code> never checks <code>name</code> — it only compares <code>password</code> against a single hardcoded constant. Anyone who knows this one value is authenticated as any username, including <code>admin</code>.</li>
+            <li>Exploit Scenario: An attacker calls <code>login("admin", "hunter2")</code> and is authenticated as the admin account regardless of the actual credential-to-user mapping.</li>
+            <li>Recommendation: Store per-user hashed credentials (e.g., bcrypt/argon2) and validate against the specific <code>name</code>'s stored hash. Use a constant-time comparison (<code>hmac.compare_digest</code>) instead of <code>==</code>.</li>
+          </ul>
+        </div>
+      </div>
+      <p class="term-note"><strong>端末画面(実測)</strong>— プロンプトの指示どおり「検出用サブエージェント→偽陽性フィルタ」の多段実行になる様子(別回の実行では3件検出)</p>
+      <div class="term"><div class="term-bar">claude — /security-review(実行中 → 完了)</div><pre>❯ /security-review
+● I'll perform a security review of the changes on this branch. Let me start by
+  identifying vulnerabilities and then validating them against false-positive
+  filters.
+● Agent(Identify security vulnerabilities in the new code)
+  ⎿  Backgrounded agent (↓ to manage · ctrl+o to expand)
+✻ Waiting for 1 background agent to finish
+  ● main
+  ◯ general-purpose  Identify security vulnerabilities in the new code      4s
+
+  · · · 約2分後 · · ·
+
+  Vuln 3: Command Injection — Remote Code Execution — src/user_db.py:18-20
+  - Severity: HIGH
+  - Category: command_injection
+  - Recommendation: Replace os.system() with subprocess.run() using shell=False
+  ---
+  Summary: Three HIGH-severity vulnerabilities identified. The hardcoded
+  password and broken authentication enable unauthorized admin access, and the
+  command injection enables remote code execution.
+✻ Crunched for 1m 31s</pre></div>
+    </div>
+  </article>
+
   <!-- CELL:verify -->
   <article class="cell" id="cell-verify">
     <div class="cell-head">
@@ -820,48 +810,103 @@ Enter to select · ↑/↓ to navigate · Esc to cancel</pre></div>
     </div>
   </article>
 
-  <!-- CELL:btw -->
-  <article class="cell" id="cell-btw">
+  <!-- CELL:explain -->
+  <article class="cell custom" id="cell-explain">
     <div class="cell-head">
       <span class="in-label">In</span>
-      <code class="typed">/btw pythonのGILとは?一文で</code>
-      <span class="cell-meta">model: haiku · 画面実測 · 2026-08-17</span>
+      <code class="typed">/explain divide</code>
+      <span class="chip skill">custom</span>
+      <span class="cell-meta">model: haiku · カスタムコマンド · 2026-08-17 実測</span>
     </div>
     <div class="cell-body">
-      <p class="cell-lede">今の会話の文脈に残さずに、サイド質問へ即答してもらう。</p>
-      <p class="cell-desc">回答は専用のオーバーレイに表示され、メインの会話コンテキストには追加されない(<code>c</code> でコピー、<code>f</code> で別セッションへ分岐)。モデル呼び出しがセッション外で行われる中間形のコマンド。</p>
-      <div class="term"><div class="term-bar">claude — /btw</div><pre>    <span style="color:#FFD700;font-weight:700">/btw </span><span style="color:#949494">pythonのGILとは?一文で</span>
+      <p class="cell-lede"><code>.claude/commands/</code> に定義ファイルを置くだけで作れる、自作(カスタム)コマンドの実例。</p>
+      <p class="cell-desc"><code>explain.md</code> を置くと <code>/explain</code> が使えるようになる。定義中の <code>$ARGUMENTS</code>・<code>!`シェル`</code>・<code>@ファイル</code> は、モデルに渡る前に CLI 側で展開される。</p>
+      <details class="prompt">
+        <summary><strong>コマンド定義</strong>(.claude/commands/explain.md)</summary>
+        <pre>---
+description: Explain a function in this codebase
+argument-hint: [function-name]
+allowed-tools: Bash(ls:*)
+---
 
-      Python の Global Interpreter Lock（GIL）は、複数のスレッドが同時に Python
-      バイトコードを実行することを防ぎ、マルチスレッドでも CPU
-      バウンドなタスクの並列実行を制限する仕組みです。
+## Context
 
-    <span style="color:#949494">↑/↓ to scroll · c to copy · f to fork · Esc to close</span></pre></div>
+- Current files: !`ls src/`
+- Source: @src/calc.py
+
+## Task
+
+Explain what the function `$ARGUMENTS` does, in two sentences, and point out any risk.</pre>
+      </details>
+      <div class="out-block">
+        <span class="out-label">Out</span>
+        <div class="out-content">
+          <p>The <code>divide</code> function takes two numbers and returns their quotient by performing a simple division operation <code>a / b</code>.</p>
+          <p><strong>Risk:</strong> The function lacks validation for division by zero, which will raise a <code>ZeroDivisionError</code> if <code>b</code> is 0. This is already noted in the code comment and documented in CLAUDE.md as a known issue that should be addressed if the utility expands to production use.</p>
+        </div>
+      </div>
+      <p class="term-note"><strong>端末画面(実測)</strong>— 対話モードでの別回の実行(この回は日本語で応答)</p>
+      <div class="term"><div class="term-bar">claude — /explain divide</div><pre>❯ /explain divide
+  ⎿  Read src/calc.py (15 lines)
+● divide() 関数は 2 つの数値を受け取り、最初の数値を 2
+  番目の数値で割った結果を返します。シンプルな算術演算で、戻り値は浮動小数点数です。
+  ⚠️  リスク: ゼロチェックがないため、b が 0 の場合に ZeroDivisionError が発生します。
+✻ Sautéed for 3s</pre></div>
     </div>
   </article>
 
   <h2 id="tui"><span class="sec-no">§2</span>UI/ハーネス型コマンド — 画面の実測</h2>
-  <p class="sec-lede">以下のコマンドは CLI 自身が処理し、コマンド自体のプロンプトはモデルに送られない(ただし /goal のように、設定をきっかけに通常ターンの自律動作が始まるものはある)。「出力」は端末画面なので、対話モードで実行した直後の画面をカラー付きで採取した(採取条件の詳細は末尾の「取得方法」)。表示内容(モデル一覧・使用量・セッション一覧など)は環境依存であり、この環境での一例。メールアドレス等は伏せ字にしてある。</p>
+  <p class="sec-lede">以下のコマンドは CLI 自身が処理し、コマンド自体のプロンプトはモデルに送られない(ただし /goal のように、設定をきっかけに通常ターンの自律動作が始まるものはある)。「出力」は端末画面なので、対話モードで実行した直後の画面をカラー付きで採取した(採取条件の詳細は末尾の「取得方法」)。表示内容(モデル一覧・使用量・セッション一覧など)は環境依存であり、この環境での一例。メールアドレス等は伏せ字にしてある。セルはアルファベット順。</p>
 
-  <!-- CELL:model-ui -->
-  <article class="cell" id="cell-model-ui">
-    <div class="cell-head"><span class="in-label">In</span><code class="typed">/model</code><span class="cell-meta">画面実測 · 2026-08-17</span></div>
+  <!-- CELL:clear-ui -->
+  <article class="cell" id="cell-clear-ui">
+    <div class="cell-head"><span class="in-label">In</span><code class="typed">/clear</code><span class="cell-meta">画面実測 · 2026-08-17</span></div>
     <div class="cell-body">
-      <p class="cell-lede">使用するモデルを切り替える。</p>
-      <p class="cell-desc">選択画面が開き、Enter で新しいデフォルトとして保存、<code>s</code> でこのセッションのみ、Esc でキャンセル。努力レベル(effort)もここで調整できる。</p>
-      <div class="term"><div class="term-bar">claude — /model</div><pre>   <span style="color:#AFD7FF;font-weight:700">Select model</span>
-   <span style="color:#949494">Switch between Claude models. Your pick becomes the default for new sessions. For other/previous model </span>
-   <span style="color:#949494">names, specify with --model.</span>
+      <p class="cell-lede">会話をリセットし、空のコンテキストで新しい会話を始める。</p>
+      <p class="cell-desc">画面にはヘッダと空のプロンプトだけが残る。</p>
+      <div class="term"><div class="term-bar">claude — /clear</div><pre><span style="color:#D78787"> ▐</span><span style="color:#D78787;background:#000000">▛███▜</span><span style="color:#D78787">▌</span>   <span style="font-weight:700">Claude Code</span> <span style="color:#949494">v2.1.233</span>
+<span style="color:#D78787">▝▜</span><span style="color:#D78787;background:#000000">█████</span><span style="color:#D78787">▛▘</span>  <span style="color:#949494">Fable 5 · Claude Max</span>
+<span style="color:#D78787">  ▘▘ ▝▝  </span>  <span style="color:#949494">/…/****************-****/scratchpad/sample-project</span>
 
-     <span style="color:#949494">1. </span>Default (recommended)  <span style="color:#949494">Opus 5 with 1M context · Best for everyday, complex tasks</span>
-     <span style="color:#949494">2. </span>Opus (1M context)      <span style="color:#949494">Opus 5 with 1M context · Best for everyday, complex tasks</span>
-   <span style="color:#AFD7FF">❯</span> <span style="color:#949494">3. </span><span style="color:#87D787">Fable</span> <span style="color:#87D787">✔</span>                <span style="color:#D78787">Fable 5</span><span style="color:#949494"> · Most capable for your hardest and longest-running tasks</span>
-     <span style="color:#949494">4. </span>Sonnet                 <span style="color:#D78787">Sonnet 5</span><span style="color:#949494"> · Efficient for routine tasks</span>
-     <span style="color:#949494">5. </span>Haiku                  <span style="color:#949494">Haiku 4.5 · Fastest for quick answers</span>
+<span style="color:#8C8578;background:#3A3A3A">❯</span><span style="background:#3A3A3A"> </span><span style="color:#FFFFFF;background:#3A3A3A">/clear</span>
 
-   <span style="color:#D78787">●</span><span style="color:#949494"> High effort (default) </span><span style="color:#8C8578">←/→ to adjust</span>
+<span style="color:#808080">──────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
+❯</pre></div>
+    </div>
+  </article>
 
-   <span style="color:#949494">Enter to set as default · s to use this session only · Esc to cancel</span></pre></div>
+  <!-- CELL:config-ui -->
+  <article class="cell" id="cell-config-ui">
+    <div class="cell-head"><span class="in-label">In</span><code class="typed">/config</code><span class="cell-meta">画面実測 · 2026-08-17</span></div>
+    <div class="cell-body">
+      <p class="cell-lede">Claude Code の設定を確認・変更する。</p>
+      <p class="cell-desc">検索付きの設定一覧(Settings タブ)が開き、テーマ・自動コンパクト・権限モードなどをその場で変更できる(画面は抜粋)。</p>
+      <div class="term"><div class="term-bar">claude — /config</div><pre>   <span style="color:#AFD7FF;font-weight:700">Settings</span>  Status  <span style="color:#191713;background:#D9D4CA;font-weight:700"> Config </span>  Usage   Stats
+
+   <span style="color:#AFD7FF">╭──────────────────────────────────────────────────────────────────────────────────────────────────────╮</span>
+   <span style="color:#AFD7FF">│</span> ⌕ <span style="color:#949494">Search settings…</span>                                                                                   <span style="color:#AFD7FF">│</span>
+   <span style="color:#AFD7FF">╰──────────────────────────────────────────────────────────────────────────────────────────────────────╯</span>
+
+     Auto-compact                               false
+     Switch models when a message is flagged    true
+     Show tips                                  true
+     Reduce motion                              false
+     Thinking mode                              true
+     Prompt suggestions                         true
+     Session recap                              true
+     Rewind code (checkpoints)                  true
+     Dynamic workflows                          true
+     Ultracode keyword trigger                  true
+     Dynamic workflow size                      medium (default)
+     Artifacts                                  true
+     Verbose output                             false
+     Terminal progress bar                      true
+     Show turn duration                         true
+     Default permission mode                    Manual
+     Worktree base ref                          fresh
+     Use auto mode during plan                  true
+     Respect .gitignore in file picker          true
+     (以下略)</pre></div>
     </div>
   </article>
 
@@ -899,6 +944,214 @@ Enter to select · ↑/↓ to navigate · Esc to cancel</pre></div>
     </div>
   </article>
 
+  <!-- CELL:effort-ui -->
+  <article class="cell" id="cell-effort-ui">
+    <div class="cell-head"><span class="in-label">In</span><code class="typed">/effort</code><span class="cell-meta">画面実測 · 2026-08-17</span></div>
+    <div class="cell-body">
+      <p class="cell-lede">モデルの推論の「努力レベル」を調整する。</p>
+      <p class="cell-desc">Faster〜Smarter のスライダー(low / medium / high / xhigh / max)を ←/→ で動かし、Enter で確定する。</p>
+      <div class="term"><div class="term-bar">claude — /effort</div><pre>   <span style="font-weight:700">Effort</span>
+
+                                  Faster                             Smarter
+                                  <span style="color:#949494">────────────────────</span><span style="font-weight:700">▲</span><span style="color:#949494">─────────────────────</span>
+                                  <span style="color:#949494">low</span>     <span style="color:#949494">medium</span>     <span style="color:#AFD7FF;font-weight:700">high</span>     <span style="color:#949494">xhigh</span>      <span style="color:#949494">max</span>
+
+   <span style="color:#949494">←/→ to adjust · Enter to confirm · Esc to cancel</span></pre></div>
+    </div>
+  </article>
+
+  <!-- CELL:goal-ui -->
+  <article class="cell" id="cell-goal-ui">
+    <div class="cell-head"><span class="in-label">In</span><code class="typed">/goal calc モジュールの全テストが通ること</code><span class="cell-meta">画面実測 · 2026-08-17</span></div>
+    <div class="cell-body">
+      <p class="cell-lede">達成条件(ゴール)を設定し、Claude がターンをまたいで自律的に動けるようにする。</p>
+      <p class="cell-desc">ゴールの設定自体はハーネス処理で、その後の動作は通常のモデルターンとして走る。実測では、設定した直後に Claude が自分からテスト実行に動き出し、Bash 権限の確認まで進んだ(下図)。新しめの機能で、挙動はバージョンによって変わりやすい。<code>/goal clear</code> で解除できる。</p>
+      <div class="term"><div class="term-bar">claude — /goal(設定直後に自律動作が始まる)</div><pre><span style="color:#8C8578;background:#3A3A3A">❯</span><span style="background:#3A3A3A"> </span><span style="color:#FFFFFF;background:#3A3A3A">/goal calc モジュールの全テストが通ること</span>
+<span style="color:#949494">  ⎿  </span>Goal set: calc モジュールの全テストが通ること
+
+<span style="color:#FFFFFF">●</span> 了解しました。calc モジュールの全テストが通るようにします。
+
+  まず現在のテスト状況を確認します。
+
+<span style="color:#949494"> </span> Running all tests to see current state
+<span style="color:#949494">  ⎿  $ python3 -m pytest tests/ -v</span>
+
+<span style="color:#AFD7FF">──────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
+ <span style="color:#AFD7FF;font-weight:700">Bash command</span>
+
+   python3 -m pytest tests/ -v
+   <span style="color:#949494">Run all tests to see current state</span>
+
+ This command requires approval
+
+ Do you want to proceed?
+ <span style="color:#AFD7FF">❯</span> <span style="color:#949494">1. </span><span style="color:#AFD7FF">Yes</span>
+   <span style="color:#949494">2. </span>Yes, and don’t ask again for: python3 *
+   <span style="color:#949494">3. </span>No
+
+ <span style="color:#949494">Esc to cancel · Tab to amend · ctrl+e to explain</span></pre></div>
+    </div>
+  </article>
+
+  <!-- CELL:help-ui -->
+  <article class="cell" id="cell-help-ui">
+    <div class="cell-head"><span class="in-label">In</span><code class="typed">/help</code><span class="cell-meta">画面実測 · 2026-08-17</span></div>
+    <div class="cell-body">
+      <p class="cell-lede">ヘルプとキーボードショートカットの一覧を表示する。</p>
+      <p class="cell-desc">Commands / Custom commands タブでコマンド一覧も参照できる。</p>
+      <div class="term"><div class="term-bar">claude — /help</div><pre>   <span style="color:#87AFD7;font-weight:700">Help</span> <span style="color:#000000;background:#87AFD7;font-weight:700"> General </span>  Commands   Custom commands
+
+   Claude understands your codebase, makes edits with your permission, and executes commands — right from
+   your terminal.
+   <span style="font-weight:700">Shortcuts</span>
+   ! for shell mode          double tap esc to clear input        ctrl + shift + _ to undo
+   / for commands            shift + tab to auto-accept edits     ctrl + z to suspend
+   @ for file paths          ctrl + o for verbose output          ctrl + v to paste images
+   /btw for side question    ctrl + t to toggle tasks             alt + p to switch model
+                             \⏎ for newline                       ctrl + s to stash prompt
+                                                                  ctrl + g to edit in $EDITOR
+                                                                  /keybindings to customize
+
+   For more help: https://code.claude.com/docs/en/overview
+
+   <span style="color:#949494;font-style:italic">Esc to cancel</span></pre></div>
+    </div>
+  </article>
+
+  <!-- CELL:mcp-ui -->
+  <article class="cell" id="cell-mcp-ui">
+    <div class="cell-head"><span class="in-label">In</span><code class="typed">/mcp</code><span class="cell-meta">画面実測 · 2026-08-17</span></div>
+    <div class="cell-body">
+      <p class="cell-lede">MCP サーバー(外部ツール連携)の接続を管理する。</p>
+      <p class="cell-desc">一覧と接続状態が表示され、選択して有効化/無効化や認証ができる。</p>
+      <div class="term"><div class="term-bar">claude — /mcp</div><pre>   <span style="color:#AFD7FF;font-weight:700">Manage MCP servers</span>
+   <span style="color:#949494">1 server</span>
+
+     <span style="font-weight:700">claude.ai</span>
+   <span style="color:#AFD7FF">❯ claude.ai Google Drive</span> · <span style="color:#87D787">✔</span> connected · 11 tools
+
+   <span style="color:#949494">https://code.claude.com/docs/en/mcp for help</span>
+   <span style="color:#949494;font-style:italic">↑/↓ to navigate · Enter to confirm · Esc to cancel</span></pre></div>
+    </div>
+  </article>
+
+  <!-- CELL:memory-ui -->
+  <article class="cell" id="cell-memory-ui">
+    <div class="cell-head"><span class="in-label">In</span><code class="typed">/memory</code><span class="cell-meta">画面実測 · 2026-08-17</span></div>
+    <div class="cell-body">
+      <p class="cell-lede">CLAUDE.md とメモリ(自動記憶)ファイルを管理する。</p>
+      <p class="cell-desc">ユーザー指示(<code>~/.claude/CLAUDE.md</code>)・プロジェクト指示(<code>./CLAUDE.md</code>)の編集と、自動メモリフォルダを開く操作を選べる。Auto-memory の有効/無効もここで確認できる。</p>
+      <div class="term"><div class="term-bar">claude — /memory</div><pre>   <span style="color:#AFD7FF;font-weight:700">Memory</span>
+
+     Auto-memory: on
+
+   <span style="color:#AFD7FF">❯</span> <span style="color:#949494">1. </span><span style="color:#AFD7FF">User instructions</span>        <span style="color:#949494">Saved in ~/.claude/CLAUDE.md</span>
+     <span style="color:#949494">2. </span>Project instructions     <span style="color:#949494">Checked in at ./CLAUDE.md</span>
+     <span style="color:#949494">3. </span>Open auto-memory folder  <span style="color:#949494"> </span>
+
+   <span style="color:#949494">Learn more: https://code.claude.com/docs/en/memory</span>
+
+   <span style="color:#949494;font-style:italic">Enter to confirm · Esc to cancel</span></pre></div>
+    </div>
+  </article>
+
+  <!-- CELL:model-ui -->
+  <article class="cell" id="cell-model-ui">
+    <div class="cell-head"><span class="in-label">In</span><code class="typed">/model</code><span class="cell-meta">画面実測 · 2026-08-17</span></div>
+    <div class="cell-body">
+      <p class="cell-lede">使用するモデルを切り替える。</p>
+      <p class="cell-desc">選択画面が開き、Enter で新しいデフォルトとして保存、<code>s</code> でこのセッションのみ、Esc でキャンセル。努力レベル(effort)もここで調整できる。</p>
+      <div class="term"><div class="term-bar">claude — /model</div><pre>   <span style="color:#AFD7FF;font-weight:700">Select model</span>
+   <span style="color:#949494">Switch between Claude models. Your pick becomes the default for new sessions. For other/previous model </span>
+   <span style="color:#949494">names, specify with --model.</span>
+
+     <span style="color:#949494">1. </span>Default (recommended)  <span style="color:#949494">Opus 5 with 1M context · Best for everyday, complex tasks</span>
+     <span style="color:#949494">2. </span>Opus (1M context)      <span style="color:#949494">Opus 5 with 1M context · Best for everyday, complex tasks</span>
+   <span style="color:#AFD7FF">❯</span> <span style="color:#949494">3. </span><span style="color:#87D787">Fable</span> <span style="color:#87D787">✔</span>                <span style="color:#D78787">Fable 5</span><span style="color:#949494"> · Most capable for your hardest and longest-running tasks</span>
+     <span style="color:#949494">4. </span>Sonnet                 <span style="color:#D78787">Sonnet 5</span><span style="color:#949494"> · Efficient for routine tasks</span>
+     <span style="color:#949494">5. </span>Haiku                  <span style="color:#949494">Haiku 4.5 · Fastest for quick answers</span>
+
+   <span style="color:#D78787">●</span><span style="color:#949494"> High effort (default) </span><span style="color:#8C8578">←/→ to adjust</span>
+
+   <span style="color:#949494">Enter to set as default · s to use this session only · Esc to cancel</span></pre></div>
+    </div>
+  </article>
+
+  <!-- CELL:permissions-ui -->
+  <article class="cell" id="cell-permissions-ui">
+    <div class="cell-head"><span class="in-label">In</span><code class="typed">/permissions</code><span class="cell-meta">画面実測 · 2026-08-17</span></div>
+    <div class="cell-body">
+      <p class="cell-lede">ツール実行の権限ルールを管理する。</p>
+      <p class="cell-desc">Allow / Ask / Deny / Workspace のタブを横断でき、最近拒否した操作からルールを作ることもできる(一覧が空なのは、この計測環境ではルール未設定のため)。</p>
+      <div class="term"><div class="term-bar">claude — /permissions</div><pre>   <span style="color:#AFD7FF;font-weight:700">Permissions</span>  Recently denied  <span style="color:#000000;background:#AFD7FF;font-weight:700"> Allow </span>  Ask   Deny   Workspace
+
+   Claude Code won't ask before using allowed tools.
+   <span style="opacity:.72">╭───────────────────────────────────────────────╮</span>
+   <span style="opacity:.72">│</span> <span style="color:#949494">⌕ Search…</span>                                     <span style="opacity:.72">│</span>
+   <span style="opacity:.72">╰───────────────────────────────────────────────╯</span>
+
+     <span style="color:#949494">1. </span>Add a new rule…
+
+   <span style="color:#949494">←/→ to switch · ↓ to select · Esc to cancel</span></pre></div>
+    </div>
+  </article>
+
+  <!-- CELL:plan-ui -->
+  <article class="cell" id="cell-plan-ui">
+    <div class="cell-head"><span class="in-label">In</span><code class="typed">/plan</code><span class="cell-meta">画面実測 · 2026-08-17</span></div>
+    <div class="cell-body">
+      <p class="cell-lede">編集を保留してまず計画を立てる「プランモード」に切り替える。</p>
+      <p class="cell-desc">ダイアログは開かず、確認メッセージとステータスバーの表示が変わる(shift+tab でも切り替え可能)。</p>
+      <div class="term"><div class="term-bar">claude — /plan</div><pre><span style="color:#8C8578;background:#3A3A3A">❯</span><span style="background:#3A3A3A"> </span><span style="color:#FFFFFF;background:#3A3A3A">/plan</span>
+<span style="color:#949494">  ⎿  </span>Enabled plan mode
+
+<span style="color:#808080">──────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
+❯
+<span style="color:#808080">──────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
+  <span style="color:#5FAFAF">⏸ plan mode on</span><span style="color:#949494"> (shift+tab to cycle) · ← 1 agent</span></pre></div>
+    </div>
+  </article>
+
+  <!-- CELL:resume-ui -->
+  <article class="cell" id="cell-resume-ui">
+    <div class="cell-head"><span class="in-label">In</span><code class="typed">/resume</code><span class="cell-meta">画面実測 · 2026-08-17</span></div>
+    <div class="cell-body">
+      <p class="cell-lede">過去のセッションを選んで、その会話に復帰する。</p>
+      <p class="cell-desc">一覧では検索・プレビュー・リネームができ、各行に経過時間・ブランチ・サイズが出る。</p>
+      <div class="term"><div class="term-bar">claude — /resume</div><pre>   <span style="color:#AFD7FF;font-weight:700">Resume session</span>
+   <span style="opacity:.72">╭──────────────────────────────────────────────────────────────────────────────────────────────────────╮</span>
+   <span style="opacity:.72">│</span> <span style="color:#949494">⌕ Search…</span>                                                                                            <span style="opacity:.72">│</span>
+   <span style="opacity:.72">╰──────────────────────────────────────────────────────────────────────────────────────────────────────╯</span>
+     <span style="color:#949494">sample-project</span>
+
+   <span style="color:#AFD7FF">❯</span> <span style="color:#AFD7FF">/plan</span>
+     <span style="color:#949494">48 minutes ago · feature/user-db · 5KB</span>
+
+     /clear
+     <span style="color:#949494">50 minutes ago · feature/user-db · 2.3KB</span>
+
+     /config
+     <span style="color:#949494">50 minutes ago · feature/user-db · 13.5KB</span>
+
+     <span style="color:#949494">Ctrl+A to show all projects · Ctrl+B to only show current branch · Space to preview · Ctrl+R to rename</span>
+     <span style="color:#949494">· Type to search · Esc to cancel</span></pre></div>
+    </div>
+  </article>
+
+  <!-- CELL:rewind-ui -->
+  <article class="cell" id="cell-rewind-ui">
+    <div class="cell-head"><span class="in-label">In</span><code class="typed">/rewind</code><span class="cell-meta">画面実測 · 2026-08-17</span></div>
+    <div class="cell-body">
+      <p class="cell-lede">コードと会話を、チェックポイント時点まで巻き戻す。</p>
+      <p class="cell-desc">チェックポイント選択画面が開く。このセッションはまだ編集がないため巻き戻し先なし。</p>
+      <div class="term"><div class="term-bar">claude — /rewind</div><pre>  <span style="color:#AFD7FF;font-weight:700">Rewind</span>
+
+  <span style="color:#949494">Nothing to rewind to yet.</span>
+
+  <span style="color:#949494;font-style:italic">Esc to cancel</span></pre></div>
+    </div>
+  </article>
+
   <!-- CELL:status-ui -->
   <article class="cell" id="cell-status-ui">
     <div class="cell-head"><span class="in-label">In</span><code class="typed">/status</code><span class="cell-meta">画面実測 · 2026-08-17</span></div>
@@ -923,6 +1176,20 @@ Enter to select · ↑/↓ to navigate · Esc to cancel</pre></div>
    <span style="font-weight:700">Setting sources:</span>  User settings
 
    <span style="color:#949494">Esc to cancel</span></pre></div>
+    </div>
+  </article>
+
+  <!-- CELL:tasks-ui -->
+  <article class="cell" id="cell-tasks-ui">
+    <div class="cell-head"><span class="in-label">In</span><code class="typed">/tasks</code><span class="cell-meta">画面実測 · 2026-08-17</span></div>
+    <div class="cell-body">
+      <p class="cell-lede">バックグラウンドで走っている作業を一覧する。</p>
+      <p class="cell-desc">応答を中断せず即時実行されるタイプのコマンド(一覧が空なのは、この計測セッションでは何も走らせていないため)。</p>
+      <div class="term"><div class="term-bar">claude — /tasks</div><pre>   <span style="color:#00D7D7;font-weight:700">Background</span>
+
+   <span style="color:#949494">No tasks currently running</span>
+
+   <span style="color:#949494;font-style:italic">↑/↓ to select · Enter to view · Esc to close</span></pre></div>
     </div>
   </article>
 
@@ -970,273 +1237,21 @@ Enter to select · ↑/↓ to navigate · Esc to cancel</pre></div>
     </div>
   </article>
 
-  <!-- CELL:permissions-ui -->
-  <article class="cell" id="cell-permissions-ui">
-    <div class="cell-head"><span class="in-label">In</span><code class="typed">/permissions</code><span class="cell-meta">画面実測 · 2026-08-17</span></div>
-    <div class="cell-body">
-      <p class="cell-lede">ツール実行の権限ルールを管理する。</p>
-      <p class="cell-desc">Allow / Ask / Deny / Workspace のタブを横断でき、最近拒否した操作からルールを作ることもできる(一覧が空なのは、この計測環境ではルール未設定のため)。</p>
-      <div class="term"><div class="term-bar">claude — /permissions</div><pre>   <span style="color:#AFD7FF;font-weight:700">Permissions</span>  Recently denied  <span style="color:#000000;background:#AFD7FF;font-weight:700"> Allow </span>  Ask   Deny   Workspace
-
-   Claude Code won't ask before using allowed tools.
-   <span style="opacity:.72">╭───────────────────────────────────────────────╮</span>
-   <span style="opacity:.72">│</span> <span style="color:#949494">⌕ Search…</span>                                     <span style="opacity:.72">│</span>
-   <span style="opacity:.72">╰───────────────────────────────────────────────╯</span>
-
-     <span style="color:#949494">1. </span>Add a new rule…
-
-   <span style="color:#949494">←/→ to switch · ↓ to select · Esc to cancel</span></pre></div>
-    </div>
-  </article>
-
-  <!-- CELL:mcp-ui -->
-  <article class="cell" id="cell-mcp-ui">
-    <div class="cell-head"><span class="in-label">In</span><code class="typed">/mcp</code><span class="cell-meta">画面実測 · 2026-08-17</span></div>
-    <div class="cell-body">
-      <p class="cell-lede">MCP サーバー(外部ツール連携)の接続を管理する。</p>
-      <p class="cell-desc">一覧と接続状態が表示され、選択して有効化/無効化や認証ができる。</p>
-      <div class="term"><div class="term-bar">claude — /mcp</div><pre>   <span style="color:#AFD7FF;font-weight:700">Manage MCP servers</span>
-   <span style="color:#949494">1 server</span>
-
-     <span style="font-weight:700">claude.ai</span>
-   <span style="color:#AFD7FF">❯ claude.ai Google Drive</span> · <span style="color:#87D787">✔</span> connected · 11 tools
-
-   <span style="color:#949494">https://code.claude.com/docs/en/mcp for help</span>
-   <span style="color:#949494;font-style:italic">↑/↓ to navigate · Enter to confirm · Esc to cancel</span></pre></div>
-    </div>
-  </article>
-
-  <!-- CELL:config-ui -->
-  <article class="cell" id="cell-config-ui">
-    <div class="cell-head"><span class="in-label">In</span><code class="typed">/config</code><span class="cell-meta">画面実測 · 2026-08-17</span></div>
-    <div class="cell-body">
-      <p class="cell-lede">Claude Code の設定を確認・変更する。</p>
-      <p class="cell-desc">検索付きの設定一覧(Settings タブ)が開き、テーマ・自動コンパクト・権限モードなどをその場で変更できる(画面は抜粋)。</p>
-      <div class="term"><div class="term-bar">claude — /config</div><pre>   <span style="color:#AFD7FF;font-weight:700">Settings</span>  Status  <span style="color:#191713;background:#D9D4CA;font-weight:700"> Config </span>  Usage   Stats
-
-   <span style="color:#AFD7FF">╭──────────────────────────────────────────────────────────────────────────────────────────────────────╮</span>
-   <span style="color:#AFD7FF">│</span> ⌕ <span style="color:#949494">Search settings…</span>                                                                                   <span style="color:#AFD7FF">│</span>
-   <span style="color:#AFD7FF">╰──────────────────────────────────────────────────────────────────────────────────────────────────────╯</span>
-
-     Auto-compact                               false
-     Switch models when a message is flagged    true
-     Show tips                                  true
-     Reduce motion                              false
-     Thinking mode                              true
-     Prompt suggestions                         true
-     Session recap                              true
-     Rewind code (checkpoints)                  true
-     Dynamic workflows                          true
-     Ultracode keyword trigger                  true
-     Dynamic workflow size                      medium (default)
-     Artifacts                                  true
-     Verbose output                             false
-     Terminal progress bar                      true
-     Show turn duration                         true
-     Default permission mode                    Manual
-     Worktree base ref                          fresh
-     Use auto mode during plan                  true
-     Respect .gitignore in file picker          true
-     (以下略)</pre></div>
-    </div>
-  </article>
-
-  <!-- CELL:resume-ui -->
-  <article class="cell" id="cell-resume-ui">
-    <div class="cell-head"><span class="in-label">In</span><code class="typed">/resume</code><span class="cell-meta">画面実測 · 2026-08-17</span></div>
-    <div class="cell-body">
-      <p class="cell-lede">過去のセッションを選んで、その会話に復帰する。</p>
-      <p class="cell-desc">一覧では検索・プレビュー・リネームができ、各行に経過時間・ブランチ・サイズが出る。</p>
-      <div class="term"><div class="term-bar">claude — /resume</div><pre>   <span style="color:#AFD7FF;font-weight:700">Resume session</span>
-   <span style="opacity:.72">╭──────────────────────────────────────────────────────────────────────────────────────────────────────╮</span>
-   <span style="opacity:.72">│</span> <span style="color:#949494">⌕ Search…</span>                                                                                            <span style="opacity:.72">│</span>
-   <span style="opacity:.72">╰──────────────────────────────────────────────────────────────────────────────────────────────────────╯</span>
-     <span style="color:#949494">sample-project</span>
-
-   <span style="color:#AFD7FF">❯</span> <span style="color:#AFD7FF">/plan</span>
-     <span style="color:#949494">48 minutes ago · feature/user-db · 5KB</span>
-
-     /clear
-     <span style="color:#949494">50 minutes ago · feature/user-db · 2.3KB</span>
-
-     /config
-     <span style="color:#949494">50 minutes ago · feature/user-db · 13.5KB</span>
-
-     <span style="color:#949494">Ctrl+A to show all projects · Ctrl+B to only show current branch · Space to preview · Ctrl+R to rename</span>
-     <span style="color:#949494">· Type to search · Esc to cancel</span></pre></div>
-    </div>
-  </article>
-
-  <!-- CELL:tasks-ui -->
-  <article class="cell" id="cell-tasks-ui">
-    <div class="cell-head"><span class="in-label">In</span><code class="typed">/tasks</code><span class="cell-meta">画面実測 · 2026-08-17</span></div>
-    <div class="cell-body">
-      <p class="cell-lede">バックグラウンドで走っている作業を一覧する。</p>
-      <p class="cell-desc">応答を中断せず即時実行されるタイプのコマンド(一覧が空なのは、この計測セッションでは何も走らせていないため)。</p>
-      <div class="term"><div class="term-bar">claude — /tasks</div><pre>   <span style="color:#00D7D7;font-weight:700">Background</span>
-
-   <span style="color:#949494">No tasks currently running</span>
-
-   <span style="color:#949494;font-style:italic">↑/↓ to select · Enter to view · Esc to close</span></pre></div>
-    </div>
-  </article>
-
-  <!-- CELL:rewind-ui -->
-  <article class="cell" id="cell-rewind-ui">
-    <div class="cell-head"><span class="in-label">In</span><code class="typed">/rewind</code><span class="cell-meta">画面実測 · 2026-08-17</span></div>
-    <div class="cell-body">
-      <p class="cell-lede">コードと会話を、チェックポイント時点まで巻き戻す。</p>
-      <p class="cell-desc">チェックポイント選択画面が開く。このセッションはまだ編集がないため巻き戻し先なし。</p>
-      <div class="term"><div class="term-bar">claude — /rewind</div><pre>  <span style="color:#AFD7FF;font-weight:700">Rewind</span>
-
-  <span style="color:#949494">Nothing to rewind to yet.</span>
-
-  <span style="color:#949494;font-style:italic">Esc to cancel</span></pre></div>
-    </div>
-  </article>
-
-  <!-- CELL:plan-ui -->
-  <article class="cell" id="cell-plan-ui">
-    <div class="cell-head"><span class="in-label">In</span><code class="typed">/plan</code><span class="cell-meta">画面実測 · 2026-08-17</span></div>
-    <div class="cell-body">
-      <p class="cell-lede">編集を保留してまず計画を立てる「プランモード」に切り替える。</p>
-      <p class="cell-desc">ダイアログは開かず、確認メッセージとステータスバーの表示が変わる(shift+tab でも切り替え可能)。</p>
-      <div class="term"><div class="term-bar">claude — /plan</div><pre><span style="color:#8C8578;background:#3A3A3A">❯</span><span style="background:#3A3A3A"> </span><span style="color:#FFFFFF;background:#3A3A3A">/plan</span>
-<span style="color:#949494">  ⎿  </span>Enabled plan mode
-
-<span style="color:#808080">──────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
-❯
-<span style="color:#808080">──────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
-  <span style="color:#5FAFAF">⏸ plan mode on</span><span style="color:#949494"> (shift+tab to cycle) · ← 1 agent</span></pre></div>
-    </div>
-  </article>
-
-  <!-- CELL:help-ui -->
-  <article class="cell" id="cell-help-ui">
-    <div class="cell-head"><span class="in-label">In</span><code class="typed">/help</code><span class="cell-meta">画面実測 · 2026-08-17</span></div>
-    <div class="cell-body">
-      <p class="cell-lede">ヘルプとキーボードショートカットの一覧を表示する。</p>
-      <p class="cell-desc">Commands / Custom commands タブでコマンド一覧も参照できる。</p>
-      <div class="term"><div class="term-bar">claude — /help</div><pre>   <span style="color:#87AFD7;font-weight:700">Help</span> <span style="color:#000000;background:#87AFD7;font-weight:700"> General </span>  Commands   Custom commands
-
-   Claude understands your codebase, makes edits with your permission, and executes commands — right from
-   your terminal.
-   <span style="font-weight:700">Shortcuts</span>
-   ! for shell mode          double tap esc to clear input        ctrl + shift + _ to undo
-   / for commands            shift + tab to auto-accept edits     ctrl + z to suspend
-   @ for file paths          ctrl + o for verbose output          ctrl + v to paste images
-   /btw for side question    ctrl + t to toggle tasks             alt + p to switch model
-                             \⏎ for newline                       ctrl + s to stash prompt
-                                                                  ctrl + g to edit in $EDITOR
-                                                                  /keybindings to customize
-
-   For more help: https://code.claude.com/docs/en/overview
-
-   <span style="color:#949494;font-style:italic">Esc to cancel</span></pre></div>
-    </div>
-  </article>
-
-  <!-- CELL:clear-ui -->
-  <article class="cell" id="cell-clear-ui">
-    <div class="cell-head"><span class="in-label">In</span><code class="typed">/clear</code><span class="cell-meta">画面実測 · 2026-08-17</span></div>
-    <div class="cell-body">
-      <p class="cell-lede">会話をリセットし、空のコンテキストで新しい会話を始める。</p>
-      <p class="cell-desc">画面にはヘッダと空のプロンプトだけが残る。</p>
-      <div class="term"><div class="term-bar">claude — /clear</div><pre><span style="color:#D78787"> ▐</span><span style="color:#D78787;background:#000000">▛███▜</span><span style="color:#D78787">▌</span>   <span style="font-weight:700">Claude Code</span> <span style="color:#949494">v2.1.233</span>
-<span style="color:#D78787">▝▜</span><span style="color:#D78787;background:#000000">█████</span><span style="color:#D78787">▛▘</span>  <span style="color:#949494">Fable 5 · Claude Max</span>
-<span style="color:#D78787">  ▘▘ ▝▝  </span>  <span style="color:#949494">/…/****************-****/scratchpad/sample-project</span>
-
-<span style="color:#8C8578;background:#3A3A3A">❯</span><span style="background:#3A3A3A"> </span><span style="color:#FFFFFF;background:#3A3A3A">/clear</span>
-
-<span style="color:#808080">──────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
-❯</pre></div>
-    </div>
-  </article>
-
-  <!-- CELL:effort-ui -->
-  <article class="cell" id="cell-effort-ui">
-    <div class="cell-head"><span class="in-label">In</span><code class="typed">/effort</code><span class="cell-meta">画面実測 · 2026-08-17</span></div>
-    <div class="cell-body">
-      <p class="cell-lede">モデルの推論の「努力レベル」を調整する。</p>
-      <p class="cell-desc">Faster〜Smarter のスライダー(low / medium / high / xhigh / max)を ←/→ で動かし、Enter で確定する。</p>
-      <div class="term"><div class="term-bar">claude — /effort</div><pre>   <span style="font-weight:700">Effort</span>
-
-                                  Faster                             Smarter
-                                  <span style="color:#949494">────────────────────</span><span style="font-weight:700">▲</span><span style="color:#949494">─────────────────────</span>
-                                  <span style="color:#949494">low</span>     <span style="color:#949494">medium</span>     <span style="color:#AFD7FF;font-weight:700">high</span>     <span style="color:#949494">xhigh</span>      <span style="color:#949494">max</span>
-
-   <span style="color:#949494">←/→ to adjust · Enter to confirm · Esc to cancel</span></pre></div>
-    </div>
-  </article>
-
-  <!-- CELL:memory-ui -->
-  <article class="cell" id="cell-memory-ui">
-    <div class="cell-head"><span class="in-label">In</span><code class="typed">/memory</code><span class="cell-meta">画面実測 · 2026-08-17</span></div>
-    <div class="cell-body">
-      <p class="cell-lede">CLAUDE.md とメモリ(自動記憶)ファイルを管理する。</p>
-      <p class="cell-desc">ユーザー指示(<code>~/.claude/CLAUDE.md</code>)・プロジェクト指示(<code>./CLAUDE.md</code>)の編集と、自動メモリフォルダを開く操作を選べる。Auto-memory の有効/無効もここで確認できる。</p>
-      <div class="term"><div class="term-bar">claude — /memory</div><pre>   <span style="color:#AFD7FF;font-weight:700">Memory</span>
-
-     Auto-memory: on
-
-   <span style="color:#AFD7FF">❯</span> <span style="color:#949494">1. </span><span style="color:#AFD7FF">User instructions</span>        <span style="color:#949494">Saved in ~/.claude/CLAUDE.md</span>
-     <span style="color:#949494">2. </span>Project instructions     <span style="color:#949494">Checked in at ./CLAUDE.md</span>
-     <span style="color:#949494">3. </span>Open auto-memory folder  <span style="color:#949494"> </span>
-
-   <span style="color:#949494">Learn more: https://code.claude.com/docs/en/memory</span>
-
-   <span style="color:#949494;font-style:italic">Enter to confirm · Esc to cancel</span></pre></div>
-    </div>
-  </article>
-
-  <!-- CELL:goal-ui -->
-  <article class="cell" id="cell-goal-ui">
-    <div class="cell-head"><span class="in-label">In</span><code class="typed">/goal calc モジュールの全テストが通ること</code><span class="cell-meta">画面実測 · 2026-08-17</span></div>
-    <div class="cell-body">
-      <p class="cell-lede">達成条件(ゴール)を設定し、Claude がターンをまたいで自律的に動けるようにする。</p>
-      <p class="cell-desc">ゴールの設定自体はハーネス処理で、その後の動作は通常のモデルターンとして走る。実測では、設定した直後に Claude が自分からテスト実行に動き出し、Bash 権限の確認まで進んだ(下図)。新しめの機能で、挙動はバージョンによって変わりやすい。<code>/goal clear</code> で解除できる。</p>
-      <div class="term"><div class="term-bar">claude — /goal(設定直後に自律動作が始まる)</div><pre><span style="color:#8C8578;background:#3A3A3A">❯</span><span style="background:#3A3A3A"> </span><span style="color:#FFFFFF;background:#3A3A3A">/goal calc モジュールの全テストが通ること</span>
-<span style="color:#949494">  ⎿  </span>Goal set: calc モジュールの全テストが通ること
-
-<span style="color:#FFFFFF">●</span> 了解しました。calc モジュールの全テストが通るようにします。
-
-  まず現在のテスト状況を確認します。
-
-<span style="color:#949494"> </span> Running all tests to see current state
-<span style="color:#949494">  ⎿  $ python3 -m pytest tests/ -v</span>
-
-<span style="color:#AFD7FF">──────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
- <span style="color:#AFD7FF;font-weight:700">Bash command</span>
-
-   python3 -m pytest tests/ -v
-   <span style="color:#949494">Run all tests to see current state</span>
-
- This command requires approval
-
- Do you want to proceed?
- <span style="color:#AFD7FF">❯</span> <span style="color:#949494">1. </span><span style="color:#AFD7FF">Yes</span>
-   <span style="color:#949494">2. </span>Yes, and don’t ask again for: python3 *
-   <span style="color:#949494">3. </span>No
-
- <span style="color:#949494">Esc to cancel · Tab to amend · ctrl+e to explain</span></pre></div>
-    </div>
-  </article>
-
   <h2 id="catalog"><span class="sec-no">§3</span>早見表 — よく使うコマンド</h2>
-  <p class="sec-lede">全80超のコマンドのうち、日常的に使う可能性が高いものに絞った早見表。コマンド一覧はバージョンごとに変わるため網羅はせず、変わりにくい主要なものだけを載せる。<span class="chip skill">Skill</span> 印はプロンプト注入型(§1 で実測)、<span class="chip mid">中間形</span> 印はモデル呼び出しがセッション外で行われるもの(§1 で実測)。<span class="chip ui">UI</span> 印は UI/ハーネス型(§2 で画面実測。<code>/cost</code> のような別名コマンドは単独の画面セルを持たない)。</p>
+  <p class="sec-lede">全80超のコマンドのうち、日常的に使う可能性が高いものに絞った早見表。コマンド一覧はバージョンごとに変わるため網羅はせず、変わりにくい主要なものだけを載せる。<span class="chip skill">Skill</span> 印はプロンプト注入型(§1 で実測)、<span class="chip mid">中間形</span> 印はモデル呼び出しがセッション外で行われるもの(§1 で実測)。<span class="chip ui">UI</span> 印は UI/ハーネス型(§2 で画面実測。<code>/cost</code> のような別名コマンドは単独の画面セルを持たない)。コマンド名をクリックすると該当の実測セルへ移動する。</p>
 
   <!-- CATALOG:START -->
   <div class="cat-group">
     <h3>セッションとコンテキスト</h3>
     <div class="table-wrap"><table>
       <tr><th scope="col">コマンド</th><th scope="col">動作</th></tr>
-      <tr><td><code>/clear</code><span class="chip ui">UI</span></td><td>空のコンテキストで新しい会話を開始する。→ §2 で画面実測。</td></tr>
-      <tr><td><code>/resume</code><span class="chip ui">UI</span></td><td>以前の会話一覧から選んで復帰する。→ §2 で画面実測。</td></tr>
-      <tr><td><code>/compact [指示]</code><span class="chip mid">中間形</span></td><td>会話を要約してコンテキストを解放する。要約方針を引数で指示できる。→ §1 で実測。</td></tr>
-      <tr><td><code>/context</code><span class="chip ui">UI</span></td><td>コンテキスト使用状況をカラーグリッドで可視化する。→ §2 で画面実測。</td></tr>
-      <tr><td><code>/rewind</code><span class="chip ui">UI</span></td><td>コードと会話をチェックポイントまで巻き戻す。→ §2 で画面実測。</td></tr>
-      <tr><td><code>/recap</code><span class="chip mid">中間形</span></td><td>セッションの1行サマリーを生成する。→ §1 で実測。</td></tr>
-      <tr><td><code>/btw [質問]</code><span class="chip mid">中間形</span></td><td>会話の文脈に残らないサイド質問をする。→ §1 で実測。</td></tr>
+      <tr><td><a class="cmd" href="#cell-clear-ui"><code>/clear</code></a><span class="chip ui">UI</span></td><td>空のコンテキストで新しい会話を開始する。→ §2 で画面実測。</td></tr>
+      <tr><td><a class="cmd" href="#cell-resume-ui"><code>/resume</code></a><span class="chip ui">UI</span></td><td>以前の会話一覧から選んで復帰する。→ §2 で画面実測。</td></tr>
+      <tr><td><a class="cmd" href="#cell-compact"><code>/compact [指示]</code></a><span class="chip mid">中間形</span></td><td>会話を要約してコンテキストを解放する。要約方針を引数で指示できる。→ §1 で実測。</td></tr>
+      <tr><td><a class="cmd" href="#cell-context-ui"><code>/context</code></a><span class="chip ui">UI</span></td><td>コンテキスト使用状況をカラーグリッドで可視化する。→ §2 で画面実測。</td></tr>
+      <tr><td><a class="cmd" href="#cell-rewind-ui"><code>/rewind</code></a><span class="chip ui">UI</span></td><td>コードと会話をチェックポイントまで巻き戻す。→ §2 で画面実測。</td></tr>
+      <tr><td><a class="cmd" href="#cell-recap"><code>/recap</code></a><span class="chip mid">中間形</span></td><td>セッションの1行サマリーを生成する。→ §1 で実測。</td></tr>
+      <tr><td><a class="cmd" href="#cell-btw"><code>/btw [質問]</code></a><span class="chip mid">中間形</span></td><td>会話の文脈に残らないサイド質問をする。→ §1 で実測。</td></tr>
     </table></div>
   </div>
 
@@ -1244,12 +1259,12 @@ Enter to select · ↑/↓ to navigate · Esc to cancel</pre></div>
     <h3>モデルと設定</h3>
     <div class="table-wrap"><table>
       <tr><th scope="col">コマンド</th><th scope="col">動作</th></tr>
-      <tr><td><code>/model [model]</code><span class="chip ui">UI</span></td><td>使用モデルを切り替え、デフォルトとして保存する。→ §2 で画面実測。</td></tr>
-      <tr><td><code>/effort [level]</code><span class="chip ui">UI</span></td><td>推論の努力レベル(low〜max)を調整する。→ §2 で画面実測。</td></tr>
-      <tr><td><code>/memory</code><span class="chip ui">UI</span></td><td>CLAUDE.md とメモリファイルを管理する。→ §2 で画面実測。</td></tr>
-      <tr><td><code>/permissions</code><span class="chip ui">UI</span></td><td>ツール権限ルールを管理する。→ §2 で画面実測。</td></tr>
-      <tr><td><code>/mcp</code><span class="chip ui">UI</span></td><td>MCP サーバー接続と OAuth 認証を管理する。→ §2 で画面実測。</td></tr>
-      <tr><td><code>/config</code><span class="chip ui">UI</span></td><td>設定画面を開く、またはキーを直接設定する。→ §2 で画面実測。</td></tr>
+      <tr><td><a class="cmd" href="#cell-model-ui"><code>/model [model]</code></a><span class="chip ui">UI</span></td><td>使用モデルを切り替え、デフォルトとして保存する。→ §2 で画面実測。</td></tr>
+      <tr><td><a class="cmd" href="#cell-effort-ui"><code>/effort [level]</code></a><span class="chip ui">UI</span></td><td>推論の努力レベル(low〜max)を調整する。→ §2 で画面実測。</td></tr>
+      <tr><td><a class="cmd" href="#cell-memory-ui"><code>/memory</code></a><span class="chip ui">UI</span></td><td>CLAUDE.md とメモリファイルを管理する。→ §2 で画面実測。</td></tr>
+      <tr><td><a class="cmd" href="#cell-permissions-ui"><code>/permissions</code></a><span class="chip ui">UI</span></td><td>ツール権限ルールを管理する。→ §2 で画面実測。</td></tr>
+      <tr><td><a class="cmd" href="#cell-mcp-ui"><code>/mcp</code></a><span class="chip ui">UI</span></td><td>MCP サーバー接続と OAuth 認証を管理する。→ §2 で画面実測。</td></tr>
+      <tr><td><a class="cmd" href="#cell-config-ui"><code>/config</code></a><span class="chip ui">UI</span></td><td>設定画面を開く、またはキーを直接設定する。→ §2 で画面実測。</td></tr>
     </table></div>
   </div>
 
@@ -1257,13 +1272,13 @@ Enter to select · ↑/↓ to navigate · Esc to cancel</pre></div>
     <h3>開発の流れで使うもの</h3>
     <div class="table-wrap"><table>
       <tr><th scope="col">コマンド</th><th scope="col">動作</th></tr>
-      <tr><td><code>/init</code><span class="chip skill">Skill</span></td><td>プロジェクトを解析して CLAUDE.md を生成する。→ §1 で実測。</td></tr>
-      <tr><td><code>/plan</code><span class="chip ui">UI</span></td><td>編集を保留するプランモードに入る。→ §2 で画面実測。</td></tr>
-      <tr><td><code>/code-review [level]</code><span class="chip skill">Skill</span></td><td>diff や PR をレビューする。<code>--fix</code> で修正適用。→ §1 で実測。</td></tr>
-      <tr><td><code>/security-review</code><span class="chip skill">Skill</span></td><td>変更をセキュリティ脆弱性の観点でチェックする。→ §1 で実測。</td></tr>
-      <tr><td><code>/doctor</code><span class="chip skill">Skill</span></td><td>セットアップの健全性チェックを実行する。→ §1 で実測。</td></tr>
-      <tr><td><code>/verify</code><span class="chip skill">Skill</span></td><td>直近の変更の主張を実挙動で検証する。→ §1 で実測。</td></tr>
-      <tr><td><code>/goal [条件]</code><span class="chip ui">UI</span></td><td>達成条件を設定して自律動作させる(新しめの機能)。→ §2 で画面実測。</td></tr>
+      <tr><td><a class="cmd" href="#cell-init"><code>/init</code></a><span class="chip skill">Skill</span></td><td>プロジェクトを解析して CLAUDE.md を生成する。→ §1 で実測。</td></tr>
+      <tr><td><a class="cmd" href="#cell-plan-ui"><code>/plan</code></a><span class="chip ui">UI</span></td><td>編集を保留するプランモードに入る。→ §2 で画面実測。</td></tr>
+      <tr><td><a class="cmd" href="#cell-code-review"><code>/code-review [level]</code></a><span class="chip skill">Skill</span></td><td>diff や PR をレビューする。<code>--fix</code> で修正適用。→ §1 で実測。</td></tr>
+      <tr><td><a class="cmd" href="#cell-security-review"><code>/security-review</code></a><span class="chip skill">Skill</span></td><td>変更をセキュリティ脆弱性の観点でチェックする。→ §1 で実測。</td></tr>
+      <tr><td><a class="cmd" href="#cell-doctor"><code>/doctor</code></a><span class="chip skill">Skill</span></td><td>セットアップの健全性チェックを実行する。→ §1 で実測。</td></tr>
+      <tr><td><a class="cmd" href="#cell-verify"><code>/verify</code></a><span class="chip skill">Skill</span></td><td>直近の変更の主張を実挙動で検証する。→ §1 で実測。</td></tr>
+      <tr><td><a class="cmd" href="#cell-goal-ui"><code>/goal [条件]</code></a><span class="chip ui">UI</span></td><td>達成条件を設定して自律動作させる(新しめの機能)。→ §2 で画面実測。</td></tr>
     </table></div>
   </div>
 
@@ -1271,9 +1286,9 @@ Enter to select · ↑/↓ to navigate · Esc to cancel</pre></div>
     <h3>状態表示</h3>
     <div class="table-wrap"><table>
       <tr><th scope="col">コマンド</th><th scope="col">動作</th></tr>
-      <tr><td><code>/status</code> / <code>/usage</code> / <code>/cost</code><span class="chip ui">UI</span></td><td>セッション状態・トークン使用量・コストを表示(応答を中断せず即時実行)。→ §2 で画面実測。</td></tr>
-      <tr><td><code>/tasks</code><span class="chip ui">UI</span></td><td>バックグラウンド作業を一覧する(即時実行)。→ §2 で画面実測。</td></tr>
-      <tr><td><code>/help</code><span class="chip ui">UI</span></td><td>ヘルプと利用可能コマンドを表示する。→ §2 で画面実測。</td></tr>
+      <tr><td><a class="cmd" href="#cell-status-ui"><code>/status</code></a> / <a class="cmd" href="#cell-usage-ui"><code>/usage</code></a> / <code>/cost</code><span class="chip ui">UI</span></td><td>セッション状態・トークン使用量・コストを表示(応答を中断せず即時実行)。→ §2 で画面実測。</td></tr>
+      <tr><td><a class="cmd" href="#cell-tasks-ui"><code>/tasks</code></a><span class="chip ui">UI</span></td><td>バックグラウンド作業を一覧する(即時実行)。→ §2 で画面実測。</td></tr>
+      <tr><td><a class="cmd" href="#cell-help-ui"><code>/help</code></a><span class="chip ui">UI</span></td><td>ヘルプと利用可能コマンドを表示する。→ §2 で画面実測。</td></tr>
     </table></div>
   </div>
   <!-- CATALOG:END -->
