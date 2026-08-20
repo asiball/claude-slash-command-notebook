@@ -1,13 +1,16 @@
 #!/usr/bin/env python3
 """Convert ANSI tmux captures to colored HTML spans and splice them into
-the notebook's §2 terminal cells, preserving each cell's existing crop
-boundaries and masking emails / session IDs."""
-import re, html
+the notebook's terminal cells, preserving each cell's existing crop
+boundaries and masking emails / session IDs.
+
+Usage: python3 ansi2html.py [target]
+  target: 'index' (default; index.html + work/tui-color) or
+          'config' (config.html + work/config-tui)."""
+import re, html, sys
 
 import os
-SP = os.environ.get('SP', os.path.join(os.path.dirname(os.path.abspath(__file__)), 'work'))
-HTML_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'index.html')
-CAP = f'{SP}/tui-color'
+BASE = os.path.dirname(os.path.abspath(__file__))
+SP = os.environ.get('SP', os.path.join(BASE, 'work'))
 
 DEFAULT_FG = '#D9D4CA'
 DEFAULT_BG = '#191713'
@@ -155,6 +158,14 @@ def splice(doc, label, cap_lines):
     # 前回実行で埋め込んだ <span> タグを剥がしてから比較する(冪等性のため)。
     # タグ除去→unescape の順が重要: 端末出力由来の「&lt;span」等をタグと誤認しない。
     old_lines = [html.unescape(TAG_RE.sub('', l)) for l in m.group(1).split('\n')]
+    # 初回差し替え: セルがプレースホルダ「(未採取)」1行だけなら、
+    # 境界探索をスキップしてキャプチャ全行を差し替える。
+    nonblank = [l.strip() for l in old_lines if l.strip()]
+    if nonblank == ['(未採取)']:
+        body = render(cap_lines)
+        doc = doc[:m.start(1)] + body + doc[m.end(1):]
+        print(f'  ok-full {label}: lines 0-{len(cap_lines) - 1}')
+        return doc
     old_first = next((l for l in old_lines if l.strip()), None)
     old_last = next((l for l in reversed(old_lines) if l.strip()), None)
     start = next((i for i, l in enumerate(cap_lines) if tolerant_eq(old_first, l)), None)
@@ -176,13 +187,44 @@ CELLS = {
     '/resume': 'resume', '/tasks': 'tasks', '/rewind': 'rewind', '/plan': 'plan', '/clear': 'clear',
 }
 
-doc = open(HTML_PATH, encoding='utf-8').read()
-for label, name in CELLS.items():
+CELLS_CONFIG = {
+    '/status (scopes)': 'status-scopes',
+    '/config (scopes)': 'config-scopes',
+    '/permissions (rules)': 'permissions-rules',
+    'python3 src/hello.py (allow)': 'perm-allow',
+    'date (ask)': 'perm-ask',
+    'secrets read (deny)': 'perm-deny',
+}
+
+# target → (HTML ファイル名, work/ 配下のキャプチャディレクトリ, セル辞書)
+TARGETS = {
+    'index': ('index.html', 'tui-color', CELLS),
+    'config': ('config.html', 'config-tui', CELLS_CONFIG),
+}
+
+def main():
+    target = sys.argv[1] if len(sys.argv) > 1 else 'index'
+    if target not in TARGETS:
+        print(f'unknown target: {target}')
+        print(f'usage: python3 ansi2html.py [{"|".join(TARGETS)}]')
+        sys.exit(1)
+    html_name, cap_dir, cells = TARGETS[target]
+    html_path = os.path.join(BASE, html_name)
+    cap = f'{SP}/{cap_dir}'
     try:
-        raw = open(f'{CAP}/{name}.ansi', encoding='utf-8').read().rstrip('\n').split('\n')
+        doc = open(html_path, encoding='utf-8').read()
     except FileNotFoundError:
-        print(f'  !! capture missing: {name}')
-        continue
-    doc = splice(doc, label, raw)
-open(HTML_PATH, 'w', encoding='utf-8').write(doc)
-print('written', len(doc))
+        print(f'{html_name} not found')
+        sys.exit(1)
+    for label, name in cells.items():
+        try:
+            raw = open(f'{cap}/{name}.ansi', encoding='utf-8').read().rstrip('\n').split('\n')
+        except FileNotFoundError:
+            print(f'  !! capture missing: {name}')
+            continue
+        doc = splice(doc, label, raw)
+    open(html_path, 'w', encoding='utf-8').write(doc)
+    print('written', len(doc))
+
+if __name__ == '__main__':
+    main()

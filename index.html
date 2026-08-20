@@ -454,6 +454,7 @@
       <a href="#tui">§2 画面実測</a>
       <a href="#catalog">§3 早見表</a>
       <a href="#prov">取得方法</a>
+      <a href="config.html">Config ↗</a>
     </div>
   </nav>
   <nav class="toc" aria-label="目次">
@@ -497,6 +498,7 @@
     <h1>Slash Command Notebook</h1>
     <p>Claude Code(ターミナルで動く Anthropic のコーディングエージェント CLI)では、対話シェルに <code>/</code> で始まる「スラッシュコマンド」を打って機能を呼び出す。本ページはそれらを実際に実行し、「ユーザーの入力」と「Claude の最終出力・画面」のペアを Notebook 形式で記録したもの。対象は、公式ドキュメント <a href="https://code.claude.com/docs/en/commands">code.claude.com/docs/en/commands</a> に掲載の全80超のコマンドからよく使う組み込み24個と、カスタムコマンドの実例1個(<code>/explain</code>)。</p>
     <p>コマンドは2種類に大別される: <strong>プロンプト注入型</strong>(コマンドの実体として登録された指示プロンプトがモデルに渡り、出力が返る。Claude Code ではこの仕組みを <strong>Skill</strong> と呼ぶ)と <strong>UI/ハーネス型</strong>(CLI 本体=ハーネスが画面上で処理し、モデルは関与しない)。<code>/compact</code> や <code>/recap</code> のように、モデル呼び出しがセッションの外側で行われる中間形も少数ある。前者は §1 で入力と出力を、後者は §2 で端末画面を実測し(中間形は §1 に含めた)、§3 に早見表を置く。</p>
+    <p>姉妹ページ: <a href="config.html">Config Notebook</a> — 設定ファイルの階層・優先順位・permissions の実測(準備中)。</p>
     <div class="meta-chips">
       <span>Claude Code CLI v2.1.233</span>
       <span>2026-08-17 実測</span>
