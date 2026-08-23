@@ -4,7 +4,7 @@
 
 - 公開ページ (GitHub Pages): https://asiball.github.io/claude-slash-command-notebook/
 - ページソース: `index.html` が正本(GitHub Pages がリポジトリ直下からそのまま配信する。編集はこのファイルに直接行う)
-- 姉妹ページ: `config.html`(Config Notebook — 設定ファイルの階層・優先順位・permissions の実測。準備中)
+- 姉妹ページ: `config.html`(Config Notebook — 設定ファイルの階層・優先順位・permissions の実測)
 
 ## フォルダ構成
 
@@ -12,13 +12,14 @@
 .
 ├── README.md
 ├── index.html                    # ページ本体(正本。GitHub Pages がそのまま配信)
-├── config.html                   # 姉妹ページ Config Notebook(準備中)
+├── config.html                   # 姉妹ページ Config Notebook
 ├── fonts/                        # 端末キャプチャ表示用の等幅フォント JetBrains Mono(woff2 自己ホスト。OFL.txt 同梱)
 ├── setup-sample.sh               # デモ用サンプルプロジェクトを work/sample-project に再構築
 ├── run-headless.sh               # §1 のヘッドレス実測 → work/out/*.out
 ├── capture-ui.sh                 # §2 の画面採取 → work/tui-color/*.ansi
 ├── capture-skill-a.sh            # §1 の端末画面 前半 → work/tui2/
 ├── capture-skill-b.sh            # §1 の端末画面 後半 → work/tui2/
+├── capture-extra.sh              # §2 追加分(新しめコマンド・ultra 系・/code-review ultra 本実行)→ work/tui-color/
 ├── capture-config.sh             # Config Notebook 用の画面採取 → work/config-tui/*.ansi
 ├── ansi2html.py                  # ANSI→HTML 変換とセル差し替え(引数なし=index.html、`config` 指定で config.html)
 └── work/                         # 一時成果物(git 管理外。丸ごと削除して再実行してよい)
@@ -48,24 +49,31 @@
 ./capture-ui.sh          # 3. §2 の画面をカラー付きで採取(tmux 110×42 → work/tui-color/*.ansi)
 ./capture-skill-a.sh     # 4. §1 の端末画面 前半(init/recap/compact/explain。対話モードで別回実行)
 ./capture-skill-b.sh     # 5. §1 の端末画面 後半(code-review/security-review/doctor。4 の tmux セッションを引き継ぐ)
+./capture-extra.sh       # 5b. §2 追加分(/advisor /autocompact /branch /diff /fast /rename /workflows、ultracode ヒント、/code-review ultra)。注意: ultrareview を本実行する(後述)
 python3 ansi2html.py     # 6. ANSI→HTML 変換し、§2 の画面セルのみをトリミング境界に合わせて差し替え(引数なし=従来どおり index.html 対象)
 ```
 
 - 3〜5 は追加コマンド(/effort /memory /goal /btw)の採取を含まない。必要なら `capture-ui.sh` の `snap` 行に追記する。
+- 5b の `capture-extra.sh` は **`/code-review ultra`(ultrareview)をクラウドで本実行し、アカウントの無料枠(3 回)または利用クレジットを消費する**。`SKIP_ULTRA=1 ./capture-extra.sh` で確認ダイアログの採取だけに留められる。完了待ちは 20 秒おきのポーリング(最大 25 分)。また /diff 用に `work/sample-project/README.md` に未コミットの 1 行を追記する。
+- ultrareview の完了通知を受けると、主モデルは `--fix` なしでも修正に着手することがある(2026-08-23 実測: haiku が user_db.py の編集確認を出した)。manual モードなら確認で止まるので Esc で拒否する(スクリプトは完了検知を「入力待ちに戻る」で判定するため、確認ダイアログが出ている間は待ち続ける)。findings の本文はセッション jsonl の task-notification に入っており、`work/tui-color/ultrareview-findings.txt` に抽出してページの Out に載せた。
+- 採取スクリプトの待ち時間は固定の長い `sleep` ではなく、フッターが入力待ちに戻るまでのポーリングで決めている(環境によって長い `sleep` が戻らないことがあったため)。tmux 内のシェルに渡す引数で括弧を使う場合はクォートする(zsh)。
 - 引数なしの `ansi2html.py` が自動で差し替えるのは **§2 の画面セル**(`work/tui-color/*.ansi`)のみ。§1 の「端末画面(実測)」(`work/tui2/` の平文キャプチャ)は対象外なので、内容の反映は手動で行う。`config.html` を対象にする場合は `python3 ansi2html.py config`(後述)。
 - `ansi2html.py` は「既存セルの先頭行・末尾行」を新キャプチャ内で探して置換する方式。画面レイアウトが大きく変わった版では境界が見つからず `!!` を出すので、その場合は該当セルを手動更新する。
 - メールアドレス・セッション ID は `ansi2html.py` の `MASKS` で自動伏せ字化される。マスク対象を増やす場合はここに追記。
 
-### Config Notebook の採取(準備中)
+### Config Notebook の採取
 
 姉妹ページ `config.html` の画面セルは、上とは別の2手順で採取・反映する:
 
 ```bash
-./capture-config.sh          # 1. 設定スコープ / permissions の実測画面を採取(work/config-demo を再構築 → work/config-tui/*.ansi)
+./capture-config.sh          # 1. 設定スコープ / permissions / 権限モード / Output style の実測画面を採取(work/config-demo を再構築 → work/config-tui/*.ansi、16 画面)
 python3 ansi2html.py config  # 2. ANSI→HTML 変換し、config.html の画面セルを差し替え
 ```
 
-- 初回はセルが「(未採取)」プレースホルダのため、境界探索なしでキャプチャ全行が丸ごと差し替わる(`ok-full` と表示)。2回目以降は index.html と同じく既存セルの先頭行・末尾行を境界として置換する。
+- 初回はセルが「(未採取)」プレースホルダのため、境界探索なしで差し替わる(`ok-full` と表示。パネル系は区切り線「▔▔▔」から、対話系はそのセルのプロンプト行から下をトリミング)。2回目以降は index.html と同じく既存セルの先頭行・末尾行を境界として置換する。
+- 採取は 16 画面(`/status` `/config` `/permissions` の Allow タブ・Deny タブ、allow 実行・ask 確認・deny 拒否の対話 3 つ、権限モードのフッター 5 つ、Output style のピッカー 2 つ、Default / Concise の比較 2 つ)。権限モードと Output style は `.claude/settings.local.json` を書き換えてセッションを起動し直す(終了時に fixture の値へ戻す)。比較の 2 セッションは `--model sonnet` で起動し、縦 60 行の tmux で採る。allow / deny の対話は応答後に ctrl+o の詳細トランスクリプト表示に切り替えて採取する(ツール呼び出しの中身・拒否エラーを見せるため)。
+- ask 確認のデモは `touch created.txt` を使う。`date` のような読み取り専用コマンドは Claude Code の組み込み判定で確認なしに実行されるため、プロンプトが出ない(実測 2026-08-22、CLI 2.1.239)。採取後は Esc で拒否するので `created.txt` は作られない。
+- `ansi2html.py` の `MASKS` にはホームディレクトリ配下の絶対パス(`/Users/<name>/…`)の伏せ字も含まれる(`/status` の cwd や権限ダイアログに出るため)。
 - `capture-config.sh` は user スコープのデモのため **`~/.claude/settings.json` を一時変更する**(`"model": "claude-opus-5"` を JSON マージで追記)。変更前の内容は `work/config-backup/` に退避され、スクリプト終了時(異常終了・中断を含む)に `trap` で必ず復元されるが、ユーザー設定に触れる以上、コンテナや VM などの隔離環境での実行を推奨。
 
 ## HTML の更新と公開
