@@ -1443,7 +1443,7 @@ Explain what the function `$ARGUMENTS` does, in two sentences, and point out any
     <div class="cell-head"><h3 class="typed"><code>ultracode(入力キーワード)</code></h3><span class="cell-meta">画面実測 · 2026-08-23 · CLI 2.1.241</span></div>
     <div class="cell-body">
       <p class="cell-lede">プロンプトに <code>ultracode</code> を含めると、そのターンは Claude が動的ワークフロー(多数のサブエージェントの並列実行)を組んで取り組む。</p>
-      <p class="cell-desc">実測: 入力欄に <code>ultracode</code> と打った時点で、入力欄の上に "Dynamic workflow requested for this turn · opt+w to ignore" と出る(キーワードは紫でハイライトされる)。2.1.160 でキーワードが <code>workflow</code> から <code>ultracode</code> に改名。キーワードは人が打った入力にだけ効き、<code>-p</code> 実行や webhook 由来の入力では発火しない。セッション全体に適用するなら <code>/effort ultracode</code>。本ページでは本実行はしていない(多数のエージェントを起こすため)。</p>
+      <p class="cell-desc">実測: 入力欄に <code>ultracode</code> と打った時点で、入力欄の上に "Dynamic workflow requested for this turn · opt+w to ignore" と出る(キーワードは紫でハイライトされる)。キーワードは人が打った入力にだけ効き、<code>-p</code> 実行や webhook 由来の入力では発火しない。セッション全体に適用するなら <code>/effort ultracode</code>。本ページでは本実行はしていない(多数のエージェントを起こすため)。</p>
       <div class="term"><div class="term-bar">claude — ultracode (キーワード検知)</div><pre>                                                  <span style="color:#949494">Dynamic workflow requested for this turn · opt+w to ignore</span>
 <span style="color:#808080">──────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
 ❯ <span style="color:#AFAFFF">ultracode</span>
@@ -1588,7 +1588,7 @@ Explain what the function `$ARGUMENTS` does, in two sentences, and point out any
     `subprocess.run` here too.
 
 launched 2026-08-23T14:26:42Z (JST 23:26) / completed notification 2026-08-23T14:34:00Z (JST 23:34)</code></pre></div>
-      <p class="cell-desc">位置づけ: <code>/code-review</code> のレベル引数の最上位(<code>low … max | ultra</code>)で、ultra だけがクラウド実行・別課金(無料 3 回、以後 $5〜$25/回の利用クレジット)。<code>--comment</code> で PR にインラインコメント、<code>--post</code>(2.1.227)で GitHub PR にまとめコメント、<code>--fix</code> で完了後に作業ツリーへ適用。非対話では <code>claude ultrareview</code> サブコマンド。旧 <code>/ultrareview</code> は補完に残るエイリアス(2.1.223 で /code-review に統合)。ultraplan(プランモードのクラウド精査)は 2.1.222 で削除されている。</p>
+      <p class="cell-desc">位置づけ: <code>/code-review</code> のレベル引数の最上位(<code>low … max | ultra</code>)で、ultra だけがクラウド実行・別課金(無料 3 回、以後 $5〜$25/回の利用クレジット)。<code>--comment</code> で PR にインラインコメント、<code>--post</code>(2.1.227)で GitHub PR にまとめコメント、<code>--fix</code> で完了後に作業ツリーへ適用。非対話では <code>claude ultrareview</code> サブコマンド。旧 <code>/ultrareview</code> は補完に残るエイリアス(2.1.223 で /code-review に統合)。</p>
     </div>
   </article>
 
@@ -1723,10 +1723,7 @@ launched 2026-08-23T14:26:42Z (JST 23:26) / completed notification 2026-08-23T14
     <div class="table-wrap"><table>
       <thead><tr><th scope="col">旧</th><th scope="col">現在</th></tr></thead>
       <tbody>
-      <tr><td><code>/output-style</code></td><td>2.1.73 で非推奨、2.1.91 で削除。<code>/config</code> → Output style(または settings の <code>outputStyle</code>)で選ぶ。→ <a href="config.html#cell-config-output-style">Config Notebook で実測</a>。</td></tr>
-      <tr><td>ultraplan(プランモードの「Refine with Ultraplan」)</td><td>2.1.222 で削除("Removed ultraplan feature")。クラウドでの深い処理は /code-review ultra(レビュー)や ultracode(ワークフロー)に分かれている。</td></tr>
       <tr><td><code>/ultrareview</code> / <code>/review</code></td><td><code>/code-review ultra</code> / <code>/code-review</code> に統合(2.1.223)。旧名は補完に残るエイリアス。</td></tr>
-      <tr><td><code>/simplify</code></td><td>2.1.154 からクリーンアップ(再利用・簡素化・効率)専用。バグ探しは <code>/code-review</code>(<code>--fix</code> で適用)に。</td></tr>
       <tr><td><code>/agents</code></td><td>/help の一覧で "(removed)" 表示。サブエージェントは <code>.claude/agents/</code> のファイル編集か Claude への依頼で管理する。</td></tr>
       </tbody>
     </table></div>

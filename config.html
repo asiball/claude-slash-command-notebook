@@ -955,7 +955,7 @@
       <span class="cell-meta">画面実測 · 2026-08-23</span>
     </div>
     <div class="cell-body">
-      <p class="cell-lede">出力スタイルの選び方と、選択がどのファイルに書かれるかを記録する(<code>/output-style</code> コマンドは 2.1.91 で削除済み)。</p>
+      <p class="cell-lede">出力スタイルの選び方と、選択がどのファイルに書かれるかを記録する。</p>
       <p class="cell-desc">実測: <code>/config</code> の検索欄に "Output style" と打って行を選び Enter すると、5 つの組み込みスタイル(Default / Proactive / Concise / Explanatory / Learning)のピッカーが出る。Concise(2.1.237 追加)を確定すると行の値が <code>Concise</code> になり、<strong>プロジェクトの <code>.claude/settings.local.json</code> に <code>"outputStyle": "Concise"</code> が書き込まれた</strong>(下の Out)。スタイルはセッション開始時に固定されるため、効かせるには再起動か <code>/clear</code> が要る。</p>
       <div class="term"><div class="term-bar">claude — /config (output style picker)</div><pre><span style="color:#AFD7FF">▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔</span>
    <span style="color:#AFD7FF;font-weight:700">Preferred output style</span>
@@ -1060,7 +1060,7 @@
         <tr><td><code>model</code></td><td>既定で使うモデル</td></tr>
         <tr><td><code>availableModels</code></td><td>切り替え候補として提示するモデルの一覧</td></tr>
         <tr><td><code>statusLine</code></td><td>ステータスラインのカスタム表示</td></tr>
-        <tr><td><code>outputStyle</code></td><td>応答の出力スタイル。組み込みは Default / Proactive / Concise(2.1.237 追加)/ Explanatory / Learning とカスタム定義。<code>/config</code> → Output style で選ぶと <code>.claude/settings.local.json</code> に書かれる(<code>/output-style</code> コマンドは 2.1.91 で削除)。→ <a href="#cell-config-output-style">§3 で実測</a></td></tr>
+        <tr><td><code>outputStyle</code></td><td>応答の出力スタイル。組み込みは Default / Proactive / Concise(2.1.237 追加)/ Explanatory / Learning とカスタム定義。<code>/config</code> → Output style で選ぶと <code>.claude/settings.local.json</code> に書かれる。→ <a href="#cell-config-output-style">§3 で実測</a></td></tr>
         <tr><td><code>permissions.defaultMode</code></td><td>セッション開始時の権限モード: <code>default</code>(Manual)/ <code>acceptEdits</code> / <code>plan</code> / <code>auto</code> / <code>dontAsk</code> / <code>bypassPermissions</code>。→ <a href="#cell-perm-modes">§3 で実測</a></td></tr>
         <tr><td><code>useAutoModeDuringPlan</code></td><td>プランモード中のシェル実行を auto mode の分類器に任せる(既定 true)</td></tr>
         <tr><td><code>effortLevel</code></td><td><code>/effort</code> で選んだ推論努力レベルの保存先(low〜max)</td></tr>
