@@ -944,7 +944,7 @@
 ❯ <span style="opacity:.72">Try "fix typecheck errors"</span>
 <span style="color:#808080">──────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
   <span style="color:#FFD700">⏵⏵ auto mode on</span><span style="color:#949494"> (shift+tab to cycle) · ← for agents</span>                                                    <span style="color:#87D787">/rc</span></pre></div>
-      <p class="cell-desc">モードの意味(公式ドキュメント): manual(<code>default</code>)は編集・シェル・ネットワークの前に確認、acceptEdits はファイル編集と mkdir / touch などの基本的なファイル操作を自動承認、plan は編集を保留して調査と計画のみ、auto は分類器モデルが各操作を審査して日常的な確認を省く(危険操作はブロック)、ほかに dontAsk / bypassPermissions。<code>claude --permission-mode &lt;mode&gt;</code> でも起動時に指定できる。</p>
+      <p class="cell-desc">バッジの意味: manual(<code>default</code>)は操作前に確認、acceptEdits はファイル編集を自動承認、plan は編集を保留して調査と計画のみ、auto は分類器モデルが各操作を審査して日常的な確認を省く(ほかに dontAsk / bypassPermissions)。</p>
     </div>
   </article>
 
@@ -994,7 +994,7 @@
     </div>
     <div class="cell-body">
       <p class="cell-lede">同じプロンプト「このプロジェクトの .claude 配下の設定ファイルを読んで、何が設定されているか教えて」を、local の <code>outputStyle</code> だけを変えた 2 セッション(Default / Concise)に投げて比較する。</p>
-      <p class="cell-desc">実測: どちらも Glob 1 回・Read 2 回で同じ事実(project は sonnet-5 + allow/deny、local は haiku-4-5)を見出しと箇条書きで返し、<strong>この程度の短い質問では差は小さい</strong>。Concise 側は前置きの文が減り、各項目が名詞句寄りで全体が 1〜2 行短い程度。Concise の狙いは「結果を先に、経過の語りを省く」なので、違いが出るのは多段の作業中の実況やまとめの部分と考えられる(公式説明: "leads with results and skips preamble and narration, while doing the work just as thoroughly")。なお両セッションとも <code>--model sonnet</code> で起動しているため <code>⏵⏵ auto mode on</code> で始まり、local の haiku は CLI 引数に負けている(§1 の第 2 層)。応答文は非決定的で、再実行すると文面は変わる。</p>
+      <p class="cell-desc">実測: どちらも Glob 1 回・Read 2 回で同じ事実(project は sonnet-5 + allow/deny、local は haiku-4-5)を見出しと箇条書きで返し、<strong>この程度の短い質問では差は小さい</strong>。Concise 側は前置きの文が減り、各項目が名詞句寄りで全体が 1〜2 行短い程度。なお両セッションとも <code>--model sonnet</code> で起動しているため <code>⏵⏵ auto mode on</code> で始まり、local の haiku は CLI 引数に負けている(§1 の第 2 層)。応答文は非決定的で、再実行すると文面は変わる。</p>
       <div class="term"><div class="term-bar">claude — style: Default (sonnet)</div><pre><span style="color:#4E4E4E;background:#3A3A3A">❯ </span><span style="color:#FFFFFF;background:#3A3A3A">このプロジェクトの .claude 配下の設定ファイルを読んで、何が設定されているか教えて</span>
 
   <span style="color:#949494">Searched for </span><span style="color:#949494;font-weight:700">1</span><span style="color:#949494"> pattern, read </span><span style="color:#949494;font-weight:700">2</span><span style="color:#949494"> files </span>
