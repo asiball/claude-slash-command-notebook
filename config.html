@@ -25,6 +25,7 @@
     --chip-ui-bg: #EAEDEF;
     --chip-ui-ink: #4A555C;
     --btn-shadow: 0 1px 2px rgba(0, 0, 0, .12);
+    --seg-on-bg: #FFFFFF;
     --mono: "JetBrains Mono", ui-monospace, "Cascadia Code", "SF Mono", Menlo, Consolas, monospace;
   }
   @media (prefers-color-scheme: dark) {
@@ -44,6 +45,7 @@
       --chip-ui-bg: #2A2F33;
       --chip-ui-ink: #AEBBC3;
       --btn-shadow: 0 1px 2px rgba(0, 0, 0, .45);
+      --seg-on-bg: #2E2A22;
     }
   }
   :root[data-theme="dark"] {
@@ -62,6 +64,7 @@
     --chip-ui-bg: #2A2F33;
     --chip-ui-ink: #AEBBC3;
     --btn-shadow: 0 1px 2px rgba(0, 0, 0, .45);
+    --seg-on-bg: #2E2A22;
   }
 
   /* 端末キャプチャ用の等幅フォント(自己ホスト)。
@@ -92,7 +95,7 @@
     font-size: .97rem;
   }
   main { max-width: 860px; margin: 0 auto; }
-  code, pre, .mono { font-family: var(--mono); }
+  code, pre { font-family: var(--mono); }
   a { color: var(--accent-ink); }
   :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
@@ -210,17 +213,21 @@
   h2 .sec-no { color: var(--accent); font-family: var(--mono); font-size: .82em; margin-right: .55em; }
   .sec-lede { color: var(--muted); max-width: 46em; margin: .75rem 0 1.2rem; font-size: .95rem; }
 
-  /* 端末画面の読み方(§1 冒頭に 1 回だけ) */
+  /* 端末画面の読み方(§1 冒頭に 1 回だけ)。dt は端末と同じ黒地のチップにして画面と結びつける */
   .legend {
-    display: grid; grid-template-columns: max-content 1fr; gap: .2rem 1rem;
     margin: 0 0 1.9rem; padding: .75rem 1rem;
     border: 1px solid var(--line); border-radius: 8px; background: var(--surface);
     font-size: .82rem; color: var(--muted); max-width: 46em;
   }
-  .legend dt { font-family: var(--mono); font-size: .74rem; color: var(--ink); margin: 0; white-space: nowrap; }
+  .legend-title { font-family: var(--mono); font-size: .66rem; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); font-weight: 700; margin: 0 0 .4rem; }
+  .legend dl { display: grid; grid-template-columns: max-content 1fr; gap: .3rem 1rem; margin: 0; align-items: start; }
+  .legend dt {
+    font-family: var(--mono); font-size: .72rem; margin: 0; white-space: nowrap; justify-self: start;
+    background: #191713; color: #D9D4CA; border: 1px solid #383429; border-radius: 4px; padding: .05em .5em;
+  }
+  .legend dt .g { color: #84A45E; } .legend dt .p { color: #FF87AF; } .legend dt .w { color: #FFFFFF; } .legend dt .d { color: #949494; }
   .legend dd { margin: 0; }
-  .legend-title { grid-column: 1 / -1; font-family: var(--mono); font-size: .66rem; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); font-weight: 700; margin: 0 0 .15rem; }
-  @media (max-width: 640px) { .legend { grid-template-columns: 1fr; } .legend dd { margin-bottom: .35rem; } }
+  @media (max-width: 640px) { .legend dl { grid-template-columns: 1fr; } .legend dd { margin-bottom: .35rem; } }
 
   /* ---------- notebook cells ---------- */
   .cell {
@@ -253,8 +260,8 @@
   .cell-body { padding: 1rem 1.1rem 1.2rem; border-left: 3px solid transparent; }
   .cell-lede { margin: 0 0 .3rem; font-size: .96rem; font-weight: 650; color: var(--ink); max-width: 46em; }
   .cell-desc { margin: 0 0 .95rem; color: var(--muted); font-size: .92rem; max-width: 46em; }
-  .cell-body ul.notes { font-size: .9rem; color: var(--muted); padding-left: 1.2em; margin: .7rem 0 0; max-width: 46em; }
-  .cell-body ul.notes li { margin: .25em 0; }
+  ul.notes { font-size: .9rem; color: var(--muted); padding-left: 1.2em; margin: .7rem 0 0; max-width: 46em; }
+  ul.notes li { margin: .25em 0; }
 
   .cell.setup .cell-head { border-left-color: var(--line); }
   .head-badge {
@@ -271,9 +278,9 @@
     font-weight: 700; margin: 0;
   }
   .in-label { color: var(--accent-ink); padding-top: .25rem; }
-  .sw-label { color: var(--muted); }
-  .snip-label { color: var(--accent-ink); margin: 1rem 0 .3rem; }
-  .out-label { color: var(--out-ink); margin: 0 0 .35rem; }
+  .sw-label { color: var(--ink); }
+  .snip-label { color: var(--muted); margin: 0 0 .3rem; }
+  .out-label { color: var(--out-ink); margin: .9rem 0 .35rem; }
   .snip-label span, .out-label span {
     text-transform: none; letter-spacing: 0; font-weight: 500; color: var(--muted); margin-left: .6em;
   }
@@ -305,11 +312,12 @@
   }
   .switch button::before {   /* ラジオボタン風の印: ○ → ● */
     content: ""; width: .6em; height: .6em; border-radius: 50%; flex: none;
-    border: 1.5px solid currentColor; transition: background-color .15s, border-color .15s;
+    border: 2px solid currentColor; transition: background-color .15s, border-color .15s;
   }
-  .switch button:hover { color: var(--ink); background: var(--surface); }
+  .switch button:hover { color: var(--ink); }            /* hover は背景を変えず印だけ反応(選択中と混同しない) */
+  .switch button:hover::before { border-color: var(--accent); }
   .switch button[aria-selected="true"] {
-    background: var(--surface); color: var(--accent-ink);
+    background: var(--seg-on-bg); color: var(--accent-ink);
     border-color: var(--line); box-shadow: var(--btn-shadow);
   }
   .switch button[aria-selected="true"]::before { background: var(--accent); border-color: var(--accent); }
@@ -317,14 +325,24 @@
   .switch button code { font-size: .9em; background: none; padding: 0; border: 0; }
 
   /* パネルは同じグリッドセルに重ね、高さを最長パネルに固定する(切り替えで下が動かない)。
-     visibility で隠すので、非表示側はフォーカスも支援技術の読み上げも受けない。 */
-  .panels { display: grid; margin-top: .6rem; }
-  .panels > .panel { grid-area: 1 / 1; visibility: hidden; }
+     さらに各パネルを行 subgrid にして「設定 / 実測 / Out」の段の高さをパネル間で共有し、
+     文の長さが違っても端末の上端が動かないようにする(非対応ブラウザは重ねるだけ)。
+     visibility で隠すので、非表示側はフォーカスも支援技術の読み上げも受けない。
+     teal の罫線は容器に付け、短いパネルの下の余白も Out の領域として見せる。 */
+  .panels {
+    display: grid; grid-template-columns: 1fr; margin-top: .6rem;
+    border-left: 3px solid var(--out); padding-left: .9rem;
+  }
+  .panels > .panel { grid-column: 1; grid-row: 1 / span 6; visibility: hidden; min-width: 0; scroll-margin-top: 3.6rem; }
   .panels > .panel.active { visibility: visible; }
-  .panel { border-left: 3px solid var(--out); padding-left: .9rem; }
+  @supports (grid-template-rows: subgrid) {
+    .panels > .panel { display: grid; grid-template-rows: subgrid; align-content: start; }
+  }
   .panel > :first-child { margin-top: 0; }
-  .panel .out-content pre { margin-bottom: .6rem; }
+  .panel .out-content pre { margin-bottom: .6rem; white-space: pre; }
   .panel .cell-desc { margin-bottom: 0; }
+  /* 特に長い端末(outputStyle の Explanatory)は内側スクロールにして、他パネルの余白を抑える */
+  .term-scroll .term pre { max-height: 36rem; overflow-y: auto; }
 
   /* collapsible blocks */
   details.prompt {
@@ -346,7 +364,7 @@
   details.prompt[open] summary { border-bottom: 1px solid var(--line); }
   details.prompt .cell-desc { margin: .7rem .9rem; }
   details.prompt .term { border: none; border-radius: 0; }
-  details.prompt .term + .term { border-top: 1px solid #383429; }
+  details.prompt .term + .term { border-top: 1px solid #383429; margin-top: 0; }
 
   /* 設定スニペット・コード */
   .out-content { min-width: 0; font-size: .92rem; }
@@ -391,14 +409,10 @@
   .term pre {
     margin: 0; padding: .85rem 1rem;
     font-size: .72rem; line-height: 1.55;
-    overflow-x: auto; color: inherit;
-    scrollbar-gutter: stable; /* 横スクロールバーの出現/消失で高さが変わらないように */
+    overflow-x: scroll; color: inherit;   /* 横スクロールバーの出現/消失で高さが変わらないよう常時確保(gutter は横には効かない) */
+    scrollbar-width: thin; scrollbar-color: #4A463C #191713;
     font-variant-ligatures: none; /* 実端末の見た目に合わせ合字を無効化 */
   }
-
-  /* ---------- §2 次にやること ---------- */
-  .next ul.notes { font-size: .92rem; color: var(--muted); padding-left: 1.2em; margin: .9rem 0 0; max-width: 46em; }
-  .next ul.notes li { margin: .3em 0; }
 
   /* ---------- provenance ---------- */
   .prov {
@@ -423,7 +437,8 @@
     .cell + .cell::before { left: 1.3rem; }
     .cell-meta { margin-left: 0; flex-basis: 100%; }
     .in-block { grid-template-columns: 1fr; gap: .3rem; }
-    .panel { padding-left: .6rem; }
+    .panels { padding-left: .6rem; }
+    .panels > .panel { scroll-margin-top: 7rem; }
   }
   @media (prefers-reduced-motion: reduce) {
     html { scroll-behavior: auto; }
@@ -438,7 +453,7 @@
     <a class="brand" href="#top"><span>⚙</span> Config Notebook</a>
     <div class="links">
       <a href="#demos">比較デモ</a>
-      <a href="#next">次にやること</a>
+      <a href="#next">自分の環境で試す</a>
       <a href="#prov">取得方法</a>
       <a class="sister" href="index.html">← Slash Command Notebook</a>
     </div>
@@ -453,7 +468,7 @@
       <a href="#cell-defaultmode">permissions.defaultMode</a>
       <a href="#cell-sandbox">sandbox</a>
     </div>
-    <a class="toc-h" href="#next">§2 次にやること</a>
+    <a class="toc-h" href="#next">§2 自分の環境で試す</a>
     <a class="toc-h" href="#prov">取得方法(再現手順)</a>
     <a class="toc-h" href="index.html">← Slash Command Notebook</a>
   </nav>
@@ -478,21 +493,24 @@
         <a href="#cell-defaultmode">permissions.defaultMode</a>
         <a href="#cell-sandbox">sandbox</a>
       </div>
-      <a class="toc-h" href="#next">§2 次にやること</a>
+      <a class="toc-h" href="#next">§2 自分の環境で試す</a>
       <a class="toc-h" href="#prov">取得方法(再現手順)</a>
     </details>
   </header>
 
   <h2 id="demos"><span class="sec-no">§1</span>設定 × 出力の実測比較</h2>
-  <p class="sec-lede">Config の選択肢を押すと Out の画面が入れ替わる。各パネルには、その採取で使った settings ファイルの中身(切り替えた部分)を添えてある。画面は tmux 仮想端末の ANSI キャプチャ(条件は<a href="#prov">取得方法</a>)で、モデル応答は非決定的 — ここに載せた出力は「ある 1 回の実行例」である。</p>
-  <dl class="legend">
+  <p class="sec-lede">各パネルには、その採取で使った settings ファイルの中身(切り替えた部分)を添えてある。画面は tmux 仮想端末の ANSI キャプチャ(条件は<a href="#prov">取得方法</a>)で、モデル応答は非決定的 — ここに載せた出力は「ある 1 回の実行例」である。</p>
+  <div class="legend">
     <p class="legend-title">端末画面の読み方</p>
-    <dt>⏺ Bash(…) / Read(…)</dt><dd>ツール呼び出し。続く <code>⎿</code> がその結果(エラーはピンク)</dd>
-    <dt>10:32 PM claude-haiku-4-5-…</dt><dd>右端の薄い行はターンの区切り(時刻と応答したモデル)</dd>
-    <dt>⏸ manual mode on / ⏵⏵ auto mode on</dt><dd>フッター左端は現在の権限モード(→ <a href="#cell-defaultmode">defaultMode</a>)</dd>
-    <dt>/rc</dt><dd>Remote Control(ブラウザからこのセッションに接続)のリンク。設定とは無関係</dd>
-    <dt>Showing detailed transcript … verbose</dt><dd>ctrl+o の詳細表示で採取した画面。通常表示ではツールの結果や拒否エラーが畳まれる</dd>
-  </dl>
+    <dl>
+      <dt><span class="g">●</span> Bash(…) / Read(…)</dt><dd>ツール呼び出し(緑=成功、ピンク=失敗)。続く <code>⎿</code> がその結果。白の ● はモデルの応答文</dd>
+      <dt><span class="d">10:32 PM claude-haiku-4-5-…</span></dt><dd>右端の薄い行はターンの区切り(時刻と応答したモデル)。ctrl+o の詳細表示のときだけ出る</dd>
+      <dt><span class="d">✻ Cogitated for 9s</span></dt><dd>応答にかかった時間(動詞はランダム)</dd>
+      <dt><span class="d">⏸ manual mode on</span> / <span class="d">⏵⏵ auto mode on</span></dt><dd>フッター左端は現在の権限モード(→ <a href="#cell-defaultmode">defaultMode</a>)</dd>
+      <dt><span class="g">/rc</span></dt><dd>Remote Control(ブラウザからこのセッションに接続)のリンク。設定とは無関係</dd>
+      <dt><span class="d">Showing detailed transcript … verbose</span></dt><dd>ctrl+o の詳細表示で採取した画面。通常表示ではツールの結果や拒否エラーが畳まれる</dd>
+    </dl>
+  </div>
 
   <!-- CELL:config-fixture -->
   <article class="cell setup" id="cell-config-fixture">
@@ -512,7 +530,7 @@
       <ul class="notes">
         <li><code>.claude/settings.json</code> — プロジェクト共有(git 管理)。チームで揃えたい deny などのルール向き → <strong>deny の比較はこちら</strong>を切り替える。</li>
         <li><code>.claude/settings.local.json</code> — 個人用(gitignore)。<strong>outputStyle / defaultMode / sandbox の比較はこちら</strong>を切り替える。</li>
-        <li>優先順位: CLI 引数(<code>--model</code> など)&gt; settings.local.json &gt; settings.json &gt; <code>~/.claude/settings.json</code>。local に haiku を置いたまま <code>--model sonnet</code> で起動すれば sonnet になる(画面の応答モデル名がその結果)。</li>
+        <li>優先順位: CLI 引数(<code>--model</code> など)&gt; settings.local.json &gt; settings.json &gt; <code>~/.claude/settings.json</code>。local に haiku を置いたまま <code>--model sonnet</code> で起動すれば sonnet になる(<a href="#defaultmode-p2">auto パネル</a>の区切り行に <code>claude-sonnet-5</code> と出ているのがその結果)。</li>
       </ul>
     </div>
   </article>
@@ -524,7 +542,7 @@
       <span class="cell-meta">model: sonnet(--model)· 画面実測</span>
     </div>
     <div class="cell-body">
-      <p class="cell-lede">同じ依頼(小さなコード変更と実行確認)への応答の分量と構成が、出力スタイルの設定でどう変わるか。</p>
+      <p class="cell-lede">同じ依頼(小さなコード変更と実行確認)への応答の分量と構成が、出力スタイルの設定でどう変わるか。差が出るのは <code>Ran 1 shell command</code> より下(そこまでの Read → Update の diff は 3 つとも同じ)。</p>
       <div class="in-block"><span class="in-label">In(共通)</span><code class="in-cmd">❯ src/hello.py を、コマンドライン引数で名前を受け取って hello, &lt;名前&gt; と表示するように変更して、実行して確認して</code></div>
       <div class="switch-row">
         <span class="sw-label">Config</span>
@@ -536,7 +554,10 @@
       </div>
       <div class="panels">
       <section class="panel active" id="outputstyle-p0" role="tabpanel" aria-labelledby="tab-outputstyle-p0" tabindex="0">
-      <p class="out-label">Out <span>端末画面</span></p>
+      <p class="snip-label">設定 <span>.claude/settings.local.json(+ --model sonnet で起動)</span></p>
+      <div class="out-content"><pre><code>{ "model": "claude-haiku-4-5" }</code></pre></div>
+      <p class="cell-desc">実測: 編集と実行のあと、変更内容・確認結果・未検証の注意(引数なしだと IndexError)を段落で報告した。</p>
+      <p class="out-label">Out</p>
       <div class="term"><div class="term-bar">claude — style: Default (sonnet)</div><pre><span style="color:#4E4E4E;background:#3A3A3A">❯ </span><span style="color:#FFFFFF;background:#3A3A3A">src/hello.py を、コマンドライン引数で名前を受け取って hello, &lt;名前&gt; </span>
   <span style="color:#FFFFFF">と表示するように変更して、実行して確認して</span>
 
@@ -565,12 +586,12 @@
 <span style="color:#808080">──────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
                                                                                                          <span style="color:#87D787">/rc</span>
   <span style="color:#FFD700">⏵⏵ auto mode on</span><span style="color:#949494"> (shift+tab to cycle) · ← for agents</span></pre></div>
-      <p class="snip-label">設定 <span>.claude/settings.local.json</span></p>
-      <div class="out-content"><pre><code>{ "model": "claude-haiku-4-5" }</code></pre></div>
-      <p class="cell-desc">実測: 編集と実行のあと、変更内容・確認結果・未検証の注意(引数なしだと IndexError)を段落で報告した。</p>
       </section>
       <section class="panel" id="outputstyle-p1" role="tabpanel" aria-labelledby="tab-outputstyle-p1" tabindex="0">
-      <p class="out-label">Out <span>端末画面</span></p>
+      <p class="snip-label">設定 <span>.claude/settings.local.json(+ --model sonnet で起動)</span></p>
+      <div class="out-content"><pre><code>{ "model": "claude-haiku-4-5", "outputStyle": "Concise" }</code></pre></div>
+      <p class="cell-desc">実測: 同じ編集と実行をしたうえで、報告は結果の 1 行だけ(<code>hello, 太郎 と表示され、期待通り動作しました。</code>)。</p>
+      <p class="out-label">Out</p>
       <div class="term"><div class="term-bar">claude — style: Concise (sonnet)</div><pre><span style="color:#4E4E4E;background:#3A3A3A">❯ </span><span style="color:#FFFFFF;background:#3A3A3A">src/hello.py を、コマンドライン引数で名前を受け取って hello, &lt;名前&gt; </span>
   <span style="color:#FFFFFF">と表示するように変更して、実行して確認して</span>
 
@@ -595,13 +616,13 @@
 <span style="color:#808080">──────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
                                                                                                          <span style="color:#87D787">/rc</span>
   <span style="color:#FFD700">⏵⏵ auto mode on</span><span style="color:#949494"> (shift+tab to cycle) · ← for agents</span></pre></div>
-      <p class="snip-label">設定 <span>.claude/settings.local.json</span></p>
-      <div class="out-content"><pre><code>{ "model": "claude-haiku-4-5", "outputStyle": "Concise" }</code></pre></div>
-      <p class="cell-desc">実測: 同じ編集と実行をしたうえで、報告は結果の 1 行だけ(<code>hello, 太郎 と表示され、期待通り動作しました。</code>)。</p>
       </section>
       <section class="panel" id="outputstyle-p2" role="tabpanel" aria-labelledby="tab-outputstyle-p2" tabindex="0">
-      <p class="out-label">Out <span>端末画面</span></p>
-      <div class="term"><div class="term-bar">claude — style: Explanatory (sonnet)</div><pre><span style="color:#4E4E4E;background:#3A3A3A">❯ </span><span style="color:#FFFFFF;background:#3A3A3A">src/hello.py を、コマンドライン引数で名前を受け取って hello, &lt;名前&gt; </span>
+      <p class="snip-label">設定 <span>.claude/settings.local.json(+ --model sonnet で起動)</span></p>
+      <div class="out-content"><pre><code>{ "model": "claude-haiku-4-5", "outputStyle": "Explanatory" }</code></pre></div>
+      <p class="cell-desc">実測: ツール呼び出しの前に「書き換えます」「実行して確認します」の実況が入り、結果のあとに <code>★ Insight</code> の解説(sys.argv、f-string)が付く。3 つの中で最も長い(枠内スクロール)。</p>
+      <p class="out-label">Out</p>
+      <div class="term-scroll"><div class="term"><div class="term-bar">claude — style: Explanatory (sonnet)</div><pre><span style="color:#4E4E4E;background:#3A3A3A">❯ </span><span style="color:#FFFFFF;background:#3A3A3A">src/hello.py を、コマンドライン引数で名前を受け取って hello, &lt;名前&gt; </span>
   <span style="color:#FFFFFF">と表示するように変更して、実行して確認して</span>
 
   <span style="color:#949494">Read </span><span style="color:#949494;font-weight:700">1</span><span style="color:#949494"> file </span>
@@ -642,13 +663,10 @@
 ❯
 <span style="color:#808080">──────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
                                                                                                          <span style="color:#87D787">/rc</span>
-  <span style="color:#FFD700">⏵⏵ auto mode on</span><span style="color:#949494"> (shift+tab to cycle) · ← for agents</span></pre></div>
-      <p class="snip-label">設定 <span>.claude/settings.local.json</span></p>
-      <div class="out-content"><pre><code>{ "model": "claude-haiku-4-5", "outputStyle": "Explanatory" }</code></pre></div>
-      <p class="cell-desc">実測: ツール呼び出しの前に「書き換えます」「実行して確認します」の実況が入り、結果のあとに <code>★ Insight</code> の解説(sys.argv、f-string)と「変更点 / 確認 / 未検証」の整理が付く。3 つの中で最も長い。</p>
+  <span style="color:#FFD700">⏵⏵ auto mode on</span><span style="color:#949494"> (shift+tab to cycle) · ← for agents</span></pre></div></div>
       </section>
       </div>
-      <p class="cell-desc">フッターの <code>auto mode on</code> は sonnet 起動時の既定の権限モード(→ <a href="#cell-defaultmode">defaultMode</a>)で、outputStyle とは無関係。</p>
+      <p class="cell-desc">Default と Explanatory の報告末尾にある「未検証事項」「変更点 / 確認 / 未検証」の整理は、採取マシンの <code>~/.claude/CLAUDE.md</code>(最終報告でその 3 点をまとめる指示)によるもので、outputStyle の効果ではない。引数名(Taro / 太郎)の違いも非決定性によるもの。フッターの <code>auto mode on</code> は sonnet 起動時の既定の権限モード(→ <a href="#cell-defaultmode">defaultMode</a>)で、outputStyle とは無関係。</p>
       <details class="prompt">
         <summary><strong>設定の切り替え方</strong>(/config → Output style)</summary>
         <p class="cell-desc">/config の検索欄に "Output style" と打って行を選ぶと 5 つの組み込みスタイルのピッカーが出る。Concise を確定すると、プロジェクトの <code>.claude/settings.local.json</code> に書き込まれる(上のスニペットと同じ内容)。スタイルはセッション開始時に固定されるため、効かせるには再起動か /clear が要る。</p>
@@ -695,7 +713,10 @@
       </div>
       <div class="panels">
       <section class="panel active" id="deny-p0" role="tabpanel" aria-labelledby="tab-deny-p0" tabindex="0">
-      <p class="out-label">Out <span>端末画面</span></p>
+      <p class="snip-label">設定 <span>.claude/settings.json(permissions なし)</span></p>
+      <div class="out-content"><pre><code>{ "model": "claude-sonnet-5" }</code></pre></div>
+      <p class="cell-desc">実測: ルールがないので Read ツールがそのまま成功し(<code>Read 2 lines</code>)、中身の <code>DUMMY_TOKEN=xxxx</code> が応答にそのまま出た。</p>
+      <p class="out-label">Out</p>
       <div class="term"><div class="term-bar">claude — private read (no deny)</div><pre><span style="color:#4E4E4E;background:#3A3A3A">❯ </span><span style="color:#FFFFFF;background:#3A3A3A">private/credentials.env の中身をそのまま表示して</span>
 
 <span style="color:#87D787">●</span> <span style="font-weight:700">Read</span>(/…/claude-slash-command-notebook/work/config-demo/private/cr
@@ -714,12 +735,13 @@
 
 <span style="opacity:.72">──────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
   <span style="color:#949494">Showing detailed transcript · ctrl+o to toggle · ↑↓ scroll · v to open in code · ? for shortcuts</span>    <span style="color:#949494">verbose</span></pre></div>
-      <p class="snip-label">設定 <span>.claude/settings.json(permissions なし)</span></p>
-      <div class="out-content"><pre><code>{ "model": "claude-sonnet-5" }</code></pre></div>
-      <p class="cell-desc">実測: ルールがないので Read ツールがそのまま成功し(<code>Read 2 lines</code>)、中身の <code>DUMMY_TOKEN=xxxx</code> が応答にそのまま出た。</p>
       </section>
       <section class="panel" id="deny-p1" role="tabpanel" aria-labelledby="tab-deny-p1" tabindex="0">
-      <p class="out-label">Out <span>端末画面</span></p>
+      <p class="snip-label">設定 <span>.claude/settings.json</span></p>
+      <div class="out-content"><pre><code>{ "model": "claude-sonnet-5",
+  "permissions": { "allow": ["Bash(python3 src/hello.py)"], "deny": ["Read(./private/**)"] } }</code></pre></div>
+      <p class="cell-desc">実測: Read ツール呼び出しが <code>Error: File is in a directory that is denied by your permission settings.</code> で拒否された。モデルはその結果を受けて、読み取りの許可を求める応答をした。</p>
+      <p class="out-label">Out</p>
       <div class="term"><div class="term-bar">claude — private read (deny)</div><pre><span style="color:#4E4E4E;background:#3A3A3A">❯ </span><span style="color:#FFFFFF;background:#3A3A3A">private/credentials.env の中身をそのまま表示して</span>
 
 <span style="color:#FF87AF">●</span> <span style="font-weight:700">Read</span>(/…/claude-slash-command-notebook/work/config-demo/private/cr
@@ -733,15 +755,6 @@
 
 <span style="opacity:.72">──────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
   <span style="color:#949494">Showing detailed transcript · ctrl+o to toggle · ↑↓ scroll · v to open in code · ? for shortcuts</span>    <span style="color:#949494">verbose</span></pre></div>
-      <p class="snip-label">設定 <span>.claude/settings.json</span></p>
-      <div class="out-content"><pre><code>{
-  "model": "claude-sonnet-5",
-  "permissions": {
-    "allow": ["Bash(python3 src/hello.py)"],
-    "deny": ["Read(./private/**)"]
-  }
-}</code></pre></div>
-      <p class="cell-desc">実測: Read ツール呼び出しが <code>Error: File is in a directory that is denied by your permission settings.</code> で拒否された。モデルはその結果を受けて、読み取りの許可を求める応答をした。</p>
       </section>
       </div>
       <p class="cell-desc">ルールは <code>ツール名(パターン)</code> の形。<code>Read(./private/**)</code> はプロジェクト直下の private/ 以下の読み取りを拒否する。</p>
@@ -752,7 +765,7 @@
   <article class="cell" id="cell-defaultmode">
     <div class="cell-head">
       <h3 class="typed"><code>permissions.defaultMode</code></h3>
-      <span class="cell-meta">画面実測</span>
+      <span class="cell-meta">model: haiku(local 設定)· auto のみ sonnet(--model)· 画面実測</span>
     </div>
     <div class="cell-body">
       <p class="cell-lede">同じ Bash 依頼(ファイル作成。読み取り専用コマンドは確認なしで通るため touch を使う)への確認の出方が、権限モードでどう変わるか。フッター左端のバッジが現在のモード(shift+tab でも巡回できる)。</p>
@@ -767,7 +780,10 @@
       </div>
       <div class="panels">
       <section class="panel active" id="defaultmode-p0" role="tabpanel" aria-labelledby="tab-defaultmode-p0" tabindex="0">
-      <p class="out-label">Out <span>端末画面</span></p>
+      <p class="snip-label">設定 <span>.claude/settings.local.json</span></p>
+      <div class="out-content"><pre><code>{ "model": "claude-haiku-4-5" }</code></pre></div>
+      <p class="cell-desc">実測: どのルールにも一致しないコマンドなので「Do you want to proceed?」の確認ダイアログで止まった(採取後 Esc で拒否したので created.txt は作られない)。manual が既定なのは haiku のとき。sonnet 以上で起動すると設定なしでも auto が既定になる(auto パネルのフッターと同じ)。</p>
+      <p class="out-label">Out</p>
       <div class="term"><div class="term-bar">claude — footer: manual (haiku, 起動時)</div><pre><span style="color:#808080">──────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
 ❯
 <span style="color:#808080">──────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
@@ -791,12 +807,12 @@
    <span style="color:#949494">3. </span>No
 
  <span style="color:#949494">Esc to cancel · Tab to amend · ctrl+e to explain</span></pre></div>
-      <p class="snip-label">設定 <span>.claude/settings.local.json</span></p>
-      <div class="out-content"><pre><code>{ "model": "claude-haiku-4-5" }</code></pre></div>
-      <p class="cell-desc">実測: どのルールにも一致しないコマンドなので「Do you want to proceed?」の確認ダイアログで止まった(採取後 Esc で拒否したので created.txt は作られない)。</p>
       </section>
       <section class="panel" id="defaultmode-p1" role="tabpanel" aria-labelledby="tab-defaultmode-p1" tabindex="0">
-      <p class="out-label">Out <span>端末画面</span></p>
+      <p class="snip-label">設定 <span>.claude/settings.local.json</span></p>
+      <div class="out-content"><pre><code>{ "model": "claude-haiku-4-5", "permissions": { "defaultMode": "acceptEdits" } }</code></pre></div>
+      <p class="cell-desc">実測: 同じ依頼が確認なしで実行された(<code>Bash(touch created.txt)</code> → <code>Done</code>)。<code>acceptEdits</code> はファイル編集と touch などの基本的なファイル操作を自動承認する。</p>
+      <p class="out-label">Out</p>
       <div class="term"><div class="term-bar">claude — footer: defaultMode = acceptEdits で起動</div><pre><span style="color:#808080">──────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
 ❯
 <span style="color:#808080">──────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
@@ -816,12 +832,12 @@
 
 <span style="opacity:.72">──────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
   <span style="color:#949494">Showing detailed transcript · ctrl+o to toggle · ↑↓ scroll · v to open in code · ? for shortcuts</span>    <span style="color:#949494">verbose</span></pre></div>
-      <p class="snip-label">設定 <span>.claude/settings.local.json</span></p>
-      <div class="out-content"><pre><code>{ "model": "claude-haiku-4-5", "permissions": { "defaultMode": "acceptEdits" } }</code></pre></div>
-      <p class="cell-desc">実測: 同じ依頼が確認なしで実行された(<code>Bash(touch created.txt)</code> → <code>Done</code>)。<code>acceptEdits</code> はファイル編集と touch などの基本的なファイル操作を自動承認する。</p>
       </section>
       <section class="panel" id="defaultmode-p2" role="tabpanel" aria-labelledby="tab-defaultmode-p2" tabindex="0">
-      <p class="out-label">Out <span>端末画面</span></p>
+      <p class="snip-label">設定 <span>.claude/settings.local.json(+ --model sonnet で起動)</span></p>
+      <div class="out-content"><pre><code>{ "model": "claude-haiku-4-5", "permissions": { "defaultMode": "auto" } }</code></pre></div>
+      <p class="cell-desc">実測: 確認なしで実行された(sonnet は <code>ls -la</code> を足して結果も見せた)。<code>auto</code> は各操作を分類器が審査して日常的な確認を省くモード。分類器が扱えるモデル限定で haiku では選べない(<a href="index.html#cell-codereview-hint-ui">auto mode unavailable for this model</a> と出る)ため、<code>--model sonnet</code> で起動している。</p>
+      <p class="out-label">Out</p>
       <div class="term"><div class="term-bar">claude — footer: defaultMode = auto(sonnet で起動)</div><pre><span style="color:#808080">──────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
 ❯
 <span style="color:#808080">──────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
@@ -838,9 +854,6 @@
 
 <span style="opacity:.72">──────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
   <span style="color:#949494">Showing detailed transcript · ctrl+o to toggle · ↑↓ scroll · v to open in code · ? for shortcuts</span>    <span style="color:#949494">verbose</span></pre></div>
-      <p class="snip-label">設定 <span>.claude/settings.local.json(+ --model sonnet で起動)</span></p>
-      <div class="out-content"><pre><code>{ "model": "claude-haiku-4-5", "permissions": { "defaultMode": "auto" } }</code></pre></div>
-      <p class="cell-desc">実測: 確認なしで実行された(sonnet は <code>ls -la</code> を足して結果も見せた)。<code>auto</code> は各操作を分類器が審査して日常的な確認を省くモード。分類器が扱えるモデル限定で haiku では選べないため、<code>--model sonnet</code> で起動している。</p>
       </section>
       </div>
     </div>
@@ -864,7 +877,10 @@
       </div>
       <div class="panels">
       <section class="panel active" id="sandbox-p0" role="tabpanel" aria-labelledby="tab-sandbox-p0" tabindex="0">
-      <p class="out-label">Out <span>端末画面</span></p>
+      <p class="snip-label">設定 <span>.claude/settings.local.json</span></p>
+      <div class="out-content"><pre><code>{ "model": "claude-haiku-4-5" }</code></pre></div>
+      <p class="cell-desc">実測: 確認ダイアログ(manual、前セルと同じ形)で Yes を選んだ後の画面。そのまま成功し、<code>/tmp/sandbox-poke.txt</code> が作られた。</p>
+      <p class="out-label">Out</p>
       <div class="term"><div class="term-bar">claude — sandbox: off (touch /tmp)</div><pre><span style="color:#4E4E4E;background:#3A3A3A">❯ </span><span style="color:#FFFFFF;background:#3A3A3A">touch /tmp/sandbox-poke.txt を実行して</span>
 
 <span style="color:#87D787">●</span> <span style="font-weight:700">Bash</span>(touch /tmp/sandbox-poke.txt)
@@ -877,12 +893,12 @@
 
 <span style="opacity:.72">──────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
   <span style="color:#949494">Showing detailed transcript · ctrl+o to toggle · ↑↓ scroll · v to open in code · ? for shortcuts</span>    <span style="color:#949494">verbose</span></pre></div>
-      <p class="snip-label">設定 <span>.claude/settings.local.json</span></p>
-      <div class="out-content"><pre><code>{ "model": "claude-haiku-4-5" }</code></pre></div>
-      <p class="cell-desc">実測: 確認ダイアログ(manual、前セルと同じ形)で Yes を選んだ後の画面。そのまま成功し、<code>/tmp/sandbox-poke.txt</code> が作られた。</p>
       </section>
       <section class="panel" id="sandbox-p1" role="tabpanel" aria-labelledby="tab-sandbox-p1" tabindex="0">
-      <p class="out-label">Out <span>端末画面</span></p>
+      <p class="snip-label">設定 <span>.claude/settings.local.json</span></p>
+      <div class="out-content"><pre><code>{ "model": "claude-haiku-4-5", "sandbox": { "enabled": true } }</code></pre></div>
+      <p class="cell-desc">実測: 確認ダイアログは出ず、サンドボックス内で実行されて <code>touch: cannot touch '/tmp/sandbox-poke.txt': Read-only file system</code> で失敗した。失敗を見た Claude は、セッション temp(画面の scratchpad)に作るか、ツール引数 <code>dangerouslyDisableSandbox: true</code> で再試行するかを尋ねる応答をした。</p>
+      <p class="out-label">Out</p>
       <div class="term"><div class="term-bar">claude — sandbox: on (touch /tmp)</div><pre><span style="color:#4E4E4E;background:#3A3A3A">❯ </span><span style="color:#FFFFFF;background:#3A3A3A">touch /tmp/sandbox-poke.txt を実行して</span>
 
 <span style="color:#FF87AF">●</span> <span style="font-weight:700">Bash</span>(touch /tmp/sandbox-poke.txt)
@@ -903,17 +919,14 @@
 
 <span style="opacity:.72">──────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
   <span style="color:#949494">Showing detailed transcript · ctrl+o to toggle · ↑↓ scroll · v to open in code · ? for shortcuts</span>    <span style="color:#949494">verbose</span></pre></div>
-      <p class="snip-label">設定 <span>.claude/settings.local.json</span></p>
-      <div class="out-content"><pre><code>{ "model": "claude-haiku-4-5", "sandbox": { "enabled": true } }</code></pre></div>
-      <p class="cell-desc">実測: 確認ダイアログは出ず、サンドボックス内で実行されて <code>touch: cannot touch '/tmp/sandbox-poke.txt': Read-only file system</code> で失敗した。失敗を見た Claude は、セッション temp(画面の scratchpad)に作るか、ツール引数 <code>dangerouslyDisableSandbox: true</code> で再試行するかを尋ねる応答をした。</p>
       </section>
       </div>
     </div>
   </article>
 
-  <h2 id="next"><span class="sec-no">§2</span>次にやること</h2>
+  <h2 id="next"><span class="sec-no">§2</span>自分の環境で試す</h2>
   <section class="next">
-    <p class="sec-lede">自分の環境で試すなら、プロジェクトの <code>.claude/settings.local.json</code> に必要なキーだけ書いて Claude Code を起動し直す(outputStyle はセッション開始時に固定される)。上の 4 セルを 1 つにまとめると:</p>
+    <p class="sec-lede">プロジェクトの <code>.claude/settings.local.json</code> に必要なキーだけ書いて Claude Code を起動し直す(設定ファイルは起動時に読まれる。deny をチームで共有するなら settings.json 側に置く)。上の 4 セルを 1 つにまとめると:</p>
     <div class="out-content"><pre><code>{
   "outputStyle": "Concise",
   "permissions": {
@@ -933,7 +946,8 @@
     <ul>
       <li>実測日 2026-08-24、Claude Code CLI v2.1.241(WSL2 / Ubuntu、Claude Max アカウント)。モデルはフィクスチャの local 設定(<code>claude-haiku-4-5</code>)、outputStyle 比較と auto モードのみ <code>--model sonnet</code>。</li>
       <li>採取は <code>./capture-config.sh</code>: <code>work/config-demo</code> に Setup のフィクスチャを構築し、セルごとに設定ファイルを書き換えて別セッションを起動し、tmux 仮想端末(110×42、outputStyle 比較は 110×60)の ANSI 出力を <code>python3 ansi2html.py config</code> で HTML 化して差し替える(index.html と同じ方式)。<code>~/.claude</code> のユーザー設定には触れない(マシン固有の statusLine 表示だけ <code>--settings</code> で空に上書き)。</li>
-      <li>実行系の画面は応答後に ctrl+o の詳細トランスクリプト表示に切り替えて採取(通常表示ではツールの結果・拒否エラーが畳まれるため)。権限モードのフッターは起動直後の下 4 行だけを切り出した。</li>
+      <li>deny / defaultMode / sandbox の実行画面は応答後に ctrl+o の詳細トランスクリプト表示に切り替えて採取(通常表示ではツールの結果・拒否エラーが畳まれるため)。outputStyle は応答文の分量を見るため通常表示のまま。権限モードのフッターは起動直後の下 4 行だけを切り出した。</li>
+      <li>採取マシンのユーザー設定(<code>~/.claude/settings.json</code>・<code>~/.claude/CLAUDE.md</code>)は有効なまま。CLAUDE.md の「最終報告では変更点・確認内容・未検証事項をまとめる」指示が outputStyle の応答末尾に現れている。</li>
       <li>メールアドレス・セッション ID・ホームディレクトリのパス・採取マシンのユーザー名は伏せ字化。</li>
       <li>sandbox あり側の前提: macOS は追加インストール不要(Seatbelt)。Linux / WSL2 は bubblewrap と socat が必要(/sandbox パネルの Dependencies タブで確認できる)。</li>
     </ul>
@@ -956,11 +970,17 @@
         if (p) p.classList.toggle('active', on);
       });
       if (focus) tab.focus();
-      if (syncHash && history.replaceState) history.replaceState(null, '', '#' + tab.getAttribute('aria-controls'));
+      if (syncHash && history.replaceState) {
+        try { history.replaceState(null, '', '#' + tab.getAttribute('aria-controls')); } catch (e) {}
+      }
     }
     sw.selectTab = select;
     tabs.forEach(function (t, i) {
-      t.addEventListener('click', function () { select(t, false, true); });
+      t.addEventListener('click', function () {
+        // 非表示になるパネル内(端末のスクロール領域など)にフォーカスがあれば、タブへ退避させる
+        var ae = document.activeElement, pnl = ae && ae.closest ? ae.closest('.panel') : null;
+        select(t, !!(pnl && pnl.getAttribute('aria-labelledby') !== t.id && pnl.closest('.panels') === t.closest('.cell-body').querySelector('.panels')), true);
+      });
       t.addEventListener('keydown', function (e) {
         var j = null;
         if (e.key === 'ArrowRight' || e.key === 'ArrowDown') j = (i + 1) % tabs.length;
@@ -973,9 +993,16 @@
       });
     });
   });
-  var h = location.hash.slice(1);
-  var tab = h && document.querySelector('.switch [role="tab"][aria-controls="' + h + '"]');
-  if (tab) tab.closest('.switch').selectTab(tab, false, false);
+  function applyHash() {   // #<panel id> で開いたら、そのタブを選び、セル先頭(Config の行が見える位置)へ
+    var h = location.hash.slice(1);
+    var tab = h && document.querySelector('[role="tablist"] [role="tab"][aria-controls="' + h + '"]');
+    if (!tab) return;
+    tab.closest('[role="tablist"]').selectTab(tab, false, false);
+    var cell = tab.closest('.cell');
+    if (cell && cell.scrollIntoView) cell.scrollIntoView({ block: 'start', behavior: 'instant' });
+  }
+  applyHash();
+  addEventListener('hashchange', applyHash);
 })();
 </script>
 
