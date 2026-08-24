@@ -236,9 +236,9 @@ if run_section acceptedits; then
   tmux kill-session -t $S 2>/dev/null
 fi
 
-# ---- (h) permissions.defaultMode: auto(--model sonnet で起動。2.1.228 以降の既定)----
+# ---- (h) permissions.defaultMode: auto(local に defaultMode: auto を置き、auto を選べる sonnet で起動)----
 if run_section auto; then
-  write_local "$LOCAL_FIXTURE"
+  write_local '{ "model": "claude-haiku-4-5", "permissions": { "defaultMode": "auto" } }'
   start_claude --model sonnet
   footer mode-sonnet-start
   ask perm-auto-run "touch created.txt を実行して" 90 verbose

@@ -252,7 +252,7 @@ CELLS_CONFIG = {
     'touch created.txt (ask)': ('perm-ask', r'^❯ touch created\.txt を実行して'),
     'footer: defaultMode = acceptEdits で起動': ('mode-default-acceptedits', 4),
     'touch created.txt (acceptEdits)': ('perm-acceptedits-run', r'^❯ touch created\.txt'),
-    'footer: --model sonnet で起動 → auto': ('mode-sonnet-start', 4),
+    'footer: defaultMode = auto(sonnet で起動)': ('mode-sonnet-start', 4),
     'touch created.txt (auto)': ('perm-auto-run', r'^❯ touch created\.txt'),
     # sandbox 比較
     'sandbox: off (touch /tmp)': ('sandbox-off', r'^❯ touch /tmp/sandbox-poke\.txt'),
