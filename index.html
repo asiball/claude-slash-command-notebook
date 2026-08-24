@@ -452,8 +452,8 @@
     <div class="links">
       <a href="#demos">§1 実行デモ</a>
       <a href="#tui">§2 画面実測</a>
-      <a href="#catalog">§3 早見表</a>
       <a href="#prov">取得方法</a>
+      <a href="config.html">Config ↗</a>
     </div>
   </nav>
   <nav class="toc" aria-label="目次">
@@ -488,19 +488,29 @@
       <a href="#cell-status-ui">/status</a>
       <a href="#cell-tasks-ui">/tasks</a>
       <a href="#cell-usage-ui">/usage</a>
+      <a href="#cell-advisor-ui">/advisor</a>
+      <a href="#cell-autocompact-ui">/autocompact</a>
+      <a href="#cell-branch-ui">/branch</a>
+      <a href="#cell-diff-ui">/diff</a>
+      <a href="#cell-fast-ui">/fast</a>
+      <a href="#cell-rename-ui">/rename</a>
+      <a href="#cell-workflows-ui">/workflows</a>
+      <a href="#cell-ultracode-ui">ultracode</a>
+      <a href="#cell-codereview-hint-ui">/code-review ヒント</a>
+      <a href="#cell-codereview-ultra">/code-review ultra</a>
     </div>
-    <a class="toc-h" href="#catalog">§3 早見表</a>
     <a class="toc-h" href="#prov">取得方法</a>
   </nav>
   <header class="page-head" id="top">
     <p class="eyebrow">claude code / commands</p>
     <h1>Slash Command Notebook</h1>
-    <p>Claude Code(ターミナルで動く Anthropic のコーディングエージェント CLI)では、対話シェルに <code>/</code> で始まる「スラッシュコマンド」を打って機能を呼び出す。本ページはそれらを実際に実行し、「ユーザーの入力」と「Claude の最終出力・画面」のペアを Notebook 形式で記録したもの。対象は、公式ドキュメント <a href="https://code.claude.com/docs/en/commands">code.claude.com/docs/en/commands</a> に掲載の全80超のコマンドからよく使う組み込み24個と、カスタムコマンドの実例1個(<code>/explain</code>)。</p>
-    <p>コマンドは2種類に大別される: <strong>プロンプト注入型</strong>(コマンドの実体として登録された指示プロンプトがモデルに渡り、出力が返る。Claude Code ではこの仕組みを <strong>Skill</strong> と呼ぶ)と <strong>UI/ハーネス型</strong>(CLI 本体=ハーネスが画面上で処理し、モデルは関与しない)。<code>/compact</code> や <code>/recap</code> のように、モデル呼び出しがセッションの外側で行われる中間形も少数ある。前者は §1 で入力と出力を、後者は §2 で端末画面を実測し(中間形は §1 に含めた)、§3 に早見表を置く。</p>
+    <p>Claude Code(ターミナルで動く Anthropic のコーディングエージェント CLI)では、対話シェルに <code>/</code> で始まる「スラッシュコマンド」を打って機能を呼び出す。本ページはそれらを実際に実行し、「ユーザーの入力」と「Claude の最終出力・画面」のペアを Notebook 形式で記録したもの。対象は、公式ドキュメント <a href="https://code.claude.com/docs/en/commands">code.claude.com/docs/en/commands</a> に掲載の全80超のコマンドからよく使う組み込み34個と、カスタムコマンドの実例1個(<code>/explain</code>)。</p>
+    <p>コマンドは2種類に大別される: <strong>プロンプト注入型</strong>(コマンドの実体として登録された指示プロンプトがモデルに渡り、出力が返る。Claude Code ではこの仕組みを <strong>Skill</strong> と呼ぶ)と <strong>UI/ハーネス型</strong>(CLI 本体=ハーネスが画面上で処理し、モデルは関与しない)。<code>/compact</code> や <code>/recap</code> のように、モデル呼び出しがセッションの外側で行われる中間形も少数ある。前者は §1 で入力と出力を、後者は §2 で端末画面を実測した(中間形は §1 に含めた)。</p>
+    <p>姉妹ページ: <a href="config.html">Config Notebook</a> — 設定ファイルの階層・優先順位・permissions の実測。</p>
     <div class="meta-chips">
-      <span>Claude Code CLI v2.1.233</span>
-      <span>2026-08-17 実測</span>
-      <span>実測 25 コマンド(§1: 9 · §2: 16 · うちカスタム 1)</span>
+      <span>Claude Code CLI v2.1.233(追加分 v2.1.241)</span>
+      <span>2026-08-17 実測 · 追加 2026-08-23</span>
+      <span>実測 35 コマンド(§1: 9 · §2: 26 · うちカスタム 1)</span>
       <span>対象: sample-project (Python)</span>
     </div>
   </header>
@@ -536,6 +546,16 @@
       <a href="#cell-status-ui">/status</a>
       <a href="#cell-tasks-ui">/tasks</a>
       <a href="#cell-usage-ui">/usage</a>
+      <a href="#cell-advisor-ui">/advisor</a>
+      <a href="#cell-autocompact-ui">/autocompact</a>
+      <a href="#cell-branch-ui">/branch</a>
+      <a href="#cell-diff-ui">/diff</a>
+      <a href="#cell-fast-ui">/fast</a>
+      <a href="#cell-rename-ui">/rename</a>
+      <a href="#cell-workflows-ui">/workflows</a>
+      <a href="#cell-ultracode-ui">ultracode</a>
+      <a href="#cell-codereview-hint-ui">/code-review ヒント</a>
+      <a href="#cell-codereview-ultra">/code-review ultra</a>
     </div>
   </details>
 
@@ -551,7 +571,7 @@
     </div>
     <div class="cell-body">
       <p class="cell-lede">§1 の各コマンドは、この最小 Python プロジェクトに対して実行した。</p>
-      <p class="cell-desc">デモ用に <code>divide()</code> のゼロ除算、<code>average()</code> の空リスト、<code>user_db.py</code> の SQL インジェクション・コマンドインジェクション・ハードコードされたパスワードを意図的に含めてある。なお §1 の実測には「初期状態」と「user_db.py 追加後」の2時点が混在する(各セルの注記を参照)。git は <code>main</code> → <code>feature/user-db</code> のブランチ構成で、隣に bare リモート <code>sample-remote.git</code> を持つ(<code>/security-review</code> のプロンプト展開に origin が必要なため)。</p>
+      <p class="cell-desc">デモ用に <code>divide()</code> のゼロ除算、<code>average()</code> の空リスト、<code>user_db.py</code> の SQL インジェクション・コマンドインジェクション・ハードコードされたパスワードを意図的に含めてある。§1 の実測には「初期状態」と「user_db.py 追加後」の2時点が混在する(各セルの注記を参照)。git は <code>main</code> → <code>feature/user-db</code> のブランチ構成で、隣に bare リモート <code>origin</code> を持つ。</p>
       <div class="out-content"><pre><code>sample-project/
 ├── README.md
 ├── src/
@@ -571,7 +591,7 @@
     </div>
     <div class="cell-body">
       <p class="cell-lede">プロジェクトを解析して、Claude Code 向けのプロジェクトガイド <code>CLAUDE.md</code> を自動生成する。</p>
-      <p class="cell-desc">内部では定型の指示プロンプト(コードベースを解析し、ビルド/テストコマンドとアーキテクチャの要点だけを書け、という内容)が注入される。この実測は <code>user_db.py</code> を追加する前の初期状態に対して実行したため、出力は calc.py のみに言及している。</p>
+      <p class="cell-desc">この実測は <code>user_db.py</code> を追加する前の初期状態に対して実行したため、出力は calc.py のみに言及している。</p>
       <div class="in-block"><span class="in-label">In</span><code class="in-cmd">/init</code></div>
       <div class="out-block">
         <span class="out-label">Out</span>
@@ -624,7 +644,7 @@
     </div>
     <div class="cell-body">
       <p class="cell-lede">今の会話の文脈に残さずに、サイド質問へ即答してもらう。</p>
-      <p class="cell-desc">回答は専用のオーバーレイに表示され、メインの会話コンテキストには追加されない(<code>c</code> でコピー、<code>f</code> で別セッションへ分岐)。モデル呼び出しがセッション外で行われる中間形のコマンド。</p>
+      <p class="cell-desc">回答は専用のオーバーレイに表示され、メインの会話コンテキストには追加されない(<code>c</code> でコピー、<code>f</code> で別セッションへ分岐)。</p>
       <div class="in-block"><span class="in-label">In</span><code class="in-cmd">/btw pythonのGILとは?一文で</code></div>
       <div class="term"><div class="term-bar">claude — /btw</div><pre>    <span style="color:#FFD700;font-weight:700">/btw </span><span style="color:#949494">pythonのGILとは?一文で</span>
 
@@ -644,7 +664,7 @@
     </div>
     <div class="cell-body">
       <p class="cell-lede">現在の diff をバグの観点でレビューする(引数でレビュー強度 low〜max を指定できる)。</p>
-      <p class="cell-desc">実行の仕組みが特徴的で、メインセッションには結果だけが返り、レビュー本体は<strong>サブエージェント</strong>(本体の会話とは別コンテキストで動く子エージェント)として走る。Out 冒頭の "(see above)" は、端末上で先に表示される指摘一覧を指す(本ページには未掲載)。この実測は user_db.py をコミットする前(untracked)の時点、/security-review はコミット後の時点で実行しており、同じファイルでも diff 上の扱いが異なる。</p>
+      <p class="cell-desc">メインセッションには結果だけが返り、レビュー本体は<strong>サブエージェント</strong>として別コンテキストで走る。Out 冒頭の "(see above)" は、端末上で先に表示される指摘一覧を指す(本ページには未掲載)。この実測は user_db.py をコミットする前(untracked)の時点、/security-review はコミット後の時点で実行しており、同じファイルでも diff 上の扱いが異なる。</p>
       <div class="in-block"><span class="in-label">In</span><code class="in-cmd">/code-review low</code></div>
       <div class="out-block">
         <span class="out-label">Out</span>
@@ -747,7 +767,7 @@ further questions. Resume directly — do not acknowledge the summary, …</pre>
     </div>
     <div class="cell-body">
       <p class="cell-lede">Claude Code のセットアップ全体を健全性チェックし、改善案を提案する。</p>
-      <p class="cell-desc">注入プロンプトは全44,667字と実測中最大(それだけコンテキストを消費する)。Check 0〜9(インストール健全性 / 未使用スキル・プラグイン検出 / CLAUDE.md の重複排除と削減 / 遅いフック / バージョン確認 / 権限モード提案 など)を読み取り専用で実行してから、変更をまとめて確認する多段構造になっている。</p>
+      <p class="cell-desc">Check 0〜9(インストール健全性 / 未使用スキル・プラグイン検出 / CLAUDE.md の重複排除と削減 / 遅いフック / バージョン確認 / 権限モード提案 など)を読み取り専用で実行してから、変更をまとめて確認する。</p>
       <div class="in-block"><span class="in-label">In</span><code class="in-cmd">/doctor</code></div>
       <div class="out-block">
         <span class="out-label">Out</span>
@@ -801,7 +821,7 @@ Enter to select · ↑/↓ to navigate · Esc to cancel</pre></div>
     </div>
     <div class="cell-body">
       <p class="cell-lede">現在のセッションの内容を、1行のサマリーにまとめて表示する。</p>
-      <p class="cell-desc">会話には追加されないローカルコマンドとして即時実行(応答ターンを消費せず処理)され、要約生成はセッション外で行われるためトランスクリプトには結果だけが残る。/init セッションを <code>--resume</code>(過去セッションの続きから再開)して実行した。</p>
+      <p class="cell-desc">会話には追加されないローカルコマンドとして即時実行され、トランスクリプトには結果だけが残る。/init セッションを <code>--resume</code> で再開して実行した。</p>
       <div class="in-block"><span class="in-label">In</span><code class="in-cmd">/recap</code></div>
       <div class="out-block">
         <span class="out-label">Out</span>
@@ -826,7 +846,7 @@ Enter to select · ↑/↓ to navigate · Esc to cancel</pre></div>
     </div>
     <div class="cell-body">
       <p class="cell-lede">現在のブランチの変更(diff)をセキュリティ観点でレビューし、脆弱性を報告する。</p>
-      <p class="cell-desc">レビュー対象は diff だけなので、既存コード側の SQL インジェクションは対象外。注入プロンプトは全11,140字(その分コンテキストを消費する)で、<code>git status</code> / <code>git diff</code> の結果が CLI 側で展開されて埋め込まれ、「サブタスクで脆弱性を検出→並列サブタスクで偽陽性を除去→確信度8未満を棄却」という多段の手順まで指示している。なお <code>origin</code> リモートのないリポジトリでは、プロンプト展開時の <code>git log origin/HEAD...</code> が失敗しコマンド自体が実行されない(実測で確認。本デモは origin を用意したうえで実行している)。</p>
+      <p class="cell-desc">レビュー対象は diff だけなので、既存コード側の SQL インジェクションは対象外。<code>origin</code> リモートのないリポジトリでは、プロンプト展開時の <code>git log origin/HEAD...</code> が失敗しコマンド自体が実行されない(実測で確認。本デモは origin を用意したうえで実行している)。</p>
       <div class="in-block"><span class="in-label">In</span><code class="in-cmd">/security-review</code></div>
       <div class="out-block">
         <span class="out-label">Out</span>
@@ -882,7 +902,7 @@ Enter to select · ↑/↓ to navigate · Esc to cancel</pre></div>
     </div>
     <div class="cell-body">
       <p class="cell-lede">直近の変更が「主張どおり動くか」を、実際にコードを動かして検証する。</p>
-      <p class="cell-desc">直近コミットの内容をクレームとして取り出し、テストや直接実行で裏取りして PASS/FAIL を判定する。実測では関数を直接呼び出す8ステップの検証を行い、コマンドインジェクションを実際に実行して実証したうえで PASS(懸念2件付き)を返した。</p>
+      <p class="cell-desc">直近コミットの内容をクレームとして取り出し、テストや直接実行で裏取りして PASS/FAIL を判定する。実測ではコマンドインジェクションを実際に実行して実証したうえで PASS(懸念2件付き)を返した。</p>
       <div class="in-block"><span class="in-label">In</span><code class="in-cmd">/verify</code></div>
       <div class="out-block">
         <span class="out-label">Out</span>
@@ -1056,7 +1076,7 @@ Explain what the function `$ARGUMENTS` does, in two sentences, and point out any
     <div class="cell-head"><h3 class="typed"><code>/goal</code></h3><span class="cell-meta">画面実測 · 2026-08-17</span></div>
     <div class="cell-body">
       <p class="cell-lede">達成条件(ゴール)を設定し、Claude がターンをまたいで自律的に動けるようにする。</p>
-      <p class="cell-desc">ゴールの設定自体はハーネス処理で、その後の動作は通常のモデルターンとして走る。実測では、設定した直後に Claude が自分からテスト実行に動き出し、Bash 権限の確認まで進んだ(下図)。新しめの機能で、挙動はバージョンによって変わりやすい。<code>/goal clear</code> で解除できる。</p>
+      <p class="cell-desc">ゴールの設定自体はハーネス処理で、その後の動作は通常のモデルターンとして走る。実測では、設定した直後に Claude が自分からテスト実行に動き出し、Bash 権限の確認まで進んだ(下図)。<code>/goal clear</code> で解除できる。</p>
       <div class="term"><div class="term-bar">claude — /goal(設定直後に自律動作が始まる)</div><pre><span style="color:#8C8578;background:#3A3A3A">❯</span><span style="background:#3A3A3A"> </span><span style="color:#FFFFFF;background:#3A3A3A">/goal calc モジュールの全テストが通ること</span>
 <span style="color:#949494">  ⎿  </span>Goal set: calc モジュールの全テストが通ること
 
@@ -1283,6 +1303,292 @@ Explain what the function `$ARGUMENTS` does, in two sentences, and point out any
     </div>
   </article>
 
+  <!-- CELL:advisor-ui -->
+  <article class="cell" id="cell-advisor-ui">
+    <div class="cell-head"><h3 class="typed"><code>/advisor</code></h3><span class="cell-meta">画面実測 · 2026-08-23 · CLI 2.1.241</span></div>
+    <div class="cell-body">
+      <p class="cell-lede">要所でより強いモデルに相談する「advisor」を有効化する(experimental)。</p>
+      <p class="cell-desc">実測: Opus 5 / Sonnet 5 / No advisor のピッカーが出る(選んだモデルに、判断に迷う場面でだけ助言を求めるようになる)。画面は haiku セッションで起動したもの。</p>
+      <div class="term"><div class="term-bar">claude — /advisor</div><pre><span style="color:#AFD7FF">▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔</span>
+   <span style="color:#AFD7FF;font-weight:700">Advisor (experimental)</span>
+
+   When Claude needs stronger judgment — a complex decision, an ambiguous failure, a problem it's circling
+   without progress — it escalates to the advisor model for guidance, then resumes. The advisor runs
+   server-side and uses additional tokens.
+
+     <span style="color:#949494">1. </span>Fable 5
+     <span style="color:#949494">2. </span>Opus 5
+     <span style="color:#949494">3. </span>Sonnet 5
+   <span style="color:#AFD7FF">❯</span> <span style="color:#949494">4. </span><span style="color:#87D787">No advisor</span> <span style="color:#87D787">✔</span>
+
+   <span style="color:#AFD7FF">Recommended setup: </span>Sonnet as the main model with Opus as the advisor. For certain workloads this gives
+   near-Opus performance with reduced token usage.
+
+   <span style="color:#949494">Learn more: https://claude.com/blog/the-advisor-strategy</span>
+
+   <span style="color:#949494;font-style:italic">Enter to confirm · Esc to cancel</span></pre></div>
+    </div>
+  </article>
+
+  <!-- CELL:autocompact-ui -->
+  <article class="cell" id="cell-autocompact-ui">
+    <div class="cell-head"><h3 class="typed"><code>/autocompact</code></h3><span class="cell-meta">画面実測 · 2026-08-23 · CLI 2.1.241</span></div>
+    <div class="cell-body">
+      <p class="cell-lede">自動コンパクトが走るコンテキストの閾値を設定する。</p>
+      <p class="cell-desc">実測: "Auto-compact window" のパネルが開き、現在値(auto)と説明が出て ↑/↓ で閾値を選ぶ(Esc で抜けると "Auto-compact window unchanged: auto")。<code>/autocompact 200k</code> のように直接トークン数を渡すこともできる。</p>
+      <div class="term"><div class="term-bar">claude — /autocompact</div><pre><span style="color:#AFD7FF">▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔</span>
+   <span style="color:#AFD7FF;font-weight:700">Auto-compact window</span>
+   <span style="color:#949494">Current setting: auto</span>
+
+   This command configures when auto-compaction happens. The actual threshold is the minimum of this
+   setting and your model's maximum context window.
+
+   The auto setting picks a window tuned for your model and is <span style="font-weight:700">strongly recommended</span> for the best cost and
+   performance. You can override it below.
+
+   Select auto-compact window: <span style="color:#AFD7FF;font-weight:700">auto</span>
+
+   <span style="color:#949494;font-style:italic">↑/↓ to change · Enter to apply · Esc to cancel</span></pre></div>
+    </div>
+  </article>
+
+  <!-- CELL:branch-ui -->
+  <article class="cell" id="cell-branch-ui">
+    <div class="cell-head"><h3 class="typed"><code>/branch</code></h3><span class="cell-meta">画面実測 · 2026-08-23 · CLI 2.1.241</span></div>
+    <div class="cell-body">
+      <p class="cell-lede">この時点で会話を分岐させたコピーを作る。</p>
+      <p class="cell-desc">実測: 下の画面のとおり(分岐後はセッション名が変わり、元の会話は /resume から戻れる)。</p>
+      <div class="term"><div class="term-bar">claude — /branch</div><pre><span style="color:#4E4E4E;background:#3A3A3A">❯</span><span style="background:#3A3A3A"> </span><span style="color:#FFFFFF;background:#3A3A3A">/branch</span><span style="background:#3A3A3A"> </span>
+<span style="color:#949494">  ⎿  </span>Branched conversation. You are now in the new branch (session ****************-****). Use
+     /resume ****************-**** ("autocompact-window-status") to return to the original, or
+     run <span style="color:#AFD7FF">claude -r ****************-****</span> in a new terminal.
+
+<span style="color:#00AFAF">──────────────────────────────────────────────────────────────────────────────────────</span><span style="color:#000000;background:#00AFAF"> /autocompact (Branch) </span><span style="color:#00AFAF">─</span>
+❯
+<span style="color:#00AFAF">──────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
+  <span style="color:#949494">⏸ manual mode on · ? for shortcuts · ← for agents</span>                                                      <span style="color:#87D787">/rc</span></pre></div>
+    </div>
+  </article>
+
+  <!-- CELL:diff-ui -->
+  <article class="cell" id="cell-diff-ui">
+    <div class="cell-head"><h3 class="typed"><code>/diff</code></h3><span class="cell-meta">画面実測 · 2026-08-23 · CLI 2.1.241</span></div>
+    <div class="cell-body">
+      <p class="cell-lede">未コミットの変更とターンごとの差分を見る。</p>
+      <p class="cell-desc">実測: "Uncommitted changes (git diff HEAD)" として変更ファイルの一覧(ここでは README.md +2)が出て、Enter で差分本体を開く。git 管理下で未コミットの変更がある状態で有効(未追跡の tests/ は一覧に出ない)。</p>
+      <div class="term"><div class="term-bar">claude — /diff</div><pre><span style="color:#AFD7FF">▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔</span>
+   <span style="color:#00D7D7;font-weight:700">Uncommitted changes</span><span style="color:#949494;font-weight:700"> (git diff HEAD)</span>
+
+   <span style="color:#949494">1 file changed </span><span style="color:#5FAF87">+2</span>
+
+   <span style="color:#191713;background:#00D7D7;font-weight:700">❯ README.md</span>                                                                                           <span style="color:#5FAF87;font-weight:700">+2</span>
+
+   <span style="color:#949494;font-style:italic">↑/↓ to select · Enter to view · Esc to close</span></pre></div>
+    </div>
+  </article>
+
+  <!-- CELL:fast-ui -->
+  <article class="cell" id="cell-fast-ui">
+    <div class="cell-head"><h3 class="typed"><code>/fast</code></h3><span class="cell-meta">画面実測 · 2026-08-23 · CLI 2.1.241</span></div>
+    <div class="cell-body">
+      <p class="cell-lede">Fast mode(高速出力)の切り替え。</p>
+      <p class="cell-desc">実測: Fast mode は research preview で、このアカウント/モデルでは "Fast mode requires usage credits · /usage-credits to turn them on" と表示され有効化できなかった(画面)。</p>
+      <div class="term"><div class="term-bar">claude — /fast</div><pre><span style="color:#AFD7FF">▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔</span>
+   <span style="color:#FF8700;font-weight:700">↯ Fast mode (research preview)</span>
+   <span style="color:#949494">High-speed mode for Opus 5. Draws from usage credits at a higher rate. Separate rate limits apply.</span>
+
+     <span style="color:#FF87AF">Fast mode requires usage credits · /usage-credits to turn them on</span>
+
+   <span style="color:#949494">Learn more: https://code.claude.com/docs/en/fast-mode</span>
+
+   <span style="color:#949494;font-style:italic">Esc to cancel</span></pre></div>
+    </div>
+  </article>
+
+  <!-- CELL:rename-ui -->
+  <article class="cell" id="cell-rename-ui">
+    <div class="cell-head"><h3 class="typed"><code>/rename</code></h3><span class="cell-meta">画面実測 · 2026-08-23 · CLI 2.1.241</span></div>
+    <div class="cell-body">
+      <p class="cell-lede">現在のセッションに名前を付ける。</p>
+      <p class="cell-desc">実測: 引数なしで実行すると自動生成の名前("autocompact-window-status")が付き、入力欄の右上にも表示される。<code>/rename 名前</code> で任意の名前にできる。名前は /resume の一覧に出るので、後から探しやすくなる。</p>
+      <div class="term"><div class="term-bar">claude — /rename</div><pre><span style="color:#4E4E4E;background:#3A3A3A">❯</span><span style="background:#3A3A3A"> </span><span style="color:#FFFFFF;background:#3A3A3A">/rename</span><span style="background:#3A3A3A"> </span>
+<span style="color:#949494">  ⎿  </span>Session renamed to: autocompact-window-status
+
+<span style="color:#00AFAF">──────────────────────────────────────────────────────────────────────────────────</span><span style="color:#000000;background:#00AFAF"> autocompact-window-status </span><span style="color:#00AFAF">─</span>
+❯
+<span style="color:#00AFAF">──────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
+  <span style="color:#949494">⏸ manual mode on · ? for shortcuts · ← for agents</span>                                                      <span style="color:#87D787">/rc</span></pre></div>
+    </div>
+  </article>
+
+  <!-- CELL:workflows-ui -->
+  <article class="cell" id="cell-workflows-ui">
+    <div class="cell-head"><h3 class="typed"><code>/workflows</code></h3><span class="cell-meta">画面実測 · 2026-08-23 · CLI 2.1.241</span></div>
+    <div class="cell-body">
+      <p class="cell-lede">動的ワークフロー(ultracode)の実行状況を見る。</p>
+      <p class="cell-desc">実測: まだ何も走っていないセッションでは "No dynamic workflows in this session." の空パネル。ワークフローが走ると、エージェントごとの進捗とトークン使用量がここに並ぶ。</p>
+      <div class="term"><div class="term-bar">claude — /workflows</div><pre><span style="color:#AFD7FF">▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔</span>
+   <span style="color:#00D7D7;font-weight:700">Dynamic workflows</span>
+
+   <span style="color:#949494">No dynamic workflows in this session.</span>
+
+   <span style="color:#949494;font-style:italic">Esc to close</span></pre></div>
+    </div>
+  </article>
+
+  <!-- CELL:ultracode-ui -->
+  <article class="cell" id="cell-ultracode-ui">
+    <div class="cell-head"><h3 class="typed"><code>ultracode(入力キーワード)</code></h3><span class="cell-meta">画面実測 · 2026-08-23 · CLI 2.1.241</span></div>
+    <div class="cell-body">
+      <p class="cell-lede">プロンプトに <code>ultracode</code> を含めると、そのターンは Claude が動的ワークフロー(多数のサブエージェントの並列実行)を組んで取り組む。</p>
+      <p class="cell-desc">実測: 入力欄に <code>ultracode</code> と打った時点で、入力欄の上に "Dynamic workflow requested for this turn · opt+w to ignore" と出る(キーワードは紫でハイライトされる)。キーワードは人が打った入力にだけ効き、<code>-p</code> 実行や webhook 由来の入力では発火しない。本ページでは本実行はしていない(多数のエージェントを起こすため)。</p>
+      <div class="term"><div class="term-bar">claude — ultracode (キーワード検知)</div><pre>                                                  <span style="color:#949494">Dynamic workflow requested for this turn · opt+w to ignore</span>
+<span style="color:#808080">──────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
+❯ <span style="color:#AFAFFF">ultracode</span>
+<span style="color:#808080">──────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
+  <span style="color:#949494">⏸ manual mode on</span>                                                                                       <span style="color:#87D787">/rc</span></pre></div>
+    </div>
+  </article>
+
+  <!-- CELL:codereview-hint-ui -->
+  <article class="cell" id="cell-codereview-hint-ui">
+    <div class="cell-head"><h3 class="typed"><code>/code-review(引数ヒント)と /ultra 補完</code></h3><span class="cell-meta">画面実測 · 2026-08-23 · CLI 2.1.241</span></div>
+    <div class="cell-body">
+      <p class="cell-lede"><code>/code-review</code> の引数と、ultrareview の入口を確認する。</p>
+      <p class="cell-desc">実測: <code>/code-review </code> と打つと引数ヒント <code>[low|medium|high|xhigh|max|ultra] [--fix] [--comment] [&lt;pr#&gt;|&lt;branch&gt;|&lt;path&gt;]</code> が出る(<code>ultra</code> が最上位レベル)。<code>/ultra</code> まで打つと補完に旧名 <code>/ultrareview</code>("3 free left · Start a cloud agent that finds and verifies bugs in your branch (~5-10 min, $5-$25 USD) · Runs in Claude Code on the web")と <code>/code-review</code> が並ぶ。本実行は下の <a href="#cell-codereview-ultra">/code-review ultra</a> セルを参照。ヒント行の上に "auto mode unavailable for this model" と出ているのは、haiku では auto mode が選べないことを示す(姉妹ページの<a href="config.html#cell-perm-modes">権限モードのセル</a>参照)。</p>
+      <div class="term"><div class="term-bar">claude — /code-review (引数ヒント)</div><pre>                                                                        <span style="color:#FFD700">auto mode unavailable for this model</span>
+<span style="color:#808080">──────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
+❯ <span style="color:#AFD7FF">/code-review</span>  <span style="color:#949494">[low|medium|high|xhigh|max|ultra] [--fix] [--comment] [&lt;pr#&gt;|&lt;branch&gt;|&lt;path&gt;]</span>
+<span style="color:#808080">──────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
+  <span style="color:#949494">⏸ manual mode on</span>                                                                                       <span style="color:#87D787">/rc</span></pre></div>
+      <div class="term"><div class="term-bar">claude — /ultra (補完)</div><pre>  <span style="color:#AFD7FF">/</span><span style="color:#AFD7FF;font-weight:700">ultra</span><span style="color:#AFD7FF">review                  3 free left · Start a cloud agent that finds and verifies bugs in your</span>
+                                <span style="color:#AFD7FF">branch (~5-10 min, $5-$25 USD) · Runs in Claude Code on the web. See https:…</span>
+  <span style="color:#949494">/code-review                  3 free /</span><span style="font-weight:700">ultra</span><span style="color:#949494">review · Review the current diff, or a PR number/branch/path</span>
+                                <span style="color:#949494">target, for correctness bugs and reuse/simplification/efficiency cleanups a…</span>
+<span style="color:#808080">──────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
+❯ /ultra
+<span style="color:#808080">──────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
+  <span style="color:#949494">⏸ manual mode on</span>                                                                                       <span style="color:#87D787">/rc</span></pre></div>
+    </div>
+  </article>
+
+  <!-- CELL:codereview-ultra -->
+  <article class="cell" id="cell-codereview-ultra">
+    <div class="cell-head"><h3 class="typed"><code>/code-review ultra</code>(ultrareview)</h3><span class="cell-meta">画面実測 · 2026-08-23 · CLI 2.1.241 · クラウド実行(無料枠 1 回消費)</span></div>
+    <div class="cell-body">
+      <p class="cell-lede">クラウド上で多数のエージェントがブランチのバグを探して検証する「ultrareview」を、sample-project の <code>feature/user-db</code> ブランチ(意図的に脆弱なコード)に対して 1 回だけ本実行した。</p>
+      <p class="cell-desc">実測の流れ: (1) <code>/code-review ultra</code> を実行すると課金確認ダイアログ "Run ultrareview in the cloud?" が出る(Free ultrareview 1 of 3 / Reviewing feature/user-db against main / Scope: 2 files changed / This will upload your repository to Claude Code on the web)。(2) Yes で起動すると、トランスクリプト上は <code>/ultrareview</code> として記録され、追跡 URL(claude.ai/code のセッション)とともに "Ultrareview launched … (~5-10 min, runs in the cloud)"、フッターに <code>◇ 1 cloud session</code> が出る。主モデルは "Findings will arrive as a task notification when it completes." と言って入力待ちに戻り、その間も端末は使える。(3) <code>/tasks</code> を開くと "ultrareview · 50s · running / Setup → Find → Verify → Dedupe / 10 found · 0 verified" と段階と件数が見え、Stop もここから。(4) 起動から約 7 分半(23:26 → 23:34)で "Cloud review completed" の通知が届き、findings 3 件(critical 2 + nit 1)が通知本文として主モデルに渡った。<strong><code>--fix</code> を付けていないのに主モデル(haiku)はそのまま修正に着手</strong>し、manual モードなので "Do you want to make this edit to user_db.py?" の確認が出た(今回は Esc で拒否。accept edits / auto mode なら修正が進む)。</p>
+      <div class="term"><div class="term-bar">claude — /code-review ultra (確認)</div><pre><span style="color:#AFD7FF">▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔</span>
+   <span style="color:#AFD7FF;font-weight:700">Run ultrareview in the cloud?</span>
+   <span style="color:#949494">Free ultrareview 1 of 3.</span>
+
+   <span style="color:#949494">Reviewing feature/user-db against main.</span>
+   <span style="color:#949494">Scope: 2 files changed, 11 insertions(+)</span>
+   <span style="color:#949494">Finds and verifies bugs using a multi-agent review fleet.</span>
+   <span style="color:#949494">Tip: run /code-review ultra &lt;PR number&gt; to fetch and review a specific GitHub PR instead.</span>
+   <span style="color:#949494">This will upload your repository to Claude Code on the web.</span>
+   <span style="color:#949494">More information: https://code.claude.com/docs/en/claude-code-on-the-web</span>
+
+   Proceed?
+
+   <span style="color:#AFD7FF">❯</span> <span style="color:#949494">1. </span><span style="color:#AFD7FF">Yes</span>  <span style="color:#949494">launch in Claude Code on the web</span>
+     <span style="color:#949494">2. </span>No   <span style="color:#949494"> </span>
+
+   <span style="color:#949494;font-style:italic">Enter to confirm · Esc to cancel</span></pre></div>
+      <div class="term"><div class="term-bar">claude — /code-review ultra (実行中)</div><pre><span style="color:#4E4E4E;background:#3A3A3A">❯</span><span style="background:#3A3A3A"> </span><span style="color:#FFFFFF;background:#3A3A3A">/ultrareview</span>
+<span style="color:#949494">  ⎿  </span>Free ultrareview 1 of 3.
+     Ultrareview launched for feature/user-db → main (~5-10 min, runs in the cloud). Track:
+     <span style="color:#8FB3D6">https://claude.ai/code/session_****?from=cli</span>
+     Scope: 2 files changed, 11 insertions(+)
+
+<span style="color:#FFFFFF">⏺</span> Ultrareview is running. Findings will arrive as a task notification when it completes.
+
+<span style="color:#949494">✻</span> <span style="color:#949494">Sautéed for 3s · ◇ 1 cloud session still running</span>
+
+<span style="color:#00AFAF">──────────────────────────────────────────────────────────────────────────────────</span><span style="color:#000000;background:#00AFAF"> autocompact-window-status </span><span style="color:#00AFAF">─</span>
+❯
+<span style="color:#00AFAF">──────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
+  <span style="color:#949494">⏸ manual mode on · </span><span style="color:#00D7D7">◇ 1 cloud session</span><span style="color:#949494"> · ← for agents · ↓ to manage</span>                                      <span style="color:#87D787">/rc</span></pre></div>
+      <div class="term"><div class="term-bar">claude — /tasks (ultrareview 実行中)</div><pre><span style="color:#AFD7FF">▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔</span>
+   <span style="color:#00D7D7;font-weight:700">◇ ultrareview</span><span style="color:#949494;font-weight:700"> · 50s · running</span>
+
+   <span style="color:#949494">Setup → Find → </span><span style="color:#00D7D7">Verify</span><span style="color:#949494"> → Dedupe</span>
+
+   10 found · 0 verified
+   <span style="color:#949494">https://claude.ai/code/session_****?from=cli</span>
+
+   <span style="color:#AFD7FF">❯</span> <span style="color:#949494">1. </span><span style="color:#AFD7FF">Open in Claude Code on the web</span>
+     <span style="color:#949494">2. </span>Stop ultrareview
+     <span style="color:#949494">3. </span>Back
+
+   <span style="color:#949494;font-style:italic">Enter to select · Esc to go back</span></pre></div>
+      <div class="term"><div class="term-bar">claude — /code-review ultra (完了通知 → 修正提案)</div><pre><span style="color:#4E4E4E;background:#3A3A3A">❯</span><span style="background:#3A3A3A"> </span><span style="color:#FFFFFF;background:#3A3A3A">/ultrareview</span>
+<span style="color:#949494">  ⎿  </span>Free ultrareview 1 of 3.
+     Ultrareview launched for feature/user-db → main (~5-10 min, runs in the cloud). Track:
+     <span style="color:#8FB3D6">https://claude.ai/code/session_****?from=cli</span>
+     Scope: 2 files changed, 11 insertions(+)
+
+<span style="color:#FFFFFF">⏺</span> Ultrareview is running. Findings will arrive as a task notification when it completes.
+
+<span style="color:#949494">✻</span> <span style="color:#949494">Sautéed for 3s</span>
+
+<span style="color:#87D787">⏺</span> Cloud review completed
+
+<span style="color:#FFFFFF">⏺</span> Cloud review found 3 findings: 2 critical security issues and 1 quality nit. Let me examine the code and fix
+  them.
+
+  <span style="color:#949494">Read </span><span style="color:#949494;font-weight:700">1</span><span style="color:#949494"> file </span>
+
+<span style="color:#FFFFFF">⏺</span> Looking at the findings, there are two critical security issues and one quality issue to fix. Let me fix
+  them:
+
+<span style="color:#949494">⏺</span> <span style="font-weight:700">Update</span>(src/user_db.py)
+
+<span style="color:#AFD7FF">──────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
+ <span style="color:#AFD7FF;font-weight:700">Edit file</span>
+ <span style="color:#949494">src/user_db.py</span>
+<span style="color:#4E4E4E">╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌</span>
+<span style="color:#FFFFFF;opacity:.72"> 1 </span><span style="color:#FFFFFF"> </span><span style="color:#FF005F">import</span><span style="color:#FFFFFF"> sqlite3</span>
+<span style="color:#FFFFFF;opacity:.72"> 2 </span><span style="color:#FFFFFF"> </span><span style="color:#FF005F">import</span><span style="color:#FFFFFF"> subprocess</span>
+<span style="color:#5FD75F;background:#005F00"> 3 +</span><span style="color:#FF005F;background:#005F00">import</span><span style="color:#FFFFFF;background:#005F00"> hmac</span>
+<span style="opacity:.72"> 4 </span><span style="color:#FFFFFF"> </span>
+<span style="color:#FFFFFF;opacity:.72"> 5 </span><span style="color:#FFFFFF"> </span><span style="color:#5FD7FF">def</span><span style="color:#FFFFFF"> </span><span style="color:#AFD700">find_user</span><span style="color:#FFFFFF">(</span><span style="color:#FF8700">conn, name</span><span style="color:#FFFFFF">):</span>
+<span style="color:#FFFFFF;opacity:.72"> 6 </span><span style="color:#FFFFFF">     cur = conn.cursor()</span>
+<span style="color:#4E4E4E">╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌</span>
+ Do you want to make this edit to <span style="font-weight:700">user_db.py</span>?
+ <span style="color:#AFD7FF">❯</span> <span style="color:#949494">1. </span><span style="color:#AFD7FF">Yes</span>
+   <span style="color:#949494">2. </span>Yes, and switch to <span style="font-weight:700">accept edits (auto-approve file edits and common file commands)</span> for this session
+      <span style="font-weight:700">(shift+tab)</span>
+   <span style="color:#949494">3. </span>No
+
+ <span style="color:#949494">Esc to cancel · Tab to amend</span></pre></div>
+      <p class="cell-desc">通知本文に含まれていた findings(セッション記録 jsonl から抽出。<code>pr_comment</code> の要約部分のみ、<code>reasoning</code> には再現手順付きの長文が付く)。sample-project に仕込んだ 3 つの脆弱性のうち、ハードコードされたパスワード(+ 認証バイパス・タイミング比較)とコマンドインジェクションの 2 つを検出し、SQL インジェクション(<code>find_user</code>)は feature ブランチの差分外(main 側に既にある)のため対象外だった:</p>
+      <div class="out-content"><pre><code>[1] login() has multiple critical security defects  (severity: normal, src/user_db.py:13-15)
+    The newly added `login()` in src/user_db.py:13-15 has three compounding security defects: (1)
+    the `name` argument is never used, so anyone supplying the single hardcoded password
+    authenticates as any user — a complete authentication bypass; (2) `ADMIN_PASSWORD = "hunter2"`
+    is a plaintext credential in source, permanent in git history, unrotatable without a code
+    change, and a well-known wordlist password; (3) the `==` comparison is not constant-time and
+    leaks the secret byte-by-byte via timing. Fix: look up a per-user credential (bcrypt/argon2
+    hash) from storage keyed by `name`, and verify with `hmac.compare_digest` or the hashing
+    library's constant-time verify.
+
+[2] Command injection in ping_host via unsanitized host  (severity: normal, src/user_db.py:17-19)
+    Command injection RCE: `ping_host(host)` at src/user_db.py:19 passes `"ping -c 1 " + host` to
+    `os.system`, so any shell metacharacter in `host` (e.g. `ping_host("example.com; rm -rf ~")`)
+    executes arbitrary commands. Fix by using `subprocess.run(["ping", "-c", "1", host])` without
+    `shell=True` (and/or validate `host` as a hostname/IP).
+
+[3] [quality] Function-level import of os inside ping_host  (severity: nit, src/user_db.py:17-19)
+    The new `ping_host` function imports `os` inside the function body while the rest of the module
+    imports (`sqlite3`, `subprocess`) live at the top — a minor inconsistency. Since `subprocess` is
+    already imported at module level, the cleanest fix is to drop the `os` import entirely and use
+    `subprocess.run` here too.
+
+launched 2026-08-23T14:26:42Z (JST 23:26) / completed notification 2026-08-23T14:34:00Z (JST 23:34)</code></pre></div>
+    </div>
+  </article>
+
   <!-- CELL:usage-ui -->
   <article class="cell" id="cell-usage-ui">
     <div class="cell-head"><h3 class="typed"><code>/usage</code></h3><span class="cell-meta">画面実測 · 2026-08-17</span></div>
@@ -1327,82 +1633,17 @@ Explain what the function `$ARGUMENTS` does, in two sentences, and point out any
     </div>
   </article>
 
-  <h2 id="catalog"><span class="sec-no">§3</span>早見表 — よく使うコマンド</h2>
-  <p class="sec-lede">全80超のコマンドのうち、日常的に使う可能性が高いものに絞った早見表。コマンド一覧はバージョンごとに変わるため網羅はせず、変わりにくい主要なものだけを載せる。<span class="chip skill">Skill</span> 印はプロンプト注入型(§1 で実測)、<span class="chip mid">中間形</span> 印はモデル呼び出しがセッション外で行われるもの(§1 で実測)。<span class="chip ui">UI</span> 印は UI/ハーネス型(§2 で画面実測。類似情報を表示する <code>/cost</code>(未実測)は単独の画面セルを持たない)。コマンド名をクリックすると該当の実測セルへ移動する。カスタムコマンドの作り方は §1 の <code>/explain</code> を参照。</p>
-
-  <!-- CATALOG:START -->
-  <div class="cat-group">
-    <h3>セッションとコンテキスト</h3>
-    <div class="table-wrap"><table>
-      <thead><tr><th scope="col">コマンド</th><th scope="col">動作</th></tr></thead>
-      <tbody>
-      <tr><td><a class="cmd" href="#cell-clear-ui"><code>/clear</code></a><span class="chip ui">UI</span></td><td>空のコンテキストで新しい会話を開始する。→ §2 で画面実測。</td></tr>
-      <tr><td><a class="cmd" href="#cell-resume-ui"><code>/resume</code></a><span class="chip ui">UI</span></td><td>以前の会話一覧から選んで復帰する。→ §2 で画面実測。</td></tr>
-      <tr><td><a class="cmd" href="#cell-compact"><code>/compact [指示]</code></a><span class="chip mid">中間形</span></td><td>会話を要約してコンテキストを解放する。要約方針を引数で指示できる。→ §1 で実測。</td></tr>
-      <tr><td><a class="cmd" href="#cell-context-ui"><code>/context</code></a><span class="chip ui">UI</span></td><td>コンテキスト使用状況をカラーグリッドで可視化する。→ §2 で画面実測。</td></tr>
-      <tr><td><a class="cmd" href="#cell-rewind-ui"><code>/rewind</code></a><span class="chip ui">UI</span></td><td>コードと会話をチェックポイントまで巻き戻す。→ §2 で画面実測。</td></tr>
-      <tr><td><a class="cmd" href="#cell-recap"><code>/recap</code></a><span class="chip mid">中間形</span></td><td>セッションの1行サマリーを生成する。→ §1 で実測。</td></tr>
-      <tr><td><a class="cmd" href="#cell-btw"><code>/btw [質問]</code></a><span class="chip mid">中間形</span></td><td>会話の文脈に残らないサイド質問をする。→ §1 で実測。</td></tr>
-      </tbody>
-    </table></div>
-  </div>
-
-  <div class="cat-group">
-    <h3>モデルと設定</h3>
-    <div class="table-wrap"><table>
-      <thead><tr><th scope="col">コマンド</th><th scope="col">動作</th></tr></thead>
-      <tbody>
-      <tr><td><a class="cmd" href="#cell-model-ui"><code>/model [model]</code></a><span class="chip ui">UI</span></td><td>使用モデルを切り替え、デフォルトとして保存する。→ §2 で画面実測。</td></tr>
-      <tr><td><a class="cmd" href="#cell-effort-ui"><code>/effort [level]</code></a><span class="chip ui">UI</span></td><td>推論の努力レベル(low〜max)を調整する。→ §2 で画面実測。</td></tr>
-      <tr><td><a class="cmd" href="#cell-memory-ui"><code>/memory</code></a><span class="chip ui">UI</span></td><td>CLAUDE.md とメモリファイルを管理する。→ §2 で画面実測。</td></tr>
-      <tr><td><a class="cmd" href="#cell-permissions-ui"><code>/permissions</code></a><span class="chip ui">UI</span></td><td>ツール権限ルールを管理する。→ §2 で画面実測。</td></tr>
-      <tr><td><a class="cmd" href="#cell-mcp-ui"><code>/mcp</code></a><span class="chip ui">UI</span></td><td>MCP サーバー接続と OAuth 認証を管理する。→ §2 で画面実測。</td></tr>
-      <tr><td><a class="cmd" href="#cell-config-ui"><code>/config</code></a><span class="chip ui">UI</span></td><td>設定画面を開く、またはキーを直接設定する。→ §2 で画面実測。</td></tr>
-      </tbody>
-    </table></div>
-  </div>
-
-  <div class="cat-group">
-    <h3>開発の流れで使うもの</h3>
-    <div class="table-wrap"><table>
-      <thead><tr><th scope="col">コマンド</th><th scope="col">動作</th></tr></thead>
-      <tbody>
-      <tr><td><a class="cmd" href="#cell-init"><code>/init</code></a><span class="chip skill">Skill</span></td><td>プロジェクトを解析して CLAUDE.md を生成する。→ §1 で実測。</td></tr>
-      <tr><td><a class="cmd" href="#cell-plan-ui"><code>/plan</code></a><span class="chip ui">UI</span></td><td>編集を保留するプランモードに入る。→ §2 で画面実測。</td></tr>
-      <tr><td><a class="cmd" href="#cell-code-review"><code>/code-review [level]</code></a><span class="chip skill">Skill</span></td><td>diff や PR をレビューする。<code>--fix</code> で修正適用。→ §1 で実測。</td></tr>
-      <tr><td><a class="cmd" href="#cell-security-review"><code>/security-review</code></a><span class="chip skill">Skill</span></td><td>変更をセキュリティ脆弱性の観点でチェックする。→ §1 で実測。</td></tr>
-      <tr><td><a class="cmd" href="#cell-doctor"><code>/doctor</code></a><span class="chip skill">Skill</span></td><td>セットアップの健全性チェックを実行する。→ §1 で実測。</td></tr>
-      <tr><td><a class="cmd" href="#cell-verify"><code>/verify</code></a><span class="chip skill">Skill</span></td><td>直近の変更の主張を実挙動で検証する。→ §1 で実測。</td></tr>
-      <tr><td><a class="cmd" href="#cell-goal-ui"><code>/goal [条件]</code></a><span class="chip ui">UI</span></td><td>達成条件を設定して自律動作させる(新しめの機能)。→ §2 で画面実測。</td></tr>
-      </tbody>
-    </table></div>
-  </div>
-
-  <div class="cat-group">
-    <h3>状態表示</h3>
-    <div class="table-wrap"><table>
-      <thead><tr><th scope="col">コマンド</th><th scope="col">動作</th></tr></thead>
-      <tbody>
-      <tr><td><a class="cmd" href="#cell-status-ui"><code>/status</code></a> / <a class="cmd" href="#cell-usage-ui"><code>/usage</code></a> / <code>/cost</code><span class="chip ui">UI</span></td><td>セッション状態・トークン使用量・コストを表示(応答を中断せず即時実行)。→ §2 で画面実測。</td></tr>
-      <tr><td><a class="cmd" href="#cell-tasks-ui"><code>/tasks</code></a><span class="chip ui">UI</span></td><td>バックグラウンド作業を一覧する(即時実行)。→ §2 で画面実測。</td></tr>
-      <tr><td><a class="cmd" href="#cell-help-ui"><code>/help</code></a><span class="chip ui">UI</span></td><td>ヘルプと利用可能コマンドを表示する。→ §2 で画面実測。</td></tr>
-      </tbody>
-    </table></div>
-  </div>
-  <!-- CATALOG:END -->
-
-  <p class="sec-lede">完全な一覧と各プラットフォームでの可用性は<a href="https://code.claude.com/docs/en/commands">公式ドキュメント</a>を参照。</p>
-
   <section class="prov" id="prov">
     <h2>取得方法(再現手順)</h2>
     <ul>
-      <li>実行環境: Claude Code CLI v2.1.233 / 2026-08-17 実測。</li>
+      <li>実行環境: Claude Code CLI v2.1.233 / 2026-08-17 実測。§2 の追加分(/advisor /autocompact /branch /diff /fast /rename /workflows、ultracode、/code-review のヒント、/code-review ultra)は v2.1.241 / 2026-08-23 に <code>capture-extra.sh</code> で採取(セルの日付印で区別)。</li>
       <li>出力の採取: <code>claude -p "/コマンド" --model &lt;model&gt;</code> のヘッドレス実行の標準出力。(/btw・/compact を除く。両者は対話モードで実測)</li>
       <li>UI 型の画面の採取: tmux の仮想端末(110×42)で対話モードを起動し、コマンド実行直後に <code>tmux capture-pane -e -p</code> で ANSI カラー付きテキストとして採取し、256色コードを HTML に変換して表示(実際の端末配色の近似)。メールアドレス・セッションID等は伏せ字に置換。</li>
       <li>§1 各セルの「端末画面(実測)」: プロジェクトのクリーンコピーに対する対話モード(haiku、同じく tmux 110×42)での別回の実行を採取したもの。プロンプト・出力の記録とは実行回が異なるため、指摘内容や言語が一致しない場合がある(例: 対話実行ではユーザーのグローバル CLAUDE.md の「日本語で回答」が適用される)。</li>
       <li>注意: LLM の出力は非決定的であり、ここに載せた出力は「ある1回の実行例」である。また Skill 系コマンドの内部動作は CLI のバージョンにより変わりうる。</li>
       <li>§1 の Out 中の「#」「-」等の markdown 記法は、モデル出力の原文のままにしてある。</li>
       <li>端末キャプチャは実端末配色の再現を優先しており、一部の文字色は WCAG AA のコントラスト基準を満たさない。</li>
+      <li><code>/code-review ultra</code>(ultrareview)はクラウドで実行され、<strong>アカウントの無料枠(3 回)を 1 回消費</strong>して採取した。再実行すると残りの無料枠、または利用クレジットを消費する(<code>SKIP_ULTRA=1 ./capture-extra.sh</code> で確認ダイアログの採取だけに留められる)。クラウドセッションの URL は伏せ字。</li>
     </ul>
   </section>
 </main>

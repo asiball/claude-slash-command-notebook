@@ -1,0 +1,1193 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Config Notebook</title>
+<meta name="description" content="Claude Code の設定ファイルの階層(スコープ)・優先順位・permissions を図解と端末実測で可視化する実測リファレンス(2026-08-23 実測、Claude Code 2.1.241)。">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='80' font-size='85' fill='%232F6F6C' font-family='monospace'%3E%E2%9A%99%3C/text%3E%3C/svg%3E">
+<style>
+  :root {
+    --bg: #FBFBF9;
+    --surface: #FFFFFF;
+    --ink: #26231F;
+    --muted: #6B665E;
+    --line: #E5E2DB;
+    --accent: #B4552D;
+    --accent-ink: #8F421F;
+    --accent-soft: #F6EAE2;
+    --out: #2F6F6C;
+    --out-ink: #285E5B;
+    --out-soft: #E7F0EF;
+    --code-bg: #F4F2ED;
+    --chip-skill-bg: #EDE7F4;
+    --chip-skill-ink: #5B3E86;
+    --chip-ui-bg: #EAEDEF;
+    --chip-ui-ink: #4A555C;
+    --chip-mid-bg: #F3EAD4;
+    --chip-mid-ink: #7A5B18;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #16140F;
+      --surface: #1E1B16;
+      --ink: #E9E4DB;
+      --muted: #A09A8D;
+      --line: #37332B;
+      --accent: #E08A5F;
+      --accent-ink: #E99D77;
+      --accent-soft: #3A2A1F;
+      --out: #74B5B0;
+      --out-ink: #8CC5C0;
+      --out-soft: #1E3230;
+      --code-bg: #24211A;
+      --chip-skill-bg: #322A44;
+      --chip-skill-ink: #C0A8E8;
+      --chip-ui-bg: #2A2F33;
+      --chip-ui-ink: #AEBBC3;
+      --chip-mid-bg: #3A2F17;
+      --chip-mid-ink: #D9B45C;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #16140F;
+    --surface: #1E1B16;
+    --ink: #E9E4DB;
+    --muted: #A09A8D;
+    --line: #37332B;
+    --accent: #E08A5F;
+    --accent-ink: #E99D77;
+    --accent-soft: #3A2A1F;
+    --out: #74B5B0;
+    --out-ink: #8CC5C0;
+    --out-soft: #1E3230;
+    --code-bg: #24211A;
+    --chip-skill-bg: #322A44;
+    --chip-skill-ink: #C0A8E8;
+    --chip-ui-bg: #2A2F33;
+    --chip-ui-ink: #AEBBC3;
+    --chip-mid-bg: #3A2F17;
+    --chip-mid-ink: #D9B45C;
+  }
+
+  /* 端末キャプチャ用の等幅フォント(自己ホスト)。
+     罫線(U+2500-)・ブロック要素(U+2588-259F)を収録しており、閲覧環境の
+     フォント差で AA が崩れないようにする。Google Fonts 配信はサブセット化で
+     この範囲を落とすため、woff2 をリポジトリ同梱で配信する(fonts/OFL.txt)。 */
+  @font-face {
+    font-family: "JetBrains Mono";
+    src: url("fonts/JetBrainsMono-Regular.woff2") format("woff2");
+    font-weight: 400; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: "JetBrains Mono";
+    src: url("fonts/JetBrainsMono-Bold.woff2") format("woff2");
+    font-weight: 700; font-style: normal; font-display: swap;
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: system-ui, -apple-system, "Segoe UI", "Hiragino Sans", "Noto Sans JP", sans-serif;
+    line-height: 1.75;
+    margin: 0;
+    padding: 0 1.25rem 5rem;
+    font-size: .97rem;
+  }
+  main { max-width: 860px; margin: 0 auto; }
+  code, pre, .mono {
+    font-family: "JetBrains Mono", ui-monospace, "Cascadia Code", "SF Mono", Menlo, Consolas, monospace;
+  }
+  a { color: var(--accent-ink); }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .cell-lede { margin: 0 0 .3rem; font-size: .96rem; font-weight: 650; color: var(--ink); max-width: 46em; }
+
+  /* ---------- floating TOC (wide screens) ---------- */
+  .toc { display: none; }
+  @media (min-width: 1420px) {
+    .toc {
+      display: block;
+      position: fixed; top: 4.5rem;
+      left: min(calc(100% - 230px), calc(50% + 560px));
+      width: 200px;
+      max-height: calc(100vh - 6rem);
+      overflow-y: auto;
+      font-size: .74rem; line-height: 1.5;
+      border-left: 2px solid var(--line);
+      padding-left: 1.2rem;
+    }
+    .toc-title {
+      font-family: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+      font-size: .66rem; letter-spacing: .14em; text-transform: uppercase;
+      color: var(--muted); margin: 0 0 .5rem;
+    }
+    .toc a { text-decoration: none; }
+    .toc .toc-h {
+      display: block; color: var(--ink); font-weight: 650;
+      margin: .9rem 0 .25rem;
+    }
+    .toc .toc-h:first-of-type { margin-top: 0; }
+    .toc .toc-h:hover { color: var(--accent-ink); }
+    .toc-cmds { display: flex; flex-direction: column; gap: .12rem; padding-bottom: .15rem; }
+    .toc-cmds a {
+      font-family: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+      font-size: .7rem; color: var(--muted);
+    }
+    .toc-cmds a:hover { color: var(--accent-ink); }
+    /* スクロール位置と同期して現在地をハイライト(scrollspy)。
+       padding とマイナス margin を相殺させ、背景帯が付いても文字位置がずれないようにする */
+    .toc a.active {
+      color: var(--accent-ink);
+      background: var(--accent-soft);
+      border-radius: 5px;
+      padding: .08em .45em;
+      margin-left: -.45em;
+    }
+    .toc .toc-cmds a.active { color: var(--accent-ink); font-weight: 700; }
+    .toc .toc-h.active { color: var(--accent-ink); }
+  }
+  .toc-cmds a .toc-tag {
+    font-family: system-ui, sans-serif;
+    font-size: .62rem; font-weight: 650; letter-spacing: .06em;
+    color: var(--chip-skill-ink); background: var(--chip-skill-bg);
+    border-radius: 999px; padding: .05em .5em; margin-left: .35em;
+    vertical-align: .08em;
+  }
+
+  /* 1420px 未満ではフローティング目次が出ないため、ヘッダ直下に折りたたみ目次を置く */
+  .toc-inline { display: none; }
+  @media (max-width: 1419.98px) {
+    .toc-inline {
+      display: block; margin: 1.25rem 0 0;
+      border: 1px solid var(--line); border-radius: 8px;
+      background: var(--surface); font-size: .8rem;
+    }
+    .toc-inline summary {
+      cursor: pointer; padding: .55rem .9rem; color: var(--muted);
+      font-family: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+      font-size: .74rem;
+    }
+    .toc-inline .toc-h {
+      display: block; font-weight: 650; color: var(--ink);
+      text-decoration: none; margin: .5rem .9rem .2rem;
+    }
+    .toc-inline .toc-cmds {
+      display: flex; flex-wrap: wrap; gap: .3rem .8rem;
+      padding: .1rem .9rem .7rem;
+    }
+    .toc-inline .toc-cmds a {
+      font-family: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+      font-size: .74rem; color: var(--muted); text-decoration: none;
+    }
+    .toc-inline .toc-cmds a:hover { color: var(--accent-ink); }
+  }
+
+  /* ---------- sticky nav ---------- */
+  .topnav {
+    position: sticky; top: 0; z-index: 40;
+    display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+    margin: 0; padding: .6rem 0;
+    background: var(--bg);
+    border-bottom: 1px solid var(--line);
+    font-family: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+  }
+  .topnav .brand {
+    font-size: .78rem; font-weight: 700; letter-spacing: .05em;
+    color: var(--ink); text-decoration: none; white-space: nowrap;
+  }
+  .topnav .brand span { color: var(--out); }
+  .topnav .links { display: flex; gap: .25rem; flex-wrap: wrap; }
+  .topnav .links a {
+    font-size: .74rem; color: var(--muted); text-decoration: none;
+    padding: .2em .65em; border-radius: 999px;
+  }
+  .topnav .links a:hover { color: var(--accent-ink); background: var(--accent-soft); }
+  @media (min-width: 1420px) { .topnav .links { display: none; } }
+  .topnav .links a.sister { color: var(--out-ink); }
+
+  /* ---------- header ---------- */
+  .page-head { padding: 3rem 0 1.75rem; border-bottom: 2px solid var(--ink); }
+  .eyebrow {
+    font-family: "JetBrains Mono", ui-monospace, "Cascadia Code", "SF Mono", Menlo, Consolas, monospace;
+    font-size: .72rem; letter-spacing: .16em; text-transform: uppercase;
+    color: var(--accent); margin: 0 0 .8rem;
+  }
+  h1 {
+    font-size: 2.25rem; line-height: 1.2; margin: 0 0 .9rem;
+    font-weight: 700; letter-spacing: -.015em; text-wrap: balance;
+  }
+  .page-head p { max-width: 42em; color: var(--muted); margin: .3rem 0; }
+  .meta-chips { display: flex; flex-wrap: wrap; gap: .45rem; margin-top: 1.1rem; }
+  .meta-chips span {
+    font-family: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+    font-size: .7rem; color: var(--muted);
+    border: 1px solid var(--line); border-radius: 999px;
+    padding: .2em .75em; background: var(--surface);
+    font-variant-numeric: tabular-nums;
+  }
+  .meta-chips span a { color: var(--out-ink); text-decoration: none; }
+  .meta-chips span a:hover { text-decoration: underline; }
+
+  h2 {
+    font-size: 1.32rem; font-weight: 700; letter-spacing: -.005em;
+    margin: 3.75rem 0 .5rem; text-wrap: balance;
+    scroll-margin-top: 3.6rem;
+    padding-bottom: .4rem; border-bottom: 1px solid var(--line);
+  }
+  h2 .sec-no {
+    color: var(--accent); font-family: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+    font-size: .82em; margin-right: .55em;
+  }
+  .sec-lede { color: var(--muted); max-width: 46em; margin: .75rem 0 1.9rem; font-size: .95rem; }
+  .gist { color: var(--muted); font-size: .85rem; margin: 0 0 .55em; }
+
+  /* ---------- notebook cells ---------- */
+  .cell {
+    position: relative;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    margin: 0 0 2.1rem;
+    scroll-margin-top: 3.6rem;
+  }
+  .cell + .cell::before {
+    content: "";
+    position: absolute;
+    left: 2.1rem; top: -2.15rem; height: 2.1rem;
+    border-left: 2px solid var(--line);
+  }
+  .cell-head {
+    display: flex; align-items: baseline; gap: .7rem; flex-wrap: wrap;
+    padding: .7rem 1.1rem;
+    border-bottom: 1px solid var(--line);
+    border-left: 3px solid var(--accent);
+    border-radius: 8px 8px 0 0;
+  }
+  .in-label {
+    font-family: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+    font-size: .66rem; letter-spacing: .12em; text-transform: uppercase;
+    color: var(--accent-ink); font-weight: 700; padding-top: .25rem;
+  }
+  .cell-head .typed { font-size: 1.05rem; font-weight: 600; margin: 0; }
+  .cell:not(.setup) .cell-head .typed::before {
+    content: "❯ "; color: var(--accent); font-weight: 700;
+    font-family: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+  }
+  .cell-meta { margin-left: auto; font-size: .74rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .cell-body { padding: 1rem 1.1rem 1.2rem; border-left: 3px solid transparent; }
+  .cell-desc { margin: 0 0 .95rem; color: var(--muted); font-size: .92rem; max-width: 46em; }
+
+  .cell.setup .cell-head { border-left-color: var(--line); }
+  .head-badge {
+    font-family: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+    font-size: .66rem; letter-spacing: .12em; text-transform: uppercase;
+    font-weight: 700; background: var(--chip-ui-bg); color: var(--chip-ui-ink);
+    padding: .18em .7em; border-radius: 999px;
+  }
+
+  .term-note {
+    font-size: .8rem; color: var(--muted);
+    margin: 1.05rem 0 .45rem; max-width: 46em;
+  }
+  .term-note strong { color: var(--ink); font-weight: 650; }
+
+  /* collapsible blocks */
+  details.prompt {
+    border: 1px solid var(--line); border-radius: 6px;
+    background: var(--code-bg); margin: 0 0 1rem;
+  }
+  details.prompt summary {
+    cursor: pointer; padding: .55rem .9rem;
+    font-size: .8rem; color: var(--muted);
+    list-style: none; display: flex; flex-wrap: wrap; gap: .25em .55em; align-items: baseline;
+  }
+  details.prompt summary::-webkit-details-marker { display: none; }
+  details.prompt summary::before {
+    content: "▸"; color: var(--accent); flex: none;
+    display: inline-block; transition: transform .15s ease;
+  }
+  details.prompt[open] summary::before { transform: rotate(90deg); }
+  details.prompt summary strong { color: var(--ink); font-weight: 650; }
+  details.prompt[open] summary { border-bottom: 1px solid var(--line); }
+  details.prompt pre {
+    margin: 0; padding: .9rem 1rem; font-size: .78rem; line-height: 1.6;
+    overflow-x: auto; white-space: pre-wrap; word-break: break-word;
+  }
+
+  .in-block {
+    display: grid; grid-template-columns: auto 1fr; gap: .9rem;
+    border-left: 3px solid var(--accent);
+    background: var(--accent-soft);
+    border-radius: 0 6px 6px 0;
+    padding: .7rem 1rem;
+    margin: 0 0 .9rem;
+  }
+  .in-block .in-cmd { font-size: .88rem; font-weight: 600; min-width: 0; overflow-x: auto; white-space: pre-wrap; word-break: break-word; }
+
+  /* output block */
+  .out-block {
+    display: grid; grid-template-columns: auto 1fr; gap: .9rem;
+    border-left: 3px solid var(--out);
+    background: var(--out-soft);
+    border-radius: 0 6px 6px 0;
+    padding: .85rem 1rem;
+  }
+  .out-label {
+    font-family: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+    font-size: .66rem; letter-spacing: .12em; text-transform: uppercase;
+    color: var(--out-ink); font-weight: 700; padding-top: .25rem;
+  }
+  .out-content { min-width: 0; font-size: .92rem; }
+  .out-content > :first-child { margin-top: 0; }
+  .out-content > :last-child { margin-bottom: 0; }
+  .out-content ul { padding-left: 1.3em; margin: .5em 0; }
+  .out-content li { margin: .2em 0; }
+  .out-content code {
+    background: var(--code-bg); border: 1px solid var(--line);
+    border-radius: 3px; padding: .05em .3em; font-size: .85em;
+  }
+  .out-content pre {
+    background: var(--code-bg); border: 1px solid var(--line); border-radius: 5px;
+    padding: .8rem .9rem; overflow-x: auto; font-size: .8rem; line-height: 1.6;
+  }
+  .out-content pre code { background: none; border: none; padding: 0; }
+
+  /* ---------- terminal captures (deliberately dark in both themes) ---------- */
+  .term {
+    background: #191713;
+    color: #D9D4CA;
+    border: 1px solid #383429;
+    border-radius: 8px;
+    overflow: hidden;
+    margin: 0;
+  }
+  .term-bar {
+    display: flex; align-items: center; gap: .5rem;
+    padding: .45rem .85rem;
+    background: #211E19;
+    border-bottom: 1px solid #383429;
+    font-family: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+    font-size: .7rem; color: #9A9384; letter-spacing: .08em;
+  }
+  .term-bar::before {
+    content: "";
+    width: .58rem; height: .58rem; border-radius: 50%;
+    background: #C96A42; flex: none;
+    box-shadow: 1rem 0 0 #4E6E5A;
+    margin-right: 1rem;
+  }
+  .term pre {
+    margin: 0; padding: .85rem 1rem;
+    font-size: .72rem; line-height: 1.55;
+    overflow-x: auto; color: inherit;
+    font-variant-ligatures: none; /* 実端末の見た目に合わせ合字を無効化 */
+  }
+
+  /* ---------- §1 優先順位の積み上げ図 ---------- */
+  .stack-wrap {
+    display: grid; grid-template-columns: auto 1fr; gap: 0 1rem;
+    margin: 1.5rem 0 1rem;
+  }
+  .stack-axis {
+    display: flex; flex-direction: column; align-items: center;
+    font-family: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+    font-size: .68rem; color: var(--muted); letter-spacing: .08em;
+    padding: .1rem 0; white-space: nowrap;
+  }
+  .stack-axis .axis-strong { color: var(--accent-ink); font-weight: 700; }
+  .stack-axis .axis-line {
+    flex: 1; width: 2px; margin: .4rem 0; border-radius: 2px;
+    background: linear-gradient(to bottom, var(--accent), var(--line));
+  }
+  .layers { display: flex; flex-direction: column; gap: .5rem; min-width: 0; }
+  .layer {
+    border: 1px solid var(--line); border-left: 3px solid var(--out);
+    border-radius: 6px; background: var(--surface);
+    padding: .6rem .95rem .65rem;
+  }
+  .layer.top { border-left-color: var(--accent); background: var(--accent-soft); }
+  .layer .l-head { display: flex; align-items: baseline; gap: .6rem; flex-wrap: wrap; }
+  .layer .l-no {
+    font-family: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+    font-size: .7rem; font-weight: 700; color: var(--accent);
+  }
+  .layer .l-name { font-weight: 650; font-size: .93rem; }
+  .layer .l-badge {
+    font-size: .64rem; font-weight: 650; letter-spacing: .06em;
+    background: var(--chip-mid-bg); color: var(--chip-mid-ink);
+    border-radius: 999px; padding: .1em .6em;
+  }
+  .layer .l-path {
+    font-family: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+    font-size: .74rem; color: var(--muted);
+    margin: .15rem 0 0; overflow-x: auto; white-space: nowrap;
+  }
+  .layer .l-note { font-size: .8rem; color: var(--muted); margin: .1rem 0 0; max-width: 46em; }
+  .fig-note { font-size: .84rem; color: var(--muted); margin: .9rem 0 0; max-width: 46em; }
+
+  /* ---------- §2 コラム(紛らわしいファイル) ---------- */
+  .aside-box {
+    border: 1px solid var(--line); border-left: 3px solid var(--out);
+    border-radius: 0 6px 6px 0; background: var(--out-soft);
+    padding: .8rem 1.1rem .9rem; margin: 1.4rem 0 0;
+    font-size: .9rem;
+  }
+  .aside-box .aside-title {
+    font-family: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+    font-size: .68rem; letter-spacing: .12em; text-transform: uppercase;
+    color: var(--out-ink); font-weight: 700; margin: 0 0 .4rem;
+  }
+  .aside-box ul { padding-left: 1.3em; margin: .3em 0 0; }
+  .aside-box li { margin: .3em 0; }
+  .aside-box code {
+    background: var(--code-bg); border: 1px solid var(--line);
+    border-radius: 3px; padding: .05em .3em; font-size: .85em;
+  }
+
+  /* ---------- catalog ---------- */
+  .cat-group { margin: 0 0 2.25rem; }
+  h3 { font-size: 1.02rem; font-weight: 700; margin: 0 0 .6rem; }
+  .table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
+  table { border-collapse: collapse; width: 100%; font-size: .88rem; }
+  th, td { text-align: left; padding: .55rem .9rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: var(--code-bg); }
+  th {
+    font-size: .7rem; letter-spacing: .1em; text-transform: uppercase;
+    color: var(--muted); font-weight: 650; background: var(--code-bg);
+  }
+  td code { white-space: nowrap; font-size: .92em; }
+  td a.cmd { text-decoration: none; }
+  td a.cmd code { color: var(--accent-ink); }
+  td a.cmd:hover code { text-decoration: underline; }
+  .chip {
+    display: inline-block; font-size: .66rem; font-weight: 650;
+    letter-spacing: .06em; border-radius: 999px; padding: .12em .6em;
+    vertical-align: middle; margin-left: .4em;
+  }
+  .chip.skill { background: var(--chip-skill-bg); color: var(--chip-skill-ink); }
+  .chip.ui { background: var(--chip-ui-bg); color: var(--chip-ui-ink); }
+  .chip.mid { background: var(--chip-mid-bg); color: var(--chip-mid-ink); }
+
+  /* ---------- provenance ---------- */
+  .prov {
+    scroll-margin-top: 3.6rem;
+    margin-top: 4rem; padding-top: 1.25rem; border-top: 1px solid var(--line);
+    font-size: .84rem; color: var(--muted);
+  }
+  .prov h2 {
+    font-size: .78rem; margin: 0 0 .6rem; color: var(--ink);
+    border: none; padding: 0;
+    font-family: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+    letter-spacing: .12em; text-transform: uppercase;
+  }
+  .prov ul { padding-left: 1.3em; margin: .4em 0; }
+
+  @media (max-width: 640px) {
+    body { font-size: .94rem; }
+    h2 { scroll-margin-top: 7rem; }
+    .cell, .prov { scroll-margin-top: 7rem; }
+    h1 { font-size: 1.7rem; }
+    .topnav { flex-direction: column; align-items: flex-start; gap: .2rem; }
+    .cell + .cell::before { left: 1.3rem; }
+    .cell-meta { margin-left: 0; flex-basis: 100%; }
+    .stack-wrap { grid-template-columns: 1fr; }
+    .stack-axis { flex-direction: row; gap: .5rem; margin-bottom: .5rem; }
+    .stack-axis .axis-line {
+      width: auto; height: 2px; flex: 1; margin: 0;
+      background: linear-gradient(to right, var(--accent), var(--line));
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    * { transition: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<main>
+  <nav class="topnav" aria-label="セクション">
+    <a class="brand" href="#top"><span>⚙</span> Config Notebook</a>
+    <div class="links">
+      <a href="#layers">§1 階層</a>
+      <a href="#files">§2 ファイル</a>
+      <a href="#demos">§3 実測デモ</a>
+      <a href="#catalog">§4 早見表</a>
+      <a href="#prov">取得方法</a>
+      <a class="sister" href="index.html">← Slash Command Notebook</a>
+    </div>
+  </nav>
+  <nav class="toc" aria-label="目次">
+    <p class="toc-title">目次</p>
+    <a class="toc-h" href="#layers">§1 階層と優先順位</a>
+    <a class="toc-h" href="#files">§2 ファイルの使い分け</a>
+    <a class="toc-h" href="#demos">§3 実測デモ</a>
+    <div class="toc-cmds">
+      <a href="#cell-config-fixture">Setup</a>
+      <a href="#cell-status-scopes">/status</a>
+      <a href="#cell-config-scopes">/config</a>
+      <a href="#cell-permissions-rules">/permissions</a>
+      <a href="#cell-perm-allow">allow 実行</a>
+      <a href="#cell-perm-ask">ask 確認</a>
+      <a href="#cell-perm-deny">deny 拒否</a>
+      <a href="#cell-perm-modes">権限モード</a>
+      <a href="#cell-config-output-style">Output style</a>
+      <a href="#cell-style-compare">スタイル比較</a>
+    </div>
+    <a class="toc-h" href="#catalog">§4 主要キー早見表</a>
+    <a class="toc-h" href="#prov">取得方法(再現手順)</a>
+    <a class="toc-h" href="index.html">← Slash Command Notebook</a>
+  </nav>
+  <header class="page-head" id="top">
+    <p class="eyebrow">claude code / settings</p>
+    <h1>Config Notebook</h1>
+    <p>Claude Code の設定は1つのファイルではなく、複数のファイル(スコープ)に分かれて置かれ、同じキーが重複したときに「どれが勝つか」の優先順位を持つ。公式ドキュメント <a href="https://code.claude.com/docs/en/settings">code.claude.com/docs/en/settings</a> は網羅的だが、階層の全体構造は文章だけではイメージしにくい。</p>
+    <p>本ページはその階層を図解し(§1・§2)、実際に複数スコープの設定を重ねたときの画面(<code>/status</code> の Setting sources、permissions の allow / ask / deny の各挙動)を端末実測で記録する(§3)。§3 の 16 画面は 2026-08-23 に Claude Code 2.1.241 で採取したもの(採取手順は<a href="#prov">取得方法</a>)。姉妹ページの <a href="index.html">Slash Command Notebook</a> と同じ形式・同じ採取手順を使っている。</p>
+    <div class="meta-chips">
+      <span>公式ドキュメント 2026-08-20 参照</span>
+      <span>実測 9 セル · 16 画面 · 2026-08-23</span>
+      <span>Claude Code 2.1.241</span>
+      <span>姉妹ページ: <a href="index.html">Slash Command Notebook</a></span>
+    </div>
+  </header>
+  <details class="toc-inline">
+    <summary>セクション別もくじ</summary>
+    <a class="toc-h" href="#layers">§1 階層と優先順位</a>
+    <a class="toc-h" href="#files">§2 ファイルの使い分け</a>
+    <a class="toc-h" href="#demos">§3 実測デモ</a>
+    <div class="toc-cmds">
+      <a href="#cell-config-fixture">Setup</a>
+      <a href="#cell-status-scopes">/status</a>
+      <a href="#cell-config-scopes">/config</a>
+      <a href="#cell-permissions-rules">/permissions</a>
+      <a href="#cell-perm-allow">allow 実行</a>
+      <a href="#cell-perm-ask">ask 確認</a>
+      <a href="#cell-perm-deny">deny 拒否</a>
+      <a href="#cell-perm-modes">権限モード</a>
+      <a href="#cell-config-output-style">Output style</a>
+      <a href="#cell-style-compare">スタイル比較</a>
+    </div>
+    <a class="toc-h" href="#catalog">§4 主要キー早見表</a>
+    <a class="toc-h" href="#prov">取得方法(再現手順)</a>
+  </details>
+
+  <h2 id="layers"><span class="sec-no">§1</span>設定の階層と優先順位</h2>
+  <p class="sec-lede">設定は5つの層が積み重なって解決される。上の層ほど強く、同じキーが複数の層にあるときは上の層の値が採用される。最上位の Managed settings は組織が配布するポリシーで、ユーザー側の設定では上書きできない。</p>
+
+  <div class="stack-wrap">
+    <div class="stack-axis" aria-hidden="true">
+      <span class="axis-strong">強い</span>
+      <span class="axis-line"></span>
+      <span>弱い</span>
+    </div>
+    <div class="layers">
+      <div class="layer top">
+        <div class="l-head">
+          <span class="l-no">1</span>
+          <span class="l-name">Managed settings</span>
+          <span class="l-badge">上書き不可</span>
+        </div>
+        <p class="l-note">組織(管理者)が配布するポリシー。以下より下の層では上書きできない。</p>
+        <p class="l-path">Linux: /etc/claude-code/managed-settings.json</p>
+        <p class="l-path">macOS: /Library/Application Support/ClaudeCode/managed-settings.json</p>
+        <p class="l-path">Windows: C:\ProgramData\ClaudeCode\managed-settings.json</p>
+      </div>
+      <div class="layer">
+        <div class="l-head">
+          <span class="l-no">2</span>
+          <span class="l-name">CLI 引数</span>
+        </div>
+        <p class="l-note"><code>--model</code> などの起動フラグ。その起動のみ有効。</p>
+      </div>
+      <div class="layer">
+        <div class="l-head">
+          <span class="l-no">3</span>
+          <span class="l-name">プロジェクト・個人用(local)</span>
+        </div>
+        <p class="l-path">.claude/settings.local.json</p>
+        <p class="l-note">個人の実験・ローカル事情。Claude Code が自動で .gitignore に追加する。</p>
+      </div>
+      <div class="layer">
+        <div class="l-head">
+          <span class="l-no">4</span>
+          <span class="l-name">プロジェクト共有</span>
+        </div>
+        <p class="l-path">.claude/settings.json</p>
+        <p class="l-note">チームで共有する設定。コミットする。</p>
+      </div>
+      <div class="layer">
+        <div class="l-head">
+          <span class="l-no">5</span>
+          <span class="l-name">ユーザー全体</span>
+        </div>
+        <p class="l-path">~/.claude/settings.json</p>
+        <p class="l-note">全プロジェクトに効く個人のデフォルト。</p>
+      </div>
+    </div>
+  </div>
+  <p class="fig-note">同じキーが複数スコープにあるときは上の層が勝つ。→ <a href="#demos">§3 で実測</a>(3スコープに別々の <code>model</code> を置くと、最上位の local の値が <code>/status</code> に出る)。</p>
+
+  <h2 id="files"><span class="sec-no">§2</span>どのファイルに何を書くか</h2>
+  <p class="sec-lede">§1 の各層のうち、自分で編集するのは settings.json 系の3ファイル。どこに書くかは「誰に効かせたいか」「git に載せてよいか」で決まる。</p>
+
+  <div class="table-wrap"><table>
+    <thead><tr><th scope="col">スコープ</th><th scope="col">パス</th><th scope="col">git 管理</th><th scope="col">典型用途</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>ユーザー全体</td>
+        <td><code>~/.claude/settings.json</code></td>
+        <td>対象外(ホーム直下)</td>
+        <td>個人のデフォルト。model、全プロジェクト共通の permissions・env など</td>
+      </tr>
+      <tr>
+        <td>プロジェクト共有</td>
+        <td><code>.claude/settings.json</code></td>
+        <td>コミットする</td>
+        <td>チームで揃えたい設定。プロジェクトの permissions ルール、hooks など</td>
+      </tr>
+      <tr>
+        <td>プロジェクト・個人用</td>
+        <td><code>.claude/settings.local.json</code></td>
+        <td>しない(Claude Code が自動で .gitignore に追加)</td>
+        <td>個人の実験・ローカル環境の事情による一時的な上書き</td>
+      </tr>
+      <tr>
+        <td>Managed(組織)</td>
+        <td><code>/etc/claude-code/managed-settings.json</code> など(OS 別。§1 参照)</td>
+        <td>対象外(管理者が配布)</td>
+        <td>組織ポリシーの強制。ユーザー側では上書き不可</td>
+      </tr>
+    </tbody>
+  </table></div>
+
+  <div class="aside-box">
+    <p class="aside-title">コラム — 紛らわしいファイルの区別</p>
+    <ul>
+      <li><code>~/.claude/settings.json</code> — 本ページで扱う<strong>設定本体</strong>(ユーザースコープ)。</li>
+      <li><code>~/.claude.json</code> — 別物。ユーザースコープの <strong>MCP サーバー登録</strong>や CLI の状態が入る。settings 階層の一部ではない。</li>
+      <li><code>.mcp.json</code> — プロジェクトで共有する <strong>MCP サーバー定義</strong>。これも settings とは別ファイル。</li>
+      <li><code>CLAUDE.md</code> 系(<code>~/.claude/CLAUDE.md</code>・<code>./CLAUDE.md</code>)— これらは「<strong>メモリ</strong>」(モデルに渡る指示文)であり、settings ではない。</li>
+    </ul>
+  </div>
+
+  <h2 id="demos"><span class="sec-no">§3</span>実測デモ</h2>
+  <p class="sec-lede">以下は <code>capture-config.sh</code> で採取したシナリオ(2026-08-23、Claude Code 2.1.241、tmux 110×42。スタイル比較のみ 110×60)。3スコープ(User / Project / Local)に別々の設定を置いたフィクスチャに対し、優先順位の解決、permissions の allow / ask / deny の3挙動、権限モードの表示、Output style の選択と効果を画面で確認した。対話セルの画面は起動バナーを省き、該当プロンプト以降を載せている。メールアドレス・セッション ID・ホームディレクトリのパスは伏せ字。</p>
+
+  <!-- CELL:config-fixture -->
+  <article class="cell setup" id="cell-config-fixture">
+    <div class="cell-head">
+      <span class="head-badge">Setup</span>
+      <h3 class="typed"><code>work/config-demo/</code></h3>
+      <span class="cell-meta">採取用フィクスチャ · capture-config.sh が毎回再構築</span>
+    </div>
+    <div class="cell-body">
+      <p class="cell-lede">§3 の各セルは、この最小フィクスチャに対して採取した。</p>
+      <p class="cell-desc">model キーを User / Project / Local の3スコープに別々の値で置き、優先順位の解決を観察できるようにする。permissions はプロジェクト共有の settings.json にだけ置き、allow(確認なしで実行)・deny(拒否)・ルール外(確認プロンプト)の3挙動を1つのフィクスチャで再現する。</p>
+      <div class="out-content"><pre><code>work/config-demo/
+├── src/hello.py                # print("hello from config-demo") のみ
+├── secrets/credentials.env     # ダミー値 DUMMY_TOKEN=xxxx
+└── .claude/
+    ├── settings.json           # プロジェクト共有(下記)
+    └── settings.local.json     # { "model": "claude-haiku-4-5" }</code></pre></div>
+      <details class="prompt">
+        <summary><strong>.claude/settings.json</strong>(プロジェクト共有)</summary>
+        <pre>{
+  "model": "claude-sonnet-5",
+  "permissions": {
+    "allow": ["Bash(python3 src/hello.py)"],
+    "deny": ["Read(./secrets/**)"]
+  }
+}</pre>
+      </details>
+      <p class="cell-desc">ユーザー設定 <code>~/.claude/settings.json</code> には採取時のみ <code>"model": "claude-opus-5"</code> をマージする(採取後に復元)。権限モードと Output style のセルでは、この local ファイルに <code>permissions.defaultMode</code> や <code>outputStyle</code> を足した版で起動し直している。実測結果: model は3スコープのうち最上位の local が勝って <code>claude-haiku-4-5</code> になり、<code>/status</code> の Setting sources には User / Shared project / Project local の3つが並んだ(下の <a href="#cell-status-scopes">/status セル</a>)。</p>
+    </div>
+  </article>
+
+  <!-- CELL:status-scopes -->
+  <article class="cell" id="cell-status-scopes">
+    <div class="cell-head">
+      <h3 class="typed"><code>/status</code></h3>
+      <span class="cell-meta">画面実測 · 2026-08-23</span>
+    </div>
+    <div class="cell-body">
+      <p class="cell-lede">3スコープ適用時の /status で、Setting sources と実効 model を確認する。</p>
+      <p class="cell-desc">実測: Setting sources に <code>User settings, Shared project settings, Project local settings</code> の3つが並び、Model 行は local の <code>claude-haiku-4-5</code>(user の opus-5・project の sonnet-5 は負ける — §1 の「上の層が勝つ」の実証)。1スコープのみの画面は姉妹ページの <a href="index.html#cell-status-ui">/status 実測</a> を参照。</p>
+      <div class="term"><div class="term-bar">claude — /status (scopes)</div><pre><span style="color:#AFD7FF">▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔</span>
+   <span style="color:#AFD7FF;font-weight:700">Settings</span> <span style="color:#000000;background:#AFD7FF;font-weight:700"> Status </span>  Config   Usage   Stats
+
+   <span style="font-weight:700">Version:</span>          2.1.241
+   <span style="font-weight:700">Session name:</span>     <span style="color:#949494">/rename to add a name</span>
+   <span style="font-weight:700">Session ID:</span>       ****************-****
+   <span style="font-weight:700">Session kind:</span>     interactive
+   <span style="font-weight:700">Peer address:</span>     uds:/tmp/cc-socks/26746.sock
+   <span style="font-weight:700">cwd:</span>              /…/claude-slash-command-notebook/work/config-demo
+   <span style="font-weight:700">Login method:</span>     Claude Max account
+   <span style="font-weight:700">Organization:</span>     ****'s Organization
+   <span style="font-weight:700">Email:</span>            ****@****
+   <span style="font-weight:700"> </span>
+   <span style="font-weight:700">Model:</span>            claude-haiku-4-5
+   <span style="font-weight:700">MCP servers:</span>      <span style="color:#87D787">1 connected</span>, <span style="color:#949494">1 disabled</span> <span style="color:#949494">· /mcp</span>
+   <span style="font-weight:700">Setting sources:</span>  User settings, Shared project settings, Project local settings
+
+   <span style="color:#949494">Esc to cancel</span></pre></div>
+    </div>
+  </article>
+
+  <!-- CELL:config-scopes -->
+  <article class="cell" id="cell-config-scopes">
+    <div class="cell-head">
+      <h3 class="typed"><code>/config</code></h3>
+      <span class="cell-meta">画面実測 · 2026-08-23</span>
+    </div>
+    <div class="cell-body">
+      <p class="cell-lede">フィクスチャ適用時の設定パネル(Config タブ)を記録する。</p>
+      <p class="cell-desc">実測: 検索付きの設定一覧に、複数スコープをマージした後の実効値が表示される。この一覧にはスコープの内訳(どのファイル由来か)は出ないので、スコープの確認は上の <code>/status</code> の Setting sources を見る。デフォルト状態の画面は姉妹ページの <a href="index.html#cell-config-ui">/config 実測</a> と比較できるようにする。</p>
+      <div class="term"><div class="term-bar">claude — /config (scopes)</div><pre><span style="color:#AFD7FF">▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔</span>
+   <span style="color:#AFD7FF;font-weight:700">Settings</span>  Status  <span style="color:#191713;background:#D9D4CA;font-weight:700"> Config </span>  Usage   Stats
+
+   <span style="color:#AFD7FF">╭──────────────────────────────────────────────────────────────────────────────────────────────────────╮</span>
+   <span style="color:#AFD7FF">│</span> ⌕ <span style="color:#949494">Search settings…</span>                                                                                   <span style="color:#AFD7FF">│</span>
+   <span style="color:#AFD7FF">╰──────────────────────────────────────────────────────────────────────────────────────────────────────╯</span>
+
+     Auto-compact                               true
+     Continue automatically at usage limit      true
+     Switch models when a message is flagged    true
+     Show tips                                  true
+     Reduce motion                              false
+     Thinking mode                              true
+     Prompt suggestions                         true
+     Session recap                              true
+     Rewind code (checkpoints)                  true
+     Dynamic workflows                          true
+     Ultracode keyword trigger                  true
+     Dynamic workflow size                      medium (default)
+     Artifacts                                  true
+     Verbose output                             false
+     Terminal progress bar                      true
+     Show turn duration                         true
+     Default permission mode                    Manual
+     Worktree base ref                          fresh
+     Use auto mode during plan                  true
+     Respect .gitignore in file picker          true
+     Skip the /copy picker                      false
+     Copy on select                             true
+     Auto-scroll                                true
+     Open agents view by default                false
+     ← opens agents                             true
+     Auto-update channel                        latest
+     Theme                                      Dark mode
+     Local notifications                        Auto
+     Push when actions required                 false
+     Push when Claude decides                   true
+   <span style="color:#949494">↓ 12 more below</span>
+
+   <span style="color:#949494">Type to filter · Enter/↓ to select · ↑ to tabs · Esc to clear</span></pre></div>
+    </div>
+  </article>
+
+  <!-- CELL:permissions-rules -->
+  <article class="cell" id="cell-permissions-rules">
+    <div class="cell-head">
+      <h3 class="typed"><code>/permissions</code></h3>
+      <span class="cell-meta">画面実測 · 2026-08-23</span>
+    </div>
+    <div class="cell-body">
+      <p class="cell-lede">settings.json に書いた allow / deny ルールが /permissions の一覧に載った画面を記録する(Allow タブと、←/→ で切り替えた Deny タブの2画面)。</p>
+      <p class="cell-desc">実測: Allow タブに <code>Bash(python3 src/hello.py)</code>、Deny タブに <code>Read(./secrets/**)</code> が載った。一覧にはルールの出所(どのスコープ由来か)は表示されない。Allow タブにはこのフィクスチャ由来ではないルール(採取環境に別途あった <code>mcp__computer-use__*</code>)も混ざって並んでおり、/permissions はスコープを問わず有効なルールをまとめて見せることが分かる。ルール未設定(一覧が空)の画面は姉妹ページの <a href="index.html#cell-permissions-ui">/permissions 実測</a> を参照。</p>
+      <div class="term"><div class="term-bar">claude — /permissions (rules)</div><pre><span style="color:#AFD7FF">▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔</span>
+   <span style="color:#AFD7FF;font-weight:700">Permissions</span>  Recently denied  <span style="color:#000000;background:#AFD7FF;font-weight:700"> Allow </span>  Ask   Deny   Workspace
+
+   Claude Code won't ask before using allowed tools.
+   <span style="opacity:.72">╭───────────────────────────────────────────────╮</span>
+   <span style="opacity:.72">│</span> <span style="color:#949494">⌕ Search…</span>                                     <span style="opacity:.72">│</span>
+   <span style="opacity:.72">╰───────────────────────────────────────────────╯</span>
+
+     <span style="color:#949494">1.  </span>Add a new rule…
+     <span style="color:#949494">2.  </span>Bash(python3 src/hello.py)
+     <span style="color:#949494">3.  </span>mcp__computer-use__computer_batch
+     <span style="color:#949494">4.  </span>mcp__computer-use__cursor_position
+     <span style="color:#949494">5.  </span>mcp__computer-use__double_click
+     <span style="color:#949494">6.  </span>mcp__computer-use__hold_key
+     <span style="color:#949494">7.  </span>mcp__computer-use__key
+     <span style="color:#949494">8.  </span>mcp__computer-use__left_click
+     <span style="color:#949494">9.  </span>mcp__computer-use__left_click_drag
+   <span style="color:#949494">↓</span> <span style="color:#949494">10. </span>mcp__computer-use__left_mouse_down
+
+   <span style="color:#949494">←/→ to switch · ↓ to select · Esc to cancel</span></pre></div>
+      <div class="term"><div class="term-bar">claude — /permissions (deny tab)</div><pre><span style="color:#AFD7FF">▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔</span>
+   <span style="color:#AFD7FF;font-weight:700">Permissions</span>  Recently denied   Allow   Ask  <span style="color:#000000;background:#AFD7FF;font-weight:700"> Deny </span>  Workspace
+
+   Claude Code will always reject requests to use denied tools.
+   <span style="opacity:.72">╭──────────────────────────────────────────────────────────╮</span>
+   <span style="opacity:.72">│</span> <span style="color:#949494">⌕ Search…</span>                                                <span style="opacity:.72">│</span>
+   <span style="opacity:.72">╰──────────────────────────────────────────────────────────╯</span>
+
+     <span style="color:#949494">1. </span>Add a new rule…
+     <span style="color:#949494">2. </span>Read(./secrets/**)
+
+   <span style="color:#949494">←/→ to switch · ↓ to select · Esc to cancel</span></pre></div>
+    </div>
+  </article>
+
+  <!-- CELL:perm-allow -->
+  <article class="cell" id="cell-perm-allow">
+    <div class="cell-head">
+      <h3 class="typed"><code>python3 src/hello.py を実行して</code></h3>
+      <span class="cell-meta">画面実測 · 2026-08-23</span>
+    </div>
+    <div class="cell-body">
+      <p class="cell-lede">allow ルールに一致するコマンドが、確認プロンプトなしで実行される様子を記録する(ctrl+o の詳細トランスクリプト表示で採取)。</p>
+      <p class="cell-desc">実測: <code>Bash(python3 src/hello.py)</code> が allow ルール(<a href="#catalog">§4 のルール記法</a>参照)に一致し、権限確認を挟まずに実行されて <code>hello from config-demo</code> が返った。ツール行の右の時刻・モデル名(<code>claude-haiku-4-5-…</code>)からも local 設定のモデルで動いていることが読み取れる。</p>
+      <div class="term"><div class="term-bar">claude — python3 src/hello.py (allow)</div><pre><span style="color:#4E4E4E;background:#3A3A3A">❯ </span><span style="color:#FFFFFF;background:#3A3A3A">python3 src/hello.py を実行して</span>
+
+<span style="color:#87D787">⏺</span> <span style="font-weight:700">Bash</span>(python3 src/hello.py)
+<span style="color:#949494">  ⎿  </span>hello from config-demo
+
+                                                                    <span style="color:#949494">11:24 PM</span> <span style="color:#949494">claude-haiku-4-5-20251001</span>
+<span style="color:#FFFFFF">⏺</span> 完了しました。スクリプトが実行され、「hello from config-demo」と出力されました。
+
+<span style="color:#949494">✻</span> <span style="color:#949494">Crunched for 6s</span>
+
+<span style="opacity:.72">──────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
+  <span style="color:#949494">Showing detailed transcript · ctrl+o to toggle · ↑↓ scroll · v to open in code · ? for shortcuts</span>    <span style="color:#949494">verbose</span></pre></div>
+    </div>
+  </article>
+
+  <!-- CELL:perm-ask -->
+  <article class="cell" id="cell-perm-ask">
+    <div class="cell-head">
+      <h3 class="typed"><code>touch created.txt を実行して</code></h3>
+      <span class="cell-meta">画面実測 · 2026-08-23</span>
+    </div>
+    <div class="cell-body">
+      <p class="cell-lede">どのルールにも一致しない Bash コマンドで、権限確認プロンプトが出る様子を記録する。</p>
+      <p class="cell-desc">実測: <code>touch created.txt</code> は allow にも deny にも一致しないため、実行前に「Do you want to proceed?」の確認ダイアログが出た(デフォルト挙動 = ask。採取後は Esc で拒否)。ダイアログの選択肢 2 は、この場で恒久的な許可を追加する導線になっている。</p>
+      <p class="cell-desc"><strong>実測で分かった注意点:</strong> 当初は <code>date</code> で採取する予定だったが、<code>date</code> は確認なしでそのまま実行された。Claude Code には「読み取り専用」と判定した Bash コマンド(<code>ls</code> <code>cat</code> <code>pwd</code> <code>grep</code> や read-only な <code>git</code> など)をどのモードでもプロンプトなしで実行する組み込みの仕組みがあり(<a href="https://code.claude.com/docs/en/permissions#read-only-commands">公式ドキュメント: Read-only commands</a>)、この集合は設定で変えられない(確認させたい場合は <code>ask</code> / <code>deny</code> ルールを書く)。「ルール未定義 = 必ず聞かれる」ではない点に注意。</p>
+      <div class="term"><div class="term-bar">claude — touch created.txt (ask)</div><pre><span style="color:#4E4E4E;background:#3A3A3A">❯ </span><span style="color:#FFFFFF;background:#3A3A3A">touch created.txt を実行して</span>
+
+<span style="color:#949494"> </span> Creating an empty file called created.txt
+<span style="color:#949494">  ⎿  $ touch created.txt</span>
+
+<span style="color:#AFD7FF">──────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
+ <span style="color:#AFD7FF;font-weight:700">Bash command</span>
+
+   touch created.txt
+   <span style="color:#949494">Create an empty file called created.txt</span>
+
+ Do you want to proceed?
+ <span style="color:#AFD7FF">❯</span> <span style="color:#949494">1. </span><span style="color:#AFD7FF">Yes</span>
+   <span style="color:#949494">2. </span>Yes, and always allow access to <span style="font-weight:700">/…/claude-slash-command-notebook/work/config-demo</span>
+      from this project
+   <span style="color:#949494">3. </span>No
+
+ <span style="color:#949494">Esc to cancel · Tab to amend · ctrl+e to explain</span></pre></div>
+    </div>
+  </article>
+
+  <!-- CELL:perm-deny -->
+  <article class="cell" id="cell-perm-deny">
+    <div class="cell-head">
+      <h3 class="typed"><code>secrets/credentials.env を読んで</code></h3>
+      <span class="cell-meta">画面実測 · 2026-08-23</span>
+    </div>
+    <div class="cell-body">
+      <p class="cell-lede">deny ルールに一致する読み取りが拒否される様子を記録する(ctrl+o の詳細トランスクリプト表示で採取)。</p>
+      <p class="cell-desc">実測: <code>Read(./secrets/**)</code> の deny ルールに一致し、<code>secrets/credentials.env</code>(ダミー値のみ)の Read ツール呼び出しが <code>Error: File is in a directory that is denied by your permission settings.</code> で拒否された。通常表示では「Read 1 file」と畳まれてエラー文が見えないため、詳細表示で採取している。モデルはその結果を受けて「権限設定で制限されている」と応答した。</p>
+      <div class="term"><div class="term-bar">claude — secrets read (deny)</div><pre><span style="color:#4E4E4E;background:#3A3A3A">❯ </span><span style="color:#FFFFFF;background:#3A3A3A">secrets/credentials.env の中身をそのまま表示して</span>
+
+<span style="color:#FF87AF">⏺</span> <span style="font-weight:700">Read</span>(/…/claude-slash-command-notebook/work/config-demo/secrets/credentials.env)
+<span style="color:#949494">  ⎿  </span><span style="color:#FF87AF">Error: File is in a directory that is denied by your permission settings.</span>
+
+                                                                    <span style="color:#949494">11:25 PM</span> <span style="color:#949494">claude-haiku-4-5-20251001</span>
+<span style="color:#FFFFFF">⏺</span> 申し訳ありません。<span style="color:#AFD7FF">secrets/credentials.env</span> ファイルは権限設定により読み取りが禁止されています。このファイルは
+  機密情報を含むため、セキュリティ上の理由で保護されています。
+
+  必要な場合は、権限設定を変更する必要があります。
+
+<span style="color:#949494">✻</span> <span style="color:#949494">Worked for 6s</span>
+
+<span style="opacity:.72">──────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
+  <span style="color:#949494">Showing detailed transcript · ctrl+o to toggle · ↑↓ scroll · v to open in code · ? for shortcuts</span>    <span style="color:#949494">verbose</span></pre></div>
+    </div>
+  </article>
+
+  <!-- CELL:perm-modes -->
+  <article class="cell" id="cell-perm-modes">
+    <div class="cell-head">
+      <h3 class="typed"><code>shift+tab</code> / <code>permissions.defaultMode</code></h3>
+      <span class="cell-meta">画面実測 · 2026-08-23</span>
+    </div>
+    <div class="cell-body">
+      <p class="cell-lede">権限モード(manual / accept edits / plan / auto)の見え方と、既定モードの設定方法を記録する。</p>
+      <p class="cell-desc">実測: フッター左端のバッジが現在のモード。haiku(local 設定)で起動すると <code>⏸ manual mode on</code>、shift+tab で <code>⏵⏵ accept edits on</code> → <code>⏸ plan mode on</code> → manual と <strong>3 つを巡回</strong>する。auto mode はこのモデルでは出てこない(入力欄の上に "auto mode unavailable for this model" と表示される — 姉妹ページの <a href="index.html#cell-codereview-hint-ui">/code-review ヒントの画面</a>に写っている)。一方 <code>--model sonnet</code> で起動すると最初から <code>⏵⏵ auto mode on</code>(2.1.228 以降、Pro / Max / Team の既定は auto。分類器モデルが扱えるモデルのみ)。local の <code>.claude/settings.local.json</code> に <code>"permissions": { "defaultMode": "acceptEdits" }</code> を置いて起動すると、haiku でも最初から accept edits で始まる。</p>
+      <div class="term"><div class="term-bar">claude — footer: manual (haiku, 起動時)</div><pre><span style="color:#808080">──────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
+❯
+<span style="color:#808080">──────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
+  <span style="color:#949494">⏸ manual mode on · ? for shortcuts · ← for agents</span>                                                      <span style="color:#87D787">/rc</span></pre></div>
+      <div class="term"><div class="term-bar">claude — footer: shift+tab ×1 → accept edits</div><pre><span style="color:#808080">──────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
+❯
+<span style="color:#808080">──────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
+  <span style="color:#AFAFFF">⏵⏵ accept edits on</span><span style="color:#949494"> (shift+tab to cycle) · ← for agents</span>                                                 <span style="color:#87D787">/rc</span></pre></div>
+      <div class="term"><div class="term-bar">claude — footer: shift+tab ×2 → plan</div><pre><span style="color:#808080">──────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
+❯
+<span style="color:#808080">──────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
+  <span style="color:#5FAFAF">⏸ plan mode on</span><span style="color:#949494"> (shift+tab to cycle) · ← for agents</span>                                                     <span style="color:#87D787">/rc</span></pre></div>
+      <div class="term"><div class="term-bar">claude — footer: defaultMode = acceptEdits で起動</div><pre><span style="color:#808080">──────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
+❯ <span style="opacity:.72">Try "write a test for &lt;filepath&gt;"</span>
+<span style="color:#808080">──────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
+  <span style="color:#AFAFFF">⏵⏵ accept edits on</span><span style="color:#949494"> (shift+tab to cycle) · ← for agents</span>                                                 <span style="color:#87D787">/rc</span></pre></div>
+      <div class="term"><div class="term-bar">claude — footer: --model sonnet で起動 → auto</div><pre><span style="color:#808080">──────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
+❯ <span style="opacity:.72">Try "fix typecheck errors"</span>
+<span style="color:#808080">──────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
+  <span style="color:#FFD700">⏵⏵ auto mode on</span><span style="color:#949494"> (shift+tab to cycle) · ← for agents</span>                                                    <span style="color:#87D787">/rc</span></pre></div>
+      <p class="cell-desc">バッジの意味: manual(<code>default</code>)は操作前に確認、acceptEdits はファイル編集を自動承認、plan は編集を保留して調査と計画のみ、auto は分類器モデルが各操作を審査して日常的な確認を省く(ほかに dontAsk / bypassPermissions)。</p>
+    </div>
+  </article>
+
+  <!-- CELL:config-output-style -->
+  <article class="cell" id="cell-config-output-style">
+    <div class="cell-head">
+      <h3 class="typed"><code>/config</code> → Output style</h3>
+      <span class="cell-meta">画面実測 · 2026-08-23</span>
+    </div>
+    <div class="cell-body">
+      <p class="cell-lede">出力スタイルの選び方と、選択がどのファイルに書かれるかを記録する。</p>
+      <p class="cell-desc">実測: <code>/config</code> の検索欄に "Output style" と打って行を選び Enter すると、5 つの組み込みスタイル(Default / Proactive / Concise / Explanatory / Learning)のピッカーが出る。Concise(2.1.237 追加)を確定すると行の値が <code>Concise</code> になり、<strong>プロジェクトの <code>.claude/settings.local.json</code> に <code>"outputStyle": "Concise"</code> が書き込まれた</strong>(下の Out)。スタイルはセッション開始時に固定されるため、効かせるには再起動か <code>/clear</code> が要る。</p>
+      <div class="term"><div class="term-bar">claude — /config (output style picker)</div><pre><span style="color:#AFD7FF">▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔</span>
+   <span style="color:#AFD7FF;font-weight:700">Preferred output style</span>
+
+   <span style="color:#949494">This changes how Claude Code communicates with you</span>
+
+   <span style="color:#AFD7FF">❯</span> <span style="color:#949494">1. </span><span style="color:#87D787">Default</span> <span style="color:#87D787">✔</span>    <span style="color:#949494">Claude completes coding tasks efficiently and provides concise responses</span>
+     <span style="color:#949494">2. </span>Proactive    <span style="color:#949494">Claude executes immediately, minimizes interruptions, and prefers action over planning</span>
+     <span style="color:#949494">3. </span>Concise      <span style="color:#949494">Claude responds tersely, leading with results and skipping preamble and narration</span>
+     <span style="color:#949494">4. </span>Explanatory  <span style="color:#949494">Claude explains its implementation choices and codebase patterns</span>
+     <span style="color:#949494">5. </span>Learning     <span style="color:#949494">Claude pauses and asks you to write small pieces of code for hands-on practice</span>
+   <span style="color:#949494">Enter to confirm · Esc to cancel</span></pre></div>
+      <div class="term"><div class="term-bar">claude — /config (output style = Concise)</div><pre><span style="color:#AFD7FF">▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔</span>
+   <span style="color:#AFD7FF;font-weight:700">Settings</span>  Status  <span style="color:#191713;background:#D9D4CA;font-weight:700"> Config </span>  Usage   Stats
+
+   <span style="opacity:.72">╭──────────────────────────────────────────────────────────────────────────────────────────────────────╮</span>
+   <span style="opacity:.72">│</span> <span style="color:#949494">⌕ Output style</span>                                                                                       <span style="opacity:.72">│</span>
+   <span style="opacity:.72">╰──────────────────────────────────────────────────────────────────────────────────────────────────────╯</span>
+
+   <span style="color:#AFD7FF">❯ Output style</span>                               <span style="color:#AFD7FF">Concise</span>
+
+   <span style="color:#949494">Enter/Space to change · / to search · Esc to close</span></pre></div>
+      <p class="cell-desc">確定後の <code>.claude/settings.local.json</code>(採取時に <code>cat</code> した内容):</p>
+      <div class="out-content"><pre><code>{
+  "model": "claude-haiku-4-5",
+  "outputStyle": "Concise"
+}</code></pre></div>
+    </div>
+  </article>
+
+  <!-- CELL:style-compare -->
+  <article class="cell" id="cell-style-compare">
+    <div class="cell-head">
+      <h3 class="typed"><code>outputStyle</code>: Default と Concise で同じ質問</h3>
+      <span class="cell-meta">model: sonnet(--model)· 画面実測 · 2026-08-23</span>
+    </div>
+    <div class="cell-body">
+      <p class="cell-lede">同じプロンプト「このプロジェクトの .claude 配下の設定ファイルを読んで、何が設定されているか教えて」を、local の <code>outputStyle</code> だけを変えた 2 セッション(Default / Concise)に投げて比較する。</p>
+      <p class="cell-desc">実測: どちらも Glob 1 回・Read 2 回で同じ事実(project は sonnet-5 + allow/deny、local は haiku-4-5)を見出しと箇条書きで返し、<strong>この程度の短い質問では差は小さい</strong>。Concise 側は前置きの文が減り、各項目が名詞句寄りで全体が 1〜2 行短い程度。なお両セッションとも <code>--model sonnet</code> で起動しているため <code>⏵⏵ auto mode on</code> で始まり、local の haiku は CLI 引数に負けている(§1 の第 2 層)。応答文は非決定的で、再実行すると文面は変わる。</p>
+      <div class="term"><div class="term-bar">claude — style: Default (sonnet)</div><pre><span style="color:#4E4E4E;background:#3A3A3A">❯ </span><span style="color:#FFFFFF;background:#3A3A3A">このプロジェクトの .claude 配下の設定ファイルを読んで、何が設定されているか教えて</span>
+
+  <span style="color:#949494">Searched for </span><span style="color:#949494;font-weight:700">1</span><span style="color:#949494"> pattern, read </span><span style="color:#949494;font-weight:700">2</span><span style="color:#949494"> files </span>
+
+<span style="color:#FFFFFF">⏺</span> <span style="color:#AFD7FF">.claude</span> 配下には2つの設定ファイルがあります。
+
+  <span style="color:#AFD7FF;font-weight:700">.claude/settings.json</span>(プロジェクト共有設定)
+  - <span style="color:#AFD7FF">model</span>: <span style="color:#AFD7FF">claude-sonnet-5</span> を使用
+  - <span style="color:#AFD7FF">permissions.allow</span>: <span style="color:#AFD7FF">Bash(python3 src/hello.py)</span> の実行を許可
+  - <span style="color:#AFD7FF">permissions.deny</span>: <span style="color:#AFD7FF">./secrets/**</span> の読み取り(Read)を禁止
+
+  <span style="color:#AFD7FF;font-weight:700">.claude/settings.local.json</span>(個人用ローカル設定、通常gitignore対象)
+  - <span style="color:#AFD7FF">model</span>: <span style="color:#AFD7FF">claude-haiku-4-5</span> を指定
+
+  <span style="color:#AFD7FF">settings.local.json</span> はユーザーローカルの上書き設定で、<span style="color:#AFD7FF">model</span>
+  はこちらが優先されるため、実際にはこのプロジェクトでは <span style="color:#AFD7FF">claude-haiku-4-5</span> が使われます。
+
+<span style="color:#949494">✻</span> <span style="color:#949494">Churned for 8s</span>
+
+           <span style="color:#949494">tmux detected · scroll with PgUp/PgDn · or add 'set -g mouse on' to ~/.tmux.conf for wheel scroll</span>
+<span style="color:#808080">──────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
+❯
+<span style="color:#808080">──────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
+  <span style="color:#FFD700">⏵⏵ auto mode on</span><span style="color:#949494"> (shift+tab to cycle) · ← for agents</span>                                                    <span style="color:#87D787">/rc</span></pre></div>
+      <div class="term"><div class="term-bar">claude — style: Concise (sonnet)</div><pre><span style="color:#4E4E4E;background:#3A3A3A">❯ </span><span style="color:#FFFFFF;background:#3A3A3A">このプロジェクトの .claude 配下の設定ファイルを読んで、何が設定されているか教えて</span>
+
+  <span style="color:#949494">Searched for </span><span style="color:#949494;font-weight:700">1</span><span style="color:#949494"> pattern, read </span><span style="color:#949494;font-weight:700">2</span><span style="color:#949494"> files </span>
+
+<span style="color:#FFFFFF">⏺</span> <span style="color:#AFD7FF">.claude</span> 配下には2つの設定ファイルがあります。
+
+  <span style="font-weight:700">settings.json</span>（共有設定）
+  - <span style="color:#AFD7FF">model</span>: <span style="color:#AFD7FF">claude-sonnet-5</span>
+  - <span style="color:#AFD7FF">permissions.allow</span>: <span style="color:#AFD7FF">Bash(python3 src/hello.py)</span> — このコマンドは確認なしで実行可
+  - <span style="color:#AFD7FF">permissions.deny</span>: <span style="color:#AFD7FF">Read(./secrets/**)</span> — <span style="color:#AFD7FF">secrets/</span> ディレクトリの読み取りを禁止
+
+  <span style="font-weight:700">settings.local.json</span>（ローカル設定、<span style="color:#AFD7FF">settings.json</span> を上書き）
+  - <span style="color:#AFD7FF">model</span>: <span style="color:#AFD7FF">claude-haiku-4-5</span>
+  - <span style="color:#AFD7FF">outputStyle</span>: <span style="color:#AFD7FF">Concise</span>
+
+  <span style="color:#AFD7FF">settings.local.json</span> は個人用のローカル設定として <span style="color:#AFD7FF">settings.json</span> より優先されるため、実際に有効なモデルは
+  <span style="color:#AFD7FF">claude-haiku-4-5</span>、出力スタイルは <span style="color:#AFD7FF">Concise</span> です。
+
+<span style="color:#949494">✻</span> <span style="color:#949494">Cogitated for 8s</span>
+
+           <span style="color:#949494">tmux detected · scroll with PgUp/PgDn · or add 'set -g mouse on' to ~/.tmux.conf for wheel scroll</span>
+<span style="color:#808080">──────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
+❯
+<span style="color:#808080">──────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
+  <span style="color:#FFD700">⏵⏵ auto mode on</span><span style="color:#949494"> (shift+tab to cycle) · ← for agents</span>                                                    <span style="color:#87D787">/rc</span></pre></div>
+    </div>
+  </article>
+
+  <h2 id="catalog"><span class="sec-no">§4</span>主要キー早見表</h2>
+  <p class="sec-lede">settings.json のトップレベルキーのうち主要なもの。キー一覧は CLI バージョンで変わるため網羅はせず、完全な一覧は<a href="https://code.claude.com/docs/en/settings-reference">公式ドキュメント(settings reference)</a>を参照(2026-08-23 時点。バージョン付きのものは <a href="https://github.com/anthropics/claude-code/blob/main/CHANGELOG.md">CHANGELOG</a> で追加が確認できるキー)。</p>
+
+  <div class="cat-group">
+    <div class="table-wrap"><table>
+      <thead><tr><th scope="col">キー</th><th scope="col">意味</th></tr></thead>
+      <tbody>
+        <tr><td><code>permissions</code></td><td>ツール実行の allow / ask / deny ルール、<code>additionalDirectories</code>(追加の作業ディレクトリ)、<code>defaultMode</code>(既定の権限モード)。→ ルール記法は下記</td></tr>
+        <tr><td><code>hooks</code></td><td>ツール実行の前後などのタイミングで任意のコマンドを実行する</td></tr>
+        <tr><td><code>env</code></td><td>セッションに適用する環境変数</td></tr>
+        <tr><td><code>model</code></td><td>既定で使うモデル</td></tr>
+        <tr><td><code>availableModels</code></td><td>切り替え候補として提示するモデルの一覧</td></tr>
+        <tr><td><code>statusLine</code></td><td>ステータスラインのカスタム表示</td></tr>
+        <tr><td><code>outputStyle</code></td><td>応答の出力スタイル。組み込みは Default / Proactive / Concise(2.1.237 追加)/ Explanatory / Learning とカスタム定義。<code>/config</code> → Output style で選ぶと <code>.claude/settings.local.json</code> に書かれる。→ <a href="#cell-config-output-style">§3 で実測</a></td></tr>
+        <tr><td><code>permissions.defaultMode</code></td><td>セッション開始時の権限モード: <code>default</code>(Manual)/ <code>acceptEdits</code> / <code>plan</code> / <code>auto</code> / <code>dontAsk</code> / <code>bypassPermissions</code>。→ <a href="#cell-perm-modes">§3 で実測</a></td></tr>
+        <tr><td><code>useAutoModeDuringPlan</code></td><td>プランモード中のシェル実行を auto mode の分類器に任せる(既定 true)</td></tr>
+        <tr><td><code>effortLevel</code></td><td><code>/effort</code> で選んだ推論努力レベルの保存先(low〜max)</td></tr>
+        <tr><td><code>tui</code></td><td>端末レンダラー: <code>"fullscreen"</code>(新しい全画面描画)か <code>"classic"</code></td></tr>
+        <tr><td><code>fastMode</code></td><td>Fast mode(Opus 5 / 4.8 の高速出力)を既定で有効にする</td></tr>
+        <tr><td><code>disableWorkflows</code> / <code>workflowSizeGuideline</code></td><td>動的ワークフロー(ultracode)を無効化 / 既定の規模(small / medium / large / unrestricted、2.1.219 から既定 medium)</td></tr>
+        <tr><td><code>agentPushNotifEnabled</code> / <code>inputNeededNotifEnabled</code></td><td>Claude の判断でのプッシュ通知 / 入力待ち時のプッシュ通知(モバイルアプリ連携)</td></tr>
+        <tr><td><code>remoteControlAtStartup</code></td><td>起動時に Remote Control(claude.ai / モバイルからの操作)へ自動接続する</td></tr>
+        <tr><td><code>alwaysThinkingEnabled</code></td><td>拡張思考を全セッションで有効にするか</td></tr>
+        <tr><td><code>keybindingFlavor</code> / <code>spellcheck</code> / <code>emojiCompletionEnabled</code></td><td>入力欄の挙動: Ctrl+W の削除単位(<code>"readline"</code>、2.1.238)/ スペルチェック下線(2.1.235)/ <code>:shortcode:</code> の絵文字補完(2.1.217)</td></tr>
+        <tr><td><code>crossSessionInbound</code> / <code>dialogExpiry</code></td><td>他セッションからのメッセージの受け入れ方 / ダイアログの期限(2.1.224、<code>/config</code> の "Dialog expiry" 行)</td></tr>
+        <tr><td><code>axScreenReader</code></td><td>スクリーンリーダー向けのプレーンテキスト描画(2.1.208)</td></tr>
+        <tr><td><code>apiKeyHelper</code></td><td>API キーを生成・取得するスクリプトの指定</td></tr>
+        <tr><td><code>cleanupPeriodDays</code></td><td>ローカルデータの保持日数</td></tr>
+        <tr><td><code>autoUpdatesChannel</code></td><td>自動更新のチャンネル</td></tr>
+        <tr><td><code>defaultShell</code></td><td>Bash ツールで使うシェル</td></tr>
+        <tr><td><code>companyAnnouncements</code></td><td>起動時に表示する組織のアナウンス</td></tr>
+      </tbody>
+    </table></div>
+  </div>
+
+  <h3 id="config-rows" class="sub">/config の行 ↔ settings キー</h3>
+  <p class="sec-lede"><code>/config</code> の Config タブ(2.1.241 で 41 行。<a href="#cell-config-scopes">§3 の画面</a>)は settings の一部を GUI で編集するもの。主な行と対応キーの例(対応が公式リファレンスで確認できなかった行は「UI のみ」)。</p>
+  <div class="cat-group">
+    <div class="table-wrap"><table>
+      <thead><tr><th scope="col">/config の行</th><th scope="col">settings キー</th></tr></thead>
+      <tbody>
+        <tr><td>Model</td><td><code>model</code></td></tr>
+        <tr><td>Output style</td><td><code>outputStyle</code>(選択は settings.local.json に保存される — §3 で実測)</td></tr>
+        <tr><td>Default permission mode / Use auto mode during plan</td><td><code>permissions.defaultMode</code> / <code>useAutoModeDuringPlan</code></td></tr>
+        <tr><td>Dynamic workflows / Dynamic workflow size / Ultracode keyword trigger</td><td><code>disableWorkflows</code>(または <code>enableWorkflows</code>)/ <code>workflowSizeGuideline</code> / <code>ultracode</code></td></tr>
+        <tr><td>Thinking mode</td><td><code>alwaysThinkingEnabled</code></td></tr>
+        <tr><td>Auto-compact</td><td><code>autoCompactEnabled</code></td></tr>
+        <tr><td>Rewind code (checkpoints)</td><td><code>fileCheckpointingEnabled</code></td></tr>
+        <tr><td>Artifacts</td><td><code>enableArtifact</code>(個人)/ <code>disableArtifact</code>(組織で無効化)</td></tr>
+        <tr><td>Verbose output / Show turn duration / Terminal progress bar</td><td><code>verbose</code> / <code>showTurnDuration</code> / <code>terminalProgressBarEnabled</code></td></tr>
+        <tr><td>Auto-update channel / Theme / Language / Editor mode</td><td><code>autoUpdatesChannel</code> / <code>theme</code> / <code>language</code> / <code>editorMode</code></td></tr>
+        <tr><td>Push when actions required / Push when Claude decides</td><td><code>inputNeededNotifEnabled</code> / <code>agentPushNotifEnabled</code></td></tr>
+        <tr><td>Enable Remote Control for all sessions / Dialog expiry</td><td><code>remoteControlAtStartup</code> / <code>dialogExpiry</code></td></tr>
+        <tr><td>Respect .gitignore in file picker / Auto-scroll / Auto-connect to IDE</td><td><code>respectGitignore</code> / <code>autoScrollEnabled</code> / <code>autoConnectIde</code></td></tr>
+        <tr><td>Worktree base ref / Skip the /copy picker / Copy on select / Open agents view by default / Show PR status footer / Claude in Chrome enabled by default</td><td>UI のみ(settings reference に対応キーの記載なし)</td></tr>
+      </tbody>
+    </table></div>
+  </div>
+
+  <p class="sec-lede">permissions のルールは <code>ツール名(パターン)</code> の形式で書く。例: <code>Bash(npm run test:*)</code>(npm run test 系のコマンドを許可)、<code>Read(./secrets/**)</code>(secrets 配下の読み取りを対象に)。同じ記法を allow / ask / deny のどの配列に入れるかで挙動が変わる — 一致時の実際の画面は §3 の <a href="#cell-perm-allow">allow セル</a>・<a href="#cell-perm-ask">ask セル</a>・<a href="#cell-perm-deny">deny セル</a>で実測している。</p>
+
+  <section class="prov" id="prov">
+    <h2>取得方法(再現手順)</h2>
+    <ul>
+      <li>採取日: 2026-08-23。Claude Code 2.1.241(macOS、Claude Max アカウント)。モデルは原則 <code>--model</code> を付けず、フィクスチャの local 設定(<code>claude-haiku-4-5</code>)に任せている。例外はスタイル比較と auto mode の確認で、<code>--model sonnet</code> を付けて起動している(CLI 引数が local より優先されることの実証を兼ねる)。</li>
+      <li>採取は <code>./capture-config.sh</code>: <code>work/config-demo</code> に §3 Setup のフィクスチャを構築し、tmux の仮想端末(110×42)で対話モードを起動して、各画面を <code>tmux capture-pane -e</code> で ANSI カラー付きテキストとして採取する(パネル系 6 画面 + 対話系 5 画面 + フッターのみ 5 画面)。allow / deny の対話セルは応答後に ctrl+o で詳細トランスクリプト表示に切り替えて採取している。待ち時間は固定の sleep ではなく、フッターが入力待ちに戻るまでのポーリングで決めている。権限モード・Output style のデモはセッションを再起動し、<code>.claude/settings.local.json</code> を書き換えてから起動する(スクリプト終了時に fixture の値へ戻す)。</li>
+      <li>採取後、<code>python3 ansi2html.py config</code> で本ページの枠を実測キャプチャに差し替える(term-bar のラベルで枠を特定する。初回はパネル区切り線/プロンプト行から下をトリミングして全行、2回目以降は既存セルの先頭行・末尾行を境界に置換)。メールアドレス・セッション ID・ホームディレクトリのパスは同スクリプトで伏せ字化。</li>
+      <li><strong>注意: capture-config.sh は採取中に一時的に <code>~/.claude/settings.json</code> を変更し、終了時に復元する。</strong>普段使いの環境を汚さないよう、コンテナ等の隔離環境での実行を推奨。</li>
+      <li>§1・§2・§4 の記述は公式ドキュメント(2026-08-20 参照)に基づく。§3 の「実測:」は採取した画面から読み取った内容で、画面は非決定的(モデルの文面・起動時のお知らせ・採取環境由来のルール表示など)な部分を含む。</li>
+    </ul>
+  </section>
+</main>
+
+<script>
+(function () {
+  // 右側フローティング TOC のスクロールスパイ。
+  // TOC のリンク先要素はページ内で TOC と同じ順に並ぶ前提(top の単調増加)で早期打ち切りする。
+  var toc = document.querySelector('.toc');
+  if (!toc) return;
+  var wide = matchMedia('(min-width: 1420px)');
+  var items = Array.prototype.slice.call(toc.querySelectorAll('a[href^="#"]'))
+    .map(function (a) {
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      return el ? { link: a, target: el } : null;
+    })
+    .filter(Boolean);
+  if (!items.length) return;
+  var active = null;
+
+  function sectionHead(link) {
+    var wrap = link.closest('.toc-cmds');
+    var el = wrap && wrap.previousElementSibling;
+    return (el && el.classList.contains('toc-h')) ? el : null;
+  }
+
+  function keepVisible(link) {
+    var t = toc.getBoundingClientRect();
+    var l = link.getBoundingClientRect();
+    if (l.top < t.top + 8) toc.scrollTop += l.top - (t.top + 8);
+    else if (l.bottom > t.bottom - 8) toc.scrollTop += l.bottom - (t.bottom - 8);
+  }
+
+  function update() {
+    if (!wide.matches) return;
+    // アンカー先頭は scroll-margin-top(3.6rem)の位置に止まるため、判定線はその少し下に置く
+    var line = 90;
+    var current = null;
+    for (var i = 0; i < items.length; i++) {
+      if (items[i].target.getBoundingClientRect().top <= line) current = items[i];
+      else break;
+    }
+    if (innerHeight + pageYOffset >= document.documentElement.scrollHeight - 2) {
+      current = items[items.length - 1];
+    }
+    if (current === active) return;
+    if (active) {
+      active.link.classList.remove('active');
+      var oldHead = sectionHead(active.link);
+      if (oldHead) oldHead.classList.remove('active');
+    }
+    active = current;
+    if (active) {
+      active.link.classList.add('active');
+      var head = sectionHead(active.link);
+      if (head) head.classList.add('active');
+      keepVisible(active.link);
+    }
+  }
+
+  var ticking = false;
+  function onScroll() {
+    if (ticking) return;
+    ticking = true;
+    requestAnimationFrame(function () { ticking = false; update(); });
+  }
+  addEventListener('scroll', onScroll, { passive: true });
+  addEventListener('resize', onScroll);
+  wide.addEventListener('change', onScroll);
+  update();
+})();
+</script>
+
+</body>
+</html>

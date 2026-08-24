@@ -1,13 +1,16 @@
 #!/usr/bin/env python3
 """Convert ANSI tmux captures to colored HTML spans and splice them into
-the notebook's §2 terminal cells, preserving each cell's existing crop
-boundaries and masking emails / session IDs."""
-import re, html
+the notebook's terminal cells, preserving each cell's existing crop
+boundaries and masking emails / session IDs.
+
+Usage: python3 ansi2html.py [target]
+  target: 'index' (default; index.html + work/tui-color) or
+          'config' (config.html + work/config-tui)."""
+import re, html, sys
 
 import os
-SP = os.environ.get('SP', os.path.join(os.path.dirname(os.path.abspath(__file__)), 'work'))
-HTML_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'index.html')
-CAP = f'{SP}/tui-color'
+BASE = os.path.dirname(os.path.abspath(__file__))
+SP = os.environ.get('SP', os.path.join(BASE, 'work'))
 
 DEFAULT_FG = '#D9D4CA'
 DEFAULT_BG = '#191713'
@@ -84,6 +87,12 @@ MASKS = [
     (re.compile(r'[\w.+-]+@[\w.-]+\.\w+'), '****@****'),
     (re.compile(r"\S+@\S+'s Organization"), "****'s Organization"),
     (re.compile(r"Welcome back \S+!"), 'Welcome back ****!'),
+    # ホームディレクトリ配下の絶対パス(cwd 表示・権限ダイアログ等)はユーザー名を含むので伏せる。
+    # リポジトリまでの前置きは「/…/」に畳み、それ以外の /Users/<name> は名前だけ伏せる。
+    (re.compile(r'/Users/\S*?/claude-slash-command-notebook'), '/…/claude-slash-command-notebook'),
+    (re.compile(r'/Users/[^/\s]+'), '/Users/****'),
+    # クラウドセッションの URL/ID(ultrareview の Track: リンクなど)
+    (re.compile(r'session_[A-Za-z0-9]{6,}'), 'session_****'),
 ]
 
 def parse_line(line):
@@ -105,6 +114,15 @@ def line_plain(line):
     return ANSI_RE.sub('', line)
 
 def render(lines):
+    # 連続する空行は 1 行に畳む(応答と入力欄の間の余白で画面が間延びしないように。index.html の既存セルと同じ流儀)
+    squeezed, blank = [], False
+    for raw in lines:
+        is_blank = not line_plain(raw).strip()
+        if is_blank and blank:
+            continue
+        blank = is_blank
+        squeezed.append(raw)
+    lines = squeezed
     out = []
     for raw in lines:
         # 1文字ごとに css を持たせ、マスクは行全体の平文に対して適用する。
@@ -144,7 +162,7 @@ def tolerant_eq(old, new):
         return not n
     return o == n or n.startswith(o) or o in n
 
-def splice(doc, label, cap_lines):
+def splice(doc, label, cap_lines, start_pat=None):
     pat = re.compile(
         re.escape(f'<div class="term"><div class="term-bar">claude — {label}</div><pre>') + r'(.*?)</pre>',
         re.S)
@@ -155,6 +173,24 @@ def splice(doc, label, cap_lines):
     # 前回実行で埋め込んだ <span> タグを剥がしてから比較する(冪等性のため)。
     # タグ除去→unescape の順が重要: 端末出力由来の「&lt;span」等をタグと誤認しない。
     old_lines = [html.unescape(TAG_RE.sub('', l)) for l in m.group(1).split('\n')]
+    # 初回差し替え: セルがプレースホルダ「(未採取)」1行だけなら、
+    # 境界探索をスキップしてキャプチャ全行を差し替える。
+    nonblank = [l.strip() for l in old_lines if l.strip()]
+    if nonblank == ['(未採取)']:
+        # start_pat があればその行から、末尾の空行は落とす(起動バナーの繰り返しを避ける)
+        s0 = 0
+        if isinstance(start_pat, int):      # 末尾 N 行だけ(入力欄+フッターなど)
+            s0 = max(0, len(cap_lines) - start_pat)
+        elif start_pat:
+            s0 = next((i for i, l in enumerate(cap_lines) if re.search(start_pat, line_plain(l))), None)
+            if s0 is None:
+                print(f'  !! start pattern not found for {label}: {start_pat!r}')
+                return doc
+        e0 = next((i for i in range(len(cap_lines) - 1, -1, -1) if line_plain(cap_lines[i]).strip()), len(cap_lines) - 1)
+        body = render(cap_lines[s0:e0 + 1])
+        doc = doc[:m.start(1)] + body + doc[m.end(1):]
+        print(f'  ok-full {label}: lines {s0}-{e0}')
+        return doc
     old_first = next((l for l in old_lines if l.strip()), None)
     old_last = next((l for l in reversed(old_lines) if l.strip()), None)
     start = next((i for i, l in enumerate(cap_lines) if tolerant_eq(old_first, l)), None)
@@ -170,19 +206,81 @@ def splice(doc, label, cap_lines):
     print(f'  ok {label}: lines {start}-{end}')
     return doc
 
+# 値は name または (name, 初回差し替え時の開始行パターン | 末尾行数)。
+# パネル系は区切り線「▔▔▔」から、対話系はそのセルのプロンプト行から下を採る(起動バナーは含めない)。
+PANEL = r'^▔{20,}'
 CELLS = {
     '/help': 'help', '/status': 'status', '/usage': 'usage', '/context': 'context',
     '/model': 'model', '/permissions': 'permissions', '/mcp': 'mcp', '/config': 'config',
     '/resume': 'resume', '/tasks': 'tasks', '/rewind': 'rewind', '/plan': 'plan', '/clear': 'clear',
+    # capture-extra.sh(2026-08-23 追加分)
+    '/ultra (補完)': ('ultra-autocomplete', 8),
+    '/code-review (引数ヒント)': ('codereview-hint', 5),
+    'ultracode (キーワード検知)': ('ultracode-hint', 5),
+    '/workflows': ('workflows', PANEL),
+    '/fast': ('fast', PANEL),
+    '/diff': ('diff', PANEL),
+    '/advisor': ('advisor', PANEL),
+    '/autocompact': ('autocompact', PANEL),
+    '/rename': ('rename', r'^❯ /rename'),
+    '/branch': ('branch', r'^❯ /branch|^▔{20,}'),
+    '/code-review ultra (確認)': ('ultrareview-confirm', PANEL),
+    '/code-review ultra (実行中)': ('ultrareview-start', r'^❯ /ultrareview'),
+    '/tasks (ultrareview 実行中)': ('tasks-ultra', PANEL),
+    '/code-review ultra (完了通知 → 修正提案)': ('ultrareview-fixprompt', r'^❯ /ultrareview'),
 }
 
-doc = open(HTML_PATH, encoding='utf-8').read()
-for label, name in CELLS.items():
+CELLS_CONFIG = {
+    '/status (scopes)': ('status-scopes', PANEL),
+    '/config (scopes)': ('config-scopes', PANEL),
+    '/permissions (rules)': ('permissions-rules', PANEL),
+    '/permissions (deny tab)': ('permissions-deny', PANEL),
+    'python3 src/hello.py (allow)': ('perm-allow', r'^❯ python3 src/hello\.py を実行して'),
+    'touch created.txt (ask)': ('perm-ask', r'^❯ touch created\.txt を実行して'),
+    'secrets read (deny)': ('perm-deny', r'^❯ secrets/credentials\.env の中身をそのまま表示して'),
+    # 権限モード(入力欄+フッターの 4 行)
+    'footer: manual (haiku, 起動時)': ('mode-cycle-0', 4),
+    'footer: shift+tab ×1 → accept edits': ('mode-cycle-1', 4),
+    'footer: shift+tab ×2 → plan': ('mode-cycle-2', 4),
+    'footer: defaultMode = acceptEdits で起動': ('mode-default-acceptedits', 4),
+    'footer: --model sonnet で起動 → auto': ('mode-sonnet-start', 4),
+    # Output style
+    '/config (output style picker)': ('config-output-style', PANEL),
+    '/config (output style = Concise)': ('config-output-style-pick', PANEL),
+    'style: Default (sonnet)': ('style-default', r'^❯ このプロジェクトの'),
+    'style: Concise (sonnet)': ('style-concise', r'^❯ このプロジェクトの'),
+}
+
+# target → (HTML ファイル名, work/ 配下のキャプチャディレクトリ, セル辞書)
+TARGETS = {
+    'index': ('index.html', 'tui-color', CELLS),
+    'config': ('config.html', 'config-tui', CELLS_CONFIG),
+}
+
+def main():
+    target = sys.argv[1] if len(sys.argv) > 1 else 'index'
+    if target not in TARGETS:
+        print(f'unknown target: {target}')
+        print(f'usage: python3 ansi2html.py [{"|".join(TARGETS)}]')
+        sys.exit(1)
+    html_name, cap_dir, cells = TARGETS[target]
+    html_path = os.path.join(BASE, html_name)
+    cap = f'{SP}/{cap_dir}'
     try:
-        raw = open(f'{CAP}/{name}.ansi', encoding='utf-8').read().rstrip('\n').split('\n')
+        doc = open(html_path, encoding='utf-8').read()
     except FileNotFoundError:
-        print(f'  !! capture missing: {name}')
-        continue
-    doc = splice(doc, label, raw)
-open(HTML_PATH, 'w', encoding='utf-8').write(doc)
-print('written', len(doc))
+        print(f'{html_name} not found')
+        sys.exit(1)
+    for label, spec in cells.items():
+        name, start_pat = spec if isinstance(spec, tuple) else (spec, None)
+        try:
+            raw = open(f'{cap}/{name}.ansi', encoding='utf-8').read().rstrip('\n').split('\n')
+        except FileNotFoundError:
+            print(f'  !! capture missing: {name}')
+            continue
+        doc = splice(doc, label, raw, start_pat)
+    open(html_path, 'w', encoding='utf-8').write(doc)
+    print('written', len(doc))
+
+if __name__ == '__main__':
+    main()
