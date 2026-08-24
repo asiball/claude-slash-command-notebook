@@ -89,11 +89,19 @@ MASKS = [
     (re.compile(r"Welcome back \S+!"), 'Welcome back ****!'),
     # ホームディレクトリ配下の絶対パス(cwd 表示・権限ダイアログ等)はユーザー名を含むので伏せる。
     # リポジトリまでの前置きは「/…/」に畳み、それ以外の /Users/<name> は名前だけ伏せる。
-    (re.compile(r'/Users/\S*?/claude-slash-command-notebook'), '/…/claude-slash-command-notebook'),
+    (re.compile(r'/(?:Users|home|mnt)/\S*/claude-slash-command-notebook'), '/…/claude-slash-command-notebook'),
     (re.compile(r'/Users/[^/\s]+'), '/Users/****'),
+    (re.compile(r'/home/[^/\s]+'), '/home/****'),
     # クラウドセッションの URL/ID(ultrareview の Track: リンクなど)
     (re.compile(r'session_[A-Za-z0-9]{6,}'), 'session_****'),
 ]
+# 採取したマシンのユーザー名(ls -l の所有者、user@host のシェルプロンプト等に出る)も伏せる。
+# ホスト名は一般語と衝突しうるので user@host の形でだけ伏せる。
+import getpass, socket
+_user, _host = getpass.getuser(), socket.gethostname().split('.')[0]
+if len(_user) >= 3:
+    MASKS.append((re.compile(re.escape(_user) + '@' + re.escape(_host) + r'(?![\w-])'), '****@****'))
+    MASKS.append((re.compile(r'(?<![\w-])' + re.escape(_user) + r'(?![\w-])'), '****'))
 
 def parse_line(line):
     """Return list of (text, css) spans for one raw line."""
@@ -237,8 +245,8 @@ CELLS_CONFIG = {
     '/config (output style picker)': ('config-output-style', PANEL),
     '/config (output style = Concise)': ('config-output-style-pick', PANEL),
     # permissions.deny 比較
-    'secrets read (no deny)': ('perm-deny-off', r'^❯ secrets/credentials\.env'),
-    'secrets read (deny)': ('perm-deny', r'^❯ secrets/credentials\.env の中身をそのまま表示して'),
+    'private read (no deny)': ('perm-deny-off', r'^❯ private/credentials\.env'),
+    'private read (deny)': ('perm-deny', r'^❯ private/credentials\.env の中身をそのまま表示して'),
     # permissions.defaultMode 比較(footer は入力欄+フッターの 4 行)
     'footer: manual (haiku, 起動時)': ('mode-cycle-0', 4),
     'touch created.txt (ask)': ('perm-ask', r'^❯ touch created\.txt を実行して'),
