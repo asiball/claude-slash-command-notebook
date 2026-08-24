@@ -95,11 +95,13 @@ MASKS = [
     # クラウドセッションの URL/ID(ultrareview の Track: リンクなど)
     (re.compile(r'session_[A-Za-z0-9]{6,}'), 'session_****'),
 ]
-# 採取したマシンのユーザー名・ホスト名(ls -l の所有者、シェルプロンプト等に出る)も伏せる
+# 採取したマシンのユーザー名(ls -l の所有者、user@host のシェルプロンプト等に出る)も伏せる。
+# ホスト名は一般語と衝突しうるので user@host の形でだけ伏せる。
 import getpass, socket
-for _name in {getpass.getuser(), socket.gethostname().split('.')[0]}:
-    if len(_name) >= 3:
-        MASKS.append((re.compile(r'(?<![\w-])' + re.escape(_name) + r'(?![\w-])'), '****'))
+_user, _host = getpass.getuser(), socket.gethostname().split('.')[0]
+if len(_user) >= 3:
+    MASKS.append((re.compile(re.escape(_user) + '@' + re.escape(_host) + r'(?![\w-])'), '****@****'))
+    MASKS.append((re.compile(r'(?<![\w-])' + re.escape(_user) + r'(?![\w-])'), '****'))
 
 def parse_line(line):
     """Return list of (text, css) spans for one raw line."""

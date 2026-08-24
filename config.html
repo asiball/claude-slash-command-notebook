@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Config Notebook</title>
-<meta name="description" content="Claude Code の設定ファイルの階層(スコープ)・優先順位・permissions を図解と端末実測で可視化する実測リファレンス(2026-08-23 実測、Claude Code 2.1.241)。">
+<meta name="description" content="同じ依頼文のまま Claude Code の設定(outputStyle・permissions.deny・permissions.defaultMode・sandbox)を切り替えると出力がどう変わるかを、トグルで見比べる実測ノート(2026-08-24 実測、Claude Code 2.1.241)。">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='80' font-size='85' fill='%232F6F6C' font-family='monospace'%3E%E2%9A%99%3C/text%3E%3C/svg%3E">
 <style>
   :root {
@@ -564,7 +564,7 @@
     <div class="meta-chips">
       <span>比較セル 4(切り替え 9 パターン)</span>
       <span>採取 2026-08-24 · Claude Code 2.1.241(WSL2)</span>
-            <span>姉妹ページ: <a href="index.html">Slash Command Notebook</a></span>
+      <span>姉妹ページ: <a href="index.html">Slash Command Notebook</a></span>
     </div>
   </header>
 
@@ -899,7 +899,7 @@
 
 <span style="opacity:.72">──────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
   <span style="color:#949494">Showing detailed transcript · ctrl+o to toggle · ↑↓ scroll · v to open in code · ? for shortcuts</span>    <span style="color:#949494">verbose</span></pre></div>
-      <p class="cell-desc">実測: 既定(autoAllowBashIfSandboxed: true)なので確認ダイアログは出ず、サンドボックス内で実行されて <code>touch: cannot touch '/tmp/sandbox-poke.txt': Read-only file system</code> で失敗した(WSL2 の bubblewrap では /tmp が読み取り専用でマウントされる)。失敗を見た Claude は、書き込み可能なセッション temp(スクラッチパッド)に作るか、<code>dangerouslyDisableSandbox: true</code> で再試行するかを尋ねてきた。</p>
+      <p class="cell-desc">実測: 既定(autoAllowBashIfSandboxed: true)なので確認ダイアログは出ず、サンドボックス内で実行されて <code>touch: cannot touch '/tmp/sandbox-poke.txt': Read-only file system</code> で失敗した(サンドボックス内では作業ディレクトリとセッション temp 以外が読み取り専用になる)。失敗を見た Claude は、書き込み可能なセッション temp(スクラッチパッド)に作るか、<code>dangerouslyDisableSandbox: true</code> で再試行するかを尋ねてきた。</p>
       <p class="cell-desc">前提: macOS は組み込みの Seatbelt で追加インストール不要。Linux / WSL2 は bubblewrap と socat が必要(/sandbox パネルの Dependencies タブで確認できる)。</p>
       </section>
     </div>
