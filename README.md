@@ -65,14 +65,14 @@ python3 ansi2html.py     # 6. ANSI→HTML 変換し、§2 の画面セルのみ�
 姉妹ページ `config.html` の画面セルは、上とは別の2手順で採取・反映する:
 
 ```bash
-./capture-config.sh          # 1. 設定切り替え比較の実測画面を採取(work/config-demo を再構築 → work/config-tui/*.ansi、14 画面)
+./capture-config.sh          # 1. 設定切り替え比較の実測画面を採取(work/config-demo を再構築 → work/config-tui/*.ansi、15 画面)
 python3 ansi2html.py config  # 2. ANSI→HTML 変換し、config.html の画面セルを差し替え
 ```
 
 一部だけ採り直すときはセクション名を `ONLY=` / `SKIP=` で指定する(例: `ONLY=sandbox-on ./capture-config.sh`、`SKIP="style sandbox-on" ./capture-config.sh`)。セクション名はスクリプト冒頭のコメントに列挙してある。
 
 - 初回はセルが「(未採取)」プレースホルダのため、境界探索なしで差し替わる(`ok-full` と表示。パネル系は区切り線「▔▔▔」から、対話系はそのセルのプロンプト行から下をトリミング)。2回目以降は index.html と同じく既存セルの先頭行・末尾行を境界として置換する。
-- 採取は 14 画面。セルごとに `work/config-demo/.claude/settings.local.json`(deny 比較のみ `settings.json`)を書き換えてセッションを起動し直し、同じ依頼文への挙動の違いを採る(終了時に fixture の値へ戻す)。outputStyle 比較と auto モードは `--model sonnet` で起動し、比較の 2 セッションは縦 60 行の tmux で採る。実行系の対話は応答後に ctrl+o の詳細トランスクリプト表示に切り替えて採取する(ツール呼び出しの中身・拒否エラー・sandbox の違反詳細を見せるため)。
+- 採取は 15 画面。セルごとに `work/config-demo/.claude/settings.local.json`(deny 比較のみ `settings.json`)を書き換えてセッションを起動し直し、同じ依頼文への挙動の違いを採る(終了時に fixture の値へ戻す)。outputStyle 比較(Default / Concise / Explanatory)と auto モードは `--model sonnet` で起動し、outputStyle の 3 セッションは縦 60 行の tmux で採る。outputStyle の依頼は小さなコード変更+実行確認(スタイル差が出やすい複数ステップ作業)で、セッションごとに `src/hello.py` を `git checkout` で戻して同じ入力にする。実行系の対話は応答後に ctrl+o の詳細トランスクリプト表示に切り替えて採取する(ツール呼び出しの中身・拒否エラー・sandbox の違反詳細を見せるため)。
 - ask 確認のデモは `touch created.txt` を使う。`date` のような読み取り専用コマンドは Claude Code の組み込み判定で確認なしに実行されるため、プロンプトが出ない(実測 2026-08-22、CLI 2.1.239)。採取後は Esc で拒否するので `created.txt` は作られない。
 - `ansi2html.py` の `MASKS` にはホームディレクトリ配下の絶対パス(`/Users/<name>/…`、`/home/<name>/…`、`/mnt/…` のリポジトリまでの前置き)と、採取マシンのユーザー名(`ls -l` の所有者や `user@host` のプロンプトに出る)の伏せ字も含まれる。
 - フィクスチャの機密ファイルは `private/credentials.env`(`secrets/` にしないのは、ユーザー設定側に `Read(./secrets/**)` のような deny があると「deny なし」側の比較が成立しないため)。deny 比較を採るときは、ユーザー設定の deny がこのパスに掛かっていないことを確認する。

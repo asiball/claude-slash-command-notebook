@@ -4,8 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Config Notebook</title>
-<meta name="description" content="同じ依頼文のまま Claude Code の設定(outputStyle・permissions.deny・permissions.defaultMode・sandbox)を切り替えると出力がどう変わるかを、トグルで見比べる実測ノート(2026-08-24 実測、Claude Code 2.1.241)。">
+<meta name="description" content="同じ依頼文のまま Claude Code の設定(outputStyle・permissions.deny・permissions.defaultMode・sandbox)を切り替えると出力がどう変わるかを、トグルで見比べる実測ノート(Claude Code CLI v2.1.241、2026-08-24 採取)。">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='80' font-size='85' fill='%232F6F6C' font-family='monospace'%3E%E2%9A%99%3C/text%3E%3C/svg%3E">
+<link rel="preload" href="fonts/JetBrainsMono-Regular.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/JetBrainsMono-Bold.woff2" as="font" type="font/woff2" crossorigin>
 <style>
   :root {
     --bg: #FBFBF9;
@@ -20,12 +22,11 @@
     --out-ink: #285E5B;
     --out-soft: #E7F0EF;
     --code-bg: #F4F2ED;
-    --chip-skill-bg: #EDE7F4;
-    --chip-skill-ink: #5B3E86;
     --chip-ui-bg: #EAEDEF;
     --chip-ui-ink: #4A555C;
-    --chip-mid-bg: #F3EAD4;
-    --chip-mid-ink: #7A5B18;
+    --btn-shadow: 0 1px 2px rgba(0, 0, 0, .12);
+    --seg-on-bg: #FFFFFF;
+    --mono: "JetBrains Mono", ui-monospace, "Cascadia Code", "SF Mono", Menlo, Consolas, monospace;
   }
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
@@ -41,12 +42,10 @@
       --out-ink: #8CC5C0;
       --out-soft: #1E3230;
       --code-bg: #24211A;
-      --chip-skill-bg: #322A44;
-      --chip-skill-ink: #C0A8E8;
       --chip-ui-bg: #2A2F33;
       --chip-ui-ink: #AEBBC3;
-      --chip-mid-bg: #3A2F17;
-      --chip-mid-ink: #D9B45C;
+      --btn-shadow: 0 1px 2px rgba(0, 0, 0, .45);
+      --seg-on-bg: #2E2A22;
     }
   }
   :root[data-theme="dark"] {
@@ -62,18 +61,17 @@
     --out-ink: #8CC5C0;
     --out-soft: #1E3230;
     --code-bg: #24211A;
-    --chip-skill-bg: #322A44;
-    --chip-skill-ink: #C0A8E8;
     --chip-ui-bg: #2A2F33;
     --chip-ui-ink: #AEBBC3;
-    --chip-mid-bg: #3A2F17;
-    --chip-mid-ink: #D9B45C;
+    --btn-shadow: 0 1px 2px rgba(0, 0, 0, .45);
+    --seg-on-bg: #2E2A22;
   }
 
   /* 端末キャプチャ用の等幅フォント(自己ホスト)。
      罫線(U+2500-)・ブロック要素(U+2588-259F)を収録しており、閲覧環境の
      フォント差で AA が崩れないようにする。Google Fonts 配信はサブセット化で
-     この範囲を落とすため、woff2 をリポジトリ同梱で配信する(fonts/OFL.txt)。 */
+     この範囲を落とすため、woff2 をリポジトリ同梱で配信する(fonts/OFL.txt)。
+     head の preload と合わせ、フォント到着時のリフロー(画面のガタつき)を抑える。 */
   @font-face {
     font-family: "JetBrains Mono";
     src: url("fonts/JetBrainsMono-Regular.woff2") format("woff2");
@@ -97,13 +95,9 @@
     font-size: .97rem;
   }
   main { max-width: 860px; margin: 0 auto; }
-  code, pre, .mono {
-    font-family: "JetBrains Mono", ui-monospace, "Cascadia Code", "SF Mono", Menlo, Consolas, monospace;
-  }
+  code, pre { font-family: var(--mono); }
   a { color: var(--accent-ink); }
   :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-
-  .cell-lede { margin: 0 0 .3rem; font-size: .96rem; font-weight: 650; color: var(--ink); max-width: 46em; }
 
   /* ---------- floating TOC (wide screens) ---------- */
   .toc { display: none; }
@@ -120,41 +114,24 @@
       padding-left: 1.2rem;
     }
     .toc-title {
-      font-family: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+      font-family: var(--mono);
       font-size: .66rem; letter-spacing: .14em; text-transform: uppercase;
       color: var(--muted); margin: 0 0 .5rem;
     }
-    .toc a { text-decoration: none; }
+    /* padding とマイナス margin は常時当てておき、active で背景だけ変える(現在地が動いても行が揺れない) */
+    .toc a { text-decoration: none; padding: .08em .45em; margin-left: -.45em; border-radius: 5px; }
     .toc .toc-h {
       display: block; color: var(--ink); font-weight: 650;
-      margin: .9rem 0 .25rem;
+      margin: .9rem 0 .25rem; margin-left: -.45em;
     }
     .toc .toc-h:first-of-type { margin-top: 0; }
     .toc .toc-h:hover { color: var(--accent-ink); }
     .toc-cmds { display: flex; flex-direction: column; gap: .12rem; padding-bottom: .15rem; }
-    .toc-cmds a {
-      font-family: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
-      font-size: .7rem; color: var(--muted);
-    }
+    .toc-cmds a { font-family: var(--mono); font-size: .7rem; color: var(--muted); align-self: flex-start; }
     .toc-cmds a:hover { color: var(--accent-ink); }
-    /* スクロール位置と同期して現在地をハイライト(scrollspy)。
-       padding とマイナス margin を相殺させ、背景帯が付いても文字位置がずれないようにする */
-    .toc a.active {
-      color: var(--accent-ink);
-      background: var(--accent-soft);
-      border-radius: 5px;
-      padding: .08em .45em;
-      margin-left: -.45em;
-    }
-    .toc .toc-cmds a.active { color: var(--accent-ink); font-weight: 700; }
+    .toc a.active { color: var(--accent-ink); background: var(--accent-soft); }
+    .toc .toc-cmds a.active { color: var(--accent-ink); }
     .toc .toc-h.active { color: var(--accent-ink); }
-  }
-  .toc-cmds a .toc-tag {
-    font-family: system-ui, sans-serif;
-    font-size: .62rem; font-weight: 650; letter-spacing: .06em;
-    color: var(--chip-skill-ink); background: var(--chip-skill-bg);
-    border-radius: 999px; padding: .05em .5em; margin-left: .35em;
-    vertical-align: .08em;
   }
 
   /* 1420px 未満ではフローティング目次が出ないため、ヘッダ直下に折りたたみ目次を置く */
@@ -167,8 +144,7 @@
     }
     .toc-inline summary {
       cursor: pointer; padding: .55rem .9rem; color: var(--muted);
-      font-family: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
-      font-size: .74rem;
+      font-family: var(--mono); font-size: .74rem;
     }
     .toc-inline .toc-h {
       display: block; font-weight: 650; color: var(--ink);
@@ -178,10 +154,7 @@
       display: flex; flex-wrap: wrap; gap: .3rem .8rem;
       padding: .1rem .9rem .7rem;
     }
-    .toc-inline .toc-cmds a {
-      font-family: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
-      font-size: .74rem; color: var(--muted); text-decoration: none;
-    }
+    .toc-inline .toc-cmds a { font-family: var(--mono); font-size: .74rem; color: var(--muted); text-decoration: none; }
     .toc-inline .toc-cmds a:hover { color: var(--accent-ink); }
   }
 
@@ -192,7 +165,7 @@
     margin: 0; padding: .6rem 0;
     background: var(--bg);
     border-bottom: 1px solid var(--line);
-    font-family: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+    font-family: var(--mono);
   }
   .topnav .brand {
     font-size: .78rem; font-weight: 700; letter-spacing: .05em;
@@ -211,7 +184,7 @@
   /* ---------- header ---------- */
   .page-head { padding: 3rem 0 1.75rem; border-bottom: 2px solid var(--ink); }
   .eyebrow {
-    font-family: "JetBrains Mono", ui-monospace, "Cascadia Code", "SF Mono", Menlo, Consolas, monospace;
+    font-family: var(--mono);
     font-size: .72rem; letter-spacing: .16em; text-transform: uppercase;
     color: var(--accent); margin: 0 0 .8rem;
   }
@@ -222,7 +195,7 @@
   .page-head p { max-width: 42em; color: var(--muted); margin: .3rem 0; }
   .meta-chips { display: flex; flex-wrap: wrap; gap: .45rem; margin-top: 1.1rem; }
   .meta-chips span {
-    font-family: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+    font-family: var(--mono);
     font-size: .7rem; color: var(--muted);
     border: 1px solid var(--line); border-radius: 999px;
     padding: .2em .75em; background: var(--surface);
@@ -237,12 +210,24 @@
     scroll-margin-top: 3.6rem;
     padding-bottom: .4rem; border-bottom: 1px solid var(--line);
   }
-  h2 .sec-no {
-    color: var(--accent); font-family: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
-    font-size: .82em; margin-right: .55em;
+  h2 .sec-no { color: var(--accent); font-family: var(--mono); font-size: .82em; margin-right: .55em; }
+  .sec-lede { color: var(--muted); max-width: 46em; margin: .75rem 0 1.2rem; font-size: .95rem; }
+
+  /* 端末画面の読み方(§1 冒頭に 1 回だけ)。dt は端末と同じ黒地のチップにして画面と結びつける */
+  .legend {
+    margin: 0 0 1.9rem; padding: .75rem 1rem;
+    border: 1px solid var(--line); border-radius: 8px; background: var(--surface);
+    font-size: .82rem; color: var(--muted); max-width: 46em;
   }
-  .sec-lede { color: var(--muted); max-width: 46em; margin: .75rem 0 1.9rem; font-size: .95rem; }
-  .gist { color: var(--muted); font-size: .85rem; margin: 0 0 .55em; }
+  .legend-title { font-family: var(--mono); font-size: .66rem; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); font-weight: 700; margin: 0 0 .4rem; }
+  .legend dl { display: grid; grid-template-columns: max-content 1fr; gap: .3rem 1rem; margin: 0; align-items: start; }
+  .legend dt {
+    font-family: var(--mono); font-size: .72rem; margin: 0; white-space: nowrap; justify-self: start;
+    background: #191713; color: #D9D4CA; border: 1px solid #383429; border-radius: 4px; padding: .05em .5em;
+  }
+  .legend dt .g { color: #84A45E; } .legend dt .p { color: #FF87AF; } .legend dt .w { color: #FFFFFF; } .legend dt .d { color: #949494; }
+  .legend dd { margin: 0; }
+  @media (max-width: 640px) { .legend dl { grid-template-columns: 1fr; } .legend dd { margin-bottom: .35rem; } }
 
   /* ---------- notebook cells ---------- */
   .cell {
@@ -266,38 +251,103 @@
     border-left: 3px solid var(--accent);
     border-radius: 8px 8px 0 0;
   }
-  .in-label {
-    font-family: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
-    font-size: .66rem; letter-spacing: .12em; text-transform: uppercase;
-    color: var(--accent-ink); font-weight: 700; padding-top: .25rem;
-  }
+  h3 { font-size: 1.02rem; font-weight: 700; margin: 0 0 .6rem; }
   .cell-head .typed { font-size: 1.05rem; font-weight: 600; margin: 0; }
   .cell:not(.setup) .cell-head .typed::before {
-    content: "❯ "; color: var(--accent); font-weight: 700;
-    font-family: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+    content: "❯ "; color: var(--accent); font-weight: 700; font-family: var(--mono);
   }
   .cell-meta { margin-left: auto; font-size: .74rem; color: var(--muted); font-variant-numeric: tabular-nums; }
   .cell-body { padding: 1rem 1.1rem 1.2rem; border-left: 3px solid transparent; }
+  .cell-lede { margin: 0 0 .3rem; font-size: .96rem; font-weight: 650; color: var(--ink); max-width: 46em; }
   .cell-desc { margin: 0 0 .95rem; color: var(--muted); font-size: .92rem; max-width: 46em; }
+  ul.notes { font-size: .9rem; color: var(--muted); padding-left: 1.2em; margin: .7rem 0 0; max-width: 46em; }
+  ul.notes li { margin: .25em 0; }
 
   .cell.setup .cell-head { border-left-color: var(--line); }
   .head-badge {
-    font-family: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+    font-family: var(--mono);
     font-size: .66rem; letter-spacing: .12em; text-transform: uppercase;
     font-weight: 700; background: var(--chip-ui-bg); color: var(--chip-ui-ink);
     padding: .18em .7em; border-radius: 999px;
   }
 
-  .term-note {
-    font-size: .8rem; color: var(--muted);
-    margin: 1.05rem 0 .45rem; max-width: 46em;
+  /* 小見出しラベル(IN / CONFIG / 設定 / OUT)は同じ書体・大きさで揃える */
+  .in-label, .sw-label, .snip-label, .out-label {
+    font-family: var(--mono);
+    font-size: .66rem; letter-spacing: .12em; text-transform: uppercase;
+    font-weight: 700; margin: 0;
   }
-  .term-note strong { color: var(--ink); font-weight: 650; }
+  .in-label { color: var(--accent-ink); padding-top: .25rem; }
+  .sw-label { color: var(--ink); }
+  .snip-label { color: var(--muted); margin: 0 0 .3rem; }
+  .out-label { color: var(--out-ink); margin: .9rem 0 .35rem; }
+  .snip-label span, .out-label span {
+    text-transform: none; letter-spacing: 0; font-weight: 500; color: var(--muted); margin-left: .6em;
+  }
+
+  /* In(共通の依頼文)。index.html と同じ意匠 */
+  .in-block {
+    display: grid; grid-template-columns: auto 1fr; gap: .9rem;
+    border-left: 3px solid var(--accent);
+    background: var(--accent-soft);
+    border-radius: 0 6px 6px 0;
+    padding: .7rem 1rem;
+    margin: .7rem 0 0;
+  }
+  .in-block .in-cmd { font-size: .88rem; font-weight: 600; min-width: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+
+  /* Config の切り替え: 溝(code-bg)の中で選択中だけ浮くセグメンテッドコントロール。
+     太さは変えない(太字化で幅が変わるとボタン列が揺れる)。 */
+  .switch-row { display: flex; align-items: center; gap: .8rem; flex-wrap: wrap; margin: 1rem 0 .2rem; }
+  .switch {
+    display: inline-flex; flex-wrap: wrap; gap: 2px; padding: 3px;
+    border: 1px solid var(--line); border-radius: 9px; background: var(--code-bg);
+  }
+  .switch button {
+    font-family: inherit; font-size: .82rem; font-weight: 600; line-height: 1.35;
+    padding: .36rem .85rem .36rem .7rem; border-radius: 6px;
+    border: 1px solid transparent; background: transparent; color: var(--muted);
+    cursor: pointer; display: inline-flex; align-items: center; gap: .5em;
+    transition: background-color .15s, color .15s, box-shadow .15s;
+  }
+  .switch button::before {   /* ラジオボタン風の印: ○ → ● */
+    content: ""; width: .6em; height: .6em; border-radius: 50%; flex: none;
+    border: 2px solid currentColor; transition: background-color .15s, border-color .15s;
+  }
+  .switch button:hover { color: var(--ink); }            /* hover は背景を変えず印だけ反応(選択中と混同しない) */
+  .switch button:hover::before { border-color: var(--accent); }
+  .switch button[aria-selected="true"] {
+    background: var(--seg-on-bg); color: var(--accent-ink);
+    border-color: var(--line); box-shadow: var(--btn-shadow);
+  }
+  .switch button[aria-selected="true"]::before { background: var(--accent); border-color: var(--accent); }
+  .switch button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .switch button code { font-size: .9em; background: none; padding: 0; border: 0; }
+
+  /* パネルは同じグリッドセルに重ね、高さを最長パネルに固定する(切り替えで下が動かない)。
+     さらに各パネルを行 subgrid にして「設定 / 実測 / Out」の段の高さをパネル間で共有し、
+     文の長さが違っても端末の上端が動かないようにする(非対応ブラウザは重ねるだけ)。
+     visibility で隠すので、非表示側はフォーカスも支援技術の読み上げも受けない。
+     teal の罫線は容器に付け、短いパネルの下の余白も Out の領域として見せる。 */
+  .panels {
+    display: grid; grid-template-columns: 1fr; margin-top: .6rem;
+    border-left: 3px solid var(--out); padding-left: .9rem;
+  }
+  .panels > .panel { grid-column: 1; grid-row: 1 / span 6; visibility: hidden; min-width: 0; scroll-margin-top: 3.6rem; }
+  .panels > .panel.active { visibility: visible; }
+  @supports (grid-template-rows: subgrid) {
+    .panels > .panel { display: grid; grid-template-rows: subgrid; align-content: start; }
+  }
+  .panel > :first-child { margin-top: 0; }
+  .panel .out-content pre { margin-bottom: .6rem; white-space: pre; }
+  .panel .cell-desc { margin-bottom: 0; }
+  /* 特に長い端末(outputStyle の Explanatory)は内側スクロールにして、他パネルの余白を抑える */
+  .term-scroll .term pre { max-height: 36rem; overflow-y: auto; }
 
   /* collapsible blocks */
   details.prompt {
     border: 1px solid var(--line); border-radius: 6px;
-    background: var(--code-bg); margin: 0 0 1rem;
+    background: var(--code-bg); margin: 1rem 0 0;
   }
   details.prompt summary {
     cursor: pointer; padding: .55rem .9rem;
@@ -312,39 +362,14 @@
   details.prompt[open] summary::before { transform: rotate(90deg); }
   details.prompt summary strong { color: var(--ink); font-weight: 650; }
   details.prompt[open] summary { border-bottom: 1px solid var(--line); }
-  details.prompt pre {
-    margin: 0; padding: .9rem 1rem; font-size: .78rem; line-height: 1.6;
-    overflow-x: auto; white-space: pre-wrap; word-break: break-word;
-  }
+  details.prompt .cell-desc { margin: .7rem .9rem; }
+  details.prompt .term { border: none; border-radius: 0; }
+  details.prompt .term + .term { border-top: 1px solid #383429; margin-top: 0; }
 
-  .in-block {
-    display: grid; grid-template-columns: auto 1fr; gap: .9rem;
-    border-left: 3px solid var(--accent);
-    background: var(--accent-soft);
-    border-radius: 0 6px 6px 0;
-    padding: .7rem 1rem;
-    margin: 0 0 .9rem;
-  }
-  .in-block .in-cmd { font-size: .88rem; font-weight: 600; min-width: 0; overflow-x: auto; white-space: pre-wrap; word-break: break-word; }
-
-  /* output block */
-  .out-block {
-    display: grid; grid-template-columns: auto 1fr; gap: .9rem;
-    border-left: 3px solid var(--out);
-    background: var(--out-soft);
-    border-radius: 0 6px 6px 0;
-    padding: .85rem 1rem;
-  }
-  .out-label {
-    font-family: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
-    font-size: .66rem; letter-spacing: .12em; text-transform: uppercase;
-    color: var(--out-ink); font-weight: 700; padding-top: .25rem;
-  }
+  /* 設定スニペット・コード */
   .out-content { min-width: 0; font-size: .92rem; }
   .out-content > :first-child { margin-top: 0; }
   .out-content > :last-child { margin-bottom: 0; }
-  .out-content ul { padding-left: 1.3em; margin: .5em 0; }
-  .out-content li { margin: .2em 0; }
   .out-content code {
     background: var(--code-bg); border: 1px solid var(--line);
     border-radius: 3px; padding: .05em .3em; font-size: .85em;
@@ -352,6 +377,7 @@
   .out-content pre {
     background: var(--code-bg); border: 1px solid var(--line); border-radius: 5px;
     padding: .8rem .9rem; overflow-x: auto; font-size: .8rem; line-height: 1.6;
+    margin: 0 0 .8rem; scrollbar-gutter: stable;
   }
   .out-content pre code { background: none; border: none; padding: 0; }
 
@@ -364,12 +390,13 @@
     overflow: hidden;
     margin: 0;
   }
+  .term + .term { margin-top: .6rem; }
   .term-bar {
     display: flex; align-items: center; gap: .5rem;
     padding: .45rem .85rem;
     background: #211E19;
     border-bottom: 1px solid #383429;
-    font-family: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+    font-family: var(--mono);
     font-size: .7rem; color: #9A9384; letter-spacing: .08em;
   }
   .term-bar::before {
@@ -382,95 +409,10 @@
   .term pre {
     margin: 0; padding: .85rem 1rem;
     font-size: .72rem; line-height: 1.55;
-    overflow-x: auto; color: inherit;
+    overflow-x: scroll; color: inherit;   /* 横スクロールバーの出現/消失で高さが変わらないよう常時確保(gutter は横には効かない) */
+    scrollbar-width: thin; scrollbar-color: #4A463C #191713;
     font-variant-ligatures: none; /* 実端末の見た目に合わせ合字を無効化 */
   }
-
-  /* ---------- §1 優先順位の積み上げ図 ---------- */
-  .stack-wrap {
-    display: grid; grid-template-columns: auto 1fr; gap: 0 1rem;
-    margin: 1.5rem 0 1rem;
-  }
-  .stack-axis {
-    display: flex; flex-direction: column; align-items: center;
-    font-family: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
-    font-size: .68rem; color: var(--muted); letter-spacing: .08em;
-    padding: .1rem 0; white-space: nowrap;
-  }
-  .stack-axis .axis-strong { color: var(--accent-ink); font-weight: 700; }
-  .stack-axis .axis-line {
-    flex: 1; width: 2px; margin: .4rem 0; border-radius: 2px;
-    background: linear-gradient(to bottom, var(--accent), var(--line));
-  }
-  .layers { display: flex; flex-direction: column; gap: .5rem; min-width: 0; }
-  .layer {
-    border: 1px solid var(--line); border-left: 3px solid var(--out);
-    border-radius: 6px; background: var(--surface);
-    padding: .6rem .95rem .65rem;
-  }
-  .layer.top { border-left-color: var(--accent); background: var(--accent-soft); }
-  .layer .l-head { display: flex; align-items: baseline; gap: .6rem; flex-wrap: wrap; }
-  .layer .l-no {
-    font-family: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
-    font-size: .7rem; font-weight: 700; color: var(--accent);
-  }
-  .layer .l-name { font-weight: 650; font-size: .93rem; }
-  .layer .l-badge {
-    font-size: .64rem; font-weight: 650; letter-spacing: .06em;
-    background: var(--chip-mid-bg); color: var(--chip-mid-ink);
-    border-radius: 999px; padding: .1em .6em;
-  }
-  .layer .l-path {
-    font-family: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
-    font-size: .74rem; color: var(--muted);
-    margin: .15rem 0 0; overflow-x: auto; white-space: nowrap;
-  }
-  .layer .l-note { font-size: .8rem; color: var(--muted); margin: .1rem 0 0; max-width: 46em; }
-  .fig-note { font-size: .84rem; color: var(--muted); margin: .9rem 0 0; max-width: 46em; }
-
-  /* ---------- §2 コラム(紛らわしいファイル) ---------- */
-  .aside-box {
-    border: 1px solid var(--line); border-left: 3px solid var(--out);
-    border-radius: 0 6px 6px 0; background: var(--out-soft);
-    padding: .8rem 1.1rem .9rem; margin: 1.4rem 0 0;
-    font-size: .9rem;
-  }
-  .aside-box .aside-title {
-    font-family: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
-    font-size: .68rem; letter-spacing: .12em; text-transform: uppercase;
-    color: var(--out-ink); font-weight: 700; margin: 0 0 .4rem;
-  }
-  .aside-box ul { padding-left: 1.3em; margin: .3em 0 0; }
-  .aside-box li { margin: .3em 0; }
-  .aside-box code {
-    background: var(--code-bg); border: 1px solid var(--line);
-    border-radius: 3px; padding: .05em .3em; font-size: .85em;
-  }
-
-  /* ---------- catalog ---------- */
-  .cat-group { margin: 0 0 2.25rem; }
-  h3 { font-size: 1.02rem; font-weight: 700; margin: 0 0 .6rem; }
-  .table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
-  table { border-collapse: collapse; width: 100%; font-size: .88rem; }
-  th, td { text-align: left; padding: .55rem .9rem; border-bottom: 1px solid var(--line); vertical-align: top; }
-  tr:last-child td { border-bottom: none; }
-  tr:hover td { background: var(--code-bg); }
-  th {
-    font-size: .7rem; letter-spacing: .1em; text-transform: uppercase;
-    color: var(--muted); font-weight: 650; background: var(--code-bg);
-  }
-  td code { white-space: nowrap; font-size: .92em; }
-  td a.cmd { text-decoration: none; }
-  td a.cmd code { color: var(--accent-ink); }
-  td a.cmd:hover code { text-decoration: underline; }
-  .chip {
-    display: inline-block; font-size: .66rem; font-weight: 650;
-    letter-spacing: .06em; border-radius: 999px; padding: .12em .6em;
-    vertical-align: middle; margin-left: .4em;
-  }
-  .chip.skill { background: var(--chip-skill-bg); color: var(--chip-skill-ink); }
-  .chip.ui { background: var(--chip-ui-bg); color: var(--chip-ui-ink); }
-  .chip.mid { background: var(--chip-mid-bg); color: var(--chip-mid-ink); }
 
   /* ---------- provenance ---------- */
   .prov {
@@ -481,7 +423,7 @@
   .prov h2 {
     font-size: .78rem; margin: 0 0 .6rem; color: var(--ink);
     border: none; padding: 0;
-    font-family: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+    font-family: var(--mono);
     letter-spacing: .12em; text-transform: uppercase;
   }
   .prov ul { padding-left: 1.3em; margin: .4em 0; }
@@ -494,41 +436,13 @@
     .topnav { flex-direction: column; align-items: flex-start; gap: .2rem; }
     .cell + .cell::before { left: 1.3rem; }
     .cell-meta { margin-left: 0; flex-basis: 100%; }
-    .stack-wrap { grid-template-columns: 1fr; }
-    .stack-axis { flex-direction: row; gap: .5rem; margin-bottom: .5rem; }
-    .stack-axis .axis-line {
-      width: auto; height: 2px; flex: 1; margin: 0;
-      background: linear-gradient(to right, var(--accent), var(--line));
-    }
+    .in-block { grid-template-columns: 1fr; gap: .3rem; }
+    .panels { padding-left: .6rem; }
+    .panels > .panel { scroll-margin-top: 7rem; }
   }
   @media (prefers-reduced-motion: reduce) {
     html { scroll-behavior: auto; }
     * { transition: none !important; }
-  }
-
-  /* ---------- toggle cells ---------- */
-  .cfg-in {
-    font-family: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
-    font-size: .86rem; background: var(--code-bg); border: 1px solid var(--line);
-    border-left: 3px solid var(--accent); border-radius: 8px;
-    padding: .55rem .9rem; margin: .6rem 0 .2rem; overflow-x: auto; white-space: pre;
-  }
-  .cfg-in .in-label { color: var(--muted); font-size: .72rem; letter-spacing: .08em; margin-right: .6rem; }
-  .switch { display: flex; gap: .45rem; flex-wrap: wrap; margin: .9rem 0 .8rem; }
-  .switch button {
-    font-family: inherit; font-size: .83rem; padding: .4rem .95rem; border-radius: 999px;
-    border: 1px solid var(--line); background: var(--surface); color: var(--muted);
-    cursor: pointer; transition: border-color .15s, color .15s;
-  }
-  .switch button:hover { border-color: var(--accent); color: var(--ink); }
-  .switch button.active { border-color: var(--accent); background: var(--code-bg); color: var(--ink); font-weight: 650; }
-  .switch button code { font-size: .92em; background: none; padding: 0; }
-  .panel { display: none; }
-  .panel.active { display: block; }
-  .snip-label { font-size: .72rem; color: var(--muted); letter-spacing: .06em; margin: .5rem 0 .25rem; }
-  .pending {
-    border: 1px dashed var(--line); border-radius: 8px; padding: .6rem .9rem;
-    color: var(--muted); font-size: .85rem; margin: .4rem 0 .6rem; max-width: 46em;
   }
 </style>
 </head>
@@ -539,37 +453,64 @@
     <a class="brand" href="#top"><span>⚙</span> Config Notebook</a>
     <div class="links">
       <a href="#demos">比較デモ</a>
+      <a href="#next">自分の環境で試す</a>
       <a href="#prov">取得方法</a>
       <a class="sister" href="index.html">← Slash Command Notebook</a>
     </div>
   </nav>
   <nav class="toc" aria-label="目次">
     <p class="toc-title">目次</p>
-    <a class="toc-h" href="#demos">設定 × 出力の実測比較</a>
+    <a class="toc-h" href="#demos">§1 設定 × 出力</a>
     <div class="toc-cmds">
       <a href="#cell-config-fixture">Setup</a>
       <a href="#cell-outputstyle">outputStyle</a>
       <a href="#cell-deny">permissions.deny</a>
-      <a href="#cell-defaultmode">defaultMode</a>
+      <a href="#cell-defaultmode">permissions.defaultMode</a>
       <a href="#cell-sandbox">sandbox</a>
     </div>
+    <a class="toc-h" href="#next">§2 自分の環境で試す</a>
     <a class="toc-h" href="#prov">取得方法(再現手順)</a>
     <a class="toc-h" href="index.html">← Slash Command Notebook</a>
   </nav>
   <header class="page-head" id="top">
     <p class="eyebrow">claude code / settings</p>
     <h1>Config Notebook</h1>
-    <p>同じ入力(依頼文)を固定したまま、設定だけを切り替えると Claude Code の出力・挙動がどう変わるかを実測で記録する。各セルのトグルで設定の有無・値を選ぶと、その設定で採取した画面(Out)に切り替わる。</p>
-    <p>対象は、切り替えたときの差が目に見えて分かる 4 つのキーに絞った: <code>outputStyle</code>(応答文が変わる)・<code>permissions.deny</code>(実行が拒否される)・<code>permissions.defaultMode</code>(確認の出方が変わる)・<code>sandbox</code>(OS レベルで実行が制限される)。採取手順は<a href="#prov">取得方法</a>。</p>
+    <p>入力(依頼文)を固定したまま、設定だけを切り替えると Claude Code の出力・挙動がどう変わるかを実測で記録する。各セルの <strong>Config</strong> でボタンを選ぶと、その設定で採取した画面(Out)に切り替わる。</p>
+    <p>対象は、切り替えたときの差が一目で分かる 4 つのキーに絞った: <code>outputStyle</code>(応答文が変わる)・<code>permissions.deny</code>(実行が拒否される)・<code>permissions.defaultMode</code>(確認の出方が変わる)・<code>sandbox</code>(OS レベルで実行が制限される)。採取手順は<a href="#prov">取得方法</a>を参照。</p>
     <div class="meta-chips">
-      <span>比較セル 4(切り替え 9 パターン)</span>
-      <span>採取 2026-08-24 · Claude Code 2.1.241(WSL2)</span>
+      <span>比較セル 4(切り替え 10 パターン)</span>
+      <span>Claude Code CLI v2.1.241</span>
+      <span>2026-08-24 実測(WSL2)</span>
       <span>姉妹ページ: <a href="index.html">Slash Command Notebook</a></span>
     </div>
+    <details class="toc-inline">
+      <summary>セル別もくじ</summary>
+      <a class="toc-h" href="#demos">§1 設定 × 出力</a>
+      <div class="toc-cmds">
+        <a href="#cell-config-fixture">Setup</a>
+        <a href="#cell-outputstyle">outputStyle</a>
+        <a href="#cell-deny">permissions.deny</a>
+        <a href="#cell-defaultmode">permissions.defaultMode</a>
+        <a href="#cell-sandbox">sandbox</a>
+      </div>
+      <a class="toc-h" href="#next">§2 自分の環境で試す</a>
+      <a class="toc-h" href="#prov">取得方法(再現手順)</a>
+    </details>
   </header>
 
   <h2 id="demos"><span class="sec-no">§1</span>設定 × 出力の実測比較</h2>
-  <p class="sec-lede">ボタンで設定を切り替えると Out の画面が入れ替わる。各パネルには、その採取で使った settings ファイルの中身(切り替えた部分)を添えてある。画面は tmux の仮想端末(110×42)からの ANSI キャプチャで、モデル応答は非決定的 — ここに載せた出力は「ある1回の実行例」である。</p>
+  <p class="sec-lede">各パネルには、その採取で使った設定ファイルの中身(切り替えた部分)を添えてある。画面は tmux 仮想端末の ANSI キャプチャ(条件は<a href="#prov">取得方法</a>)。モデル応答は非決定的であり、ここに載せた出力は「ある 1 回の実行例」である。</p>
+  <div class="legend">
+    <p class="legend-title">端末画面の読み方</p>
+    <dl>
+      <dt><span class="g">●</span> Bash(…) / Read(…)</dt><dd>ツール呼び出し(緑=成功、ピンク=失敗)。続く <code>⎿</code> がその結果。白の ● はモデルの応答文</dd>
+      <dt><span class="d">10:32 PM claude-haiku-4-5-…</span></dt><dd>右端の薄い行はターンの区切り(時刻と応答したモデル)。詳細表示(ctrl+o)のときだけ出る</dd>
+      <dt><span class="d">✻ Cogitated for 9s</span></dt><dd>応答にかかった時間(動詞はランダム)</dd>
+      <dt><span class="d">⏸ manual mode on</span> / <span class="d">⏵⏵ auto mode on</span></dt><dd>フッター左端は現在の権限モード(→ <a href="#cell-defaultmode">defaultMode</a>)</dd>
+      <dt><span class="g">/rc</span></dt><dd>Remote Control(ブラウザからこのセッションに接続)のリンク。設定とは無関係</dd>
+      <dt><span class="d">Showing detailed transcript … verbose</span></dt><dd>詳細表示(ctrl+o)で採取した画面。通常表示ではツールの結果や拒否エラーが畳まれる</dd>
+    </dl>
+  </div>
 
   <!-- CELL:config-fixture -->
   <article class="cell setup" id="cell-config-fixture">
@@ -579,13 +520,18 @@
       <span class="cell-meta">採取用フィクスチャ · capture-config.sh が毎回再構築</span>
     </div>
     <div class="cell-body">
-      <p class="cell-lede">各セルの採取はこの最小フィクスチャに対して行う。切り替え対象の設定は、セルごとに <code>.claude/settings.local.json</code>(deny のみ settings.json)を書き換え、別セッションで起動し直して採取する。</p>
+      <p class="cell-lede">各セルの採取はこの最小フィクスチャに対して行う。切り替える設定はセルごとに書き換え、別セッションで起動し直して採取する。</p>
       <div class="out-content"><pre><code>work/config-demo/
 ├── src/hello.py                # print("hello from config-demo") のみ
 ├── private/credentials.env     # ダミー値 DUMMY_TOKEN=xxxx
 └── .claude/
     ├── settings.json           # { "model": "claude-sonnet-5", "permissions": {...} }
-    └── settings.local.json     # { "model": "claude-haiku-4-5" } を基点にセルごとに書き換え</code></pre></div>
+    └── settings.local.json     # { "model": "claude-haiku-4-5" } をベースにセルごとに書き換え</code></pre></div>
+      <ul class="notes">
+        <li><code>.claude/settings.json</code> — プロジェクト共有(git 管理)。チームで揃えたい deny などのルール向き。<strong>deny の比較ではこちら</strong>を切り替える。</li>
+        <li><code>.claude/settings.local.json</code> — 個人用(git 管理外)。<strong>outputStyle / defaultMode / sandbox の比較ではこちら</strong>を切り替える。</li>
+        <li>優先順位: CLI 引数(<code>--model</code> など) &gt; settings.local.json &gt; settings.json &gt; <code>~/.claude/settings.json</code>。local に haiku を置いたまま <code>--model sonnet</code> で起動すれば sonnet になる(<a href="#defaultmode-p2">auto パネル</a>の区切り行に <code>claude-sonnet-5</code> と出ているのがその結果)。</li>
+      </ul>
     </div>
   </article>
 
@@ -593,36 +539,47 @@
   <article class="cell" id="cell-outputstyle">
     <div class="cell-head">
       <h3 class="typed"><code>outputStyle</code></h3>
-      <span class="cell-meta">model: sonnet(--model)· 画面実測 · 2026-08-24</span>
+      <span class="cell-meta">model: sonnet(--model) · 画面実測</span>
     </div>
     <div class="cell-body">
-      <p class="cell-lede">同じ質問への応答文が、出力スタイルの設定でどう変わるか。</p>
-      <div class="cfg-in"><span class="in-label">In(共通)</span>❯ このプロジェクトの .claude 配下の設定ファイルを読んで、何が設定されているか教えて</div>
-      <div class="switch" role="tablist">
-        <button type="button" role="tab" data-panel="outputstyle-p0" class="active" aria-selected="true">設定なし(Default)</button>
-        <button type="button" role="tab" data-panel="outputstyle-p1" aria-selected="false"><code>"outputStyle": "Concise"</code></button>
+      <p class="cell-lede">同じ依頼(小さなコード変更と実行確認)への応答の分量と構成が、出力スタイルの設定でどう変わるか。差が出るのは <code>Ran 1 shell command</code> より下(そこまでの Read → Update の diff は 3 つとも同じ)。</p>
+      <div class="in-block"><span class="in-label">In(共通)</span><code class="in-cmd">❯ src/hello.py を、コマンドライン引数で名前を受け取って hello, &lt;名前&gt; と表示するように変更して、実行して確認して</code></div>
+      <div class="switch-row">
+        <span class="sw-label">Config</span>
+        <div class="switch" role="tablist" aria-label="outputStyle の設定を切り替え">
+        <button type="button" role="tab" id="tab-outputstyle-p0" aria-controls="outputstyle-p0" aria-selected="true" tabindex="0">設定なし(Default)</button>
+        <button type="button" role="tab" id="tab-outputstyle-p1" aria-controls="outputstyle-p1" aria-selected="false" tabindex="-1"><code>"outputStyle": "Concise"</code></button>
+        <button type="button" role="tab" id="tab-outputstyle-p2" aria-controls="outputstyle-p2" aria-selected="false" tabindex="-1"><code>"outputStyle": "Explanatory"</code></button>
+        </div>
       </div>
-      <section class="panel active" id="outputstyle-p0" role="tabpanel">
-      <p class="snip-label">.claude/settings.local.json</p>
+      <div class="panels">
+      <section class="panel active" id="outputstyle-p0" role="tabpanel" aria-labelledby="tab-outputstyle-p0" tabindex="0">
+      <p class="snip-label">設定 <span>.claude/settings.local.json(+ --model sonnet で起動)</span></p>
       <div class="out-content"><pre><code>{ "model": "claude-haiku-4-5" }</code></pre></div>
-      <div class="term"><div class="term-bar">claude — style: Default (sonnet)</div><pre><span style="color:#4E4E4E;background:#3A3A3A">❯ </span><span style="color:#FFFFFF;background:#3A3A3A">このプロジェクトの .claude 配下の設定ファイルを読んで、何が設定されているか教えて</span>
+      <p class="cell-desc">実測: 編集と実行のあと、変更内容・確認結果・未検証の注意(引数なしだと IndexError)を段落で報告した。</p>
+      <p class="out-label">Out</p>
+      <div class="term"><div class="term-bar">claude — style: Default (sonnet)</div><pre><span style="color:#4E4E4E;background:#3A3A3A">❯ </span><span style="color:#FFFFFF;background:#3A3A3A">src/hello.py を、コマンドライン引数で名前を受け取って hello, &lt;名前&gt; </span>
+  <span style="color:#FFFFFF">と表示するように変更して、実行して確認して</span>
 
-  <span style="color:#949494">Searched for </span><span style="color:#949494;font-weight:700">1</span><span style="color:#949494"> pattern, read </span><span style="color:#949494;font-weight:700">2</span><span style="color:#949494"> files </span>
+  <span style="color:#949494">Read </span><span style="color:#949494;font-weight:700">1</span><span style="color:#949494"> file </span>
 
-<span style="color:#FFFFFF">●</span> このプロジェクトの <span style="color:#AFD7FF">.claude</span> 配下には2つの設定ファイルがあります。
+<span style="color:#87D787">●</span> <span style="font-weight:700">Update</span>(src/hello.py)
+<span style="color:#949494">  ⎿  </span>Added <span style="font-weight:700">4</span> lines, removed <span style="font-weight:700">1</span> line
+     <span style="color:#D75F5F;background:#5F0000"> 1 -</span><span style="color:#FFFFFF;background:#5F0000">print("hello from config-demo")                                                               </span>
+     <span style="color:#5FD75F;background:#005F00"> 1 +</span><span style="color:#FF005F;background:#005F00">import</span><span style="color:#FFFFFF;background:#005F00"> sys                                                                                    </span>
+     <span style="color:#5FD75F;background:#005F00"> 2 +</span><span style="color:#FFFFFF;background:#005F00">                                                                                              </span>
+     <span style="color:#5FD75F;background:#005F00"> 3 +</span><span style="color:#FFFFFF;background:#005F00">name = sys.argv[</span><span style="color:#AF87FF;background:#005F00">1</span><span style="color:#FFFFFF;background:#005F00">]                                                                            </span>
+     <span style="color:#5FD75F;background:#005F00"> 4 +</span><span style="color:#AFD700;background:#005F00">print</span><span style="color:#FFFFFF;background:#005F00">(</span><span style="color:#D7D787;background:#005F00">f"hello, </span><span style="color:#FFFFFF;background:#005F00">{name}</span><span style="color:#D7D787;background:#005F00">"</span><span style="color:#FFFFFF;background:#005F00">)                                                                       </span>
 
-  <span style="color:#AFD7FF;font-weight:700">.claude/settings.json</span>（プロジェクト共有設定、Gitで管理される想定）
-  - <span style="color:#AFD7FF">model</span>: <span style="color:#AFD7FF">claude-sonnet-5</span>
-  - <span style="color:#AFD7FF">permissions.allow</span>: <span style="color:#AFD7FF">Bash(python3 src/hello.py)</span> の実行を許可
-  - <span style="color:#AFD7FF">permissions.deny</span>: <span style="color:#AFD7FF">./private/**</span> 配下の読み取り(Read)を拒否
+  <span style="color:#949494">Ran </span><span style="color:#949494;font-weight:700">1</span><span style="color:#949494"> shell command </span>
 
-  <span style="color:#AFD7FF;font-weight:700">.claude/settings.local.json</span>（ローカル専用設定、通常Git管理外）
-  - <span style="color:#AFD7FF">model</span>: <span style="color:#AFD7FF">claude-haiku-4-5</span>
+<span style="color:#FFFFFF">●</span> <span style="color:#AFD7FF">src/hello.py</span> を、コマンドライン引数の名前を <span style="color:#AFD7FF">hello, &lt;名前&gt;</span> と表示するよう変更しました。<span style="color:#AFD7FF">python3 src/hello.py </span>
+  <span style="color:#AFD7FF">Taro</span> を実行し、<span style="color:#AFD7FF">hello, Taro</span> が出力されることを確認済みです。
 
-  <span style="font-weight:700">注意点</span>：<span style="color:#AFD7FF">settings.local.json</span> の方が優先度が高いため、実際にこのプロジェクトで使われるモデルは <span style="color:#AFD7FF">settings.json</span>
-  の <span style="color:#AFD7FF">claude-sonnet-5</span> ではなく <span style="color:#AFD7FF">claude-haiku-4-5</span> になります。
+  なお、引数を渡さなかった場合は <span style="color:#AFD7FF">IndexError</span>
+  になります（未検証事項）。エラーメッセージを出すなどの対応が必要であれば教えてください。
 
-<span style="color:#949494">✻</span> <span style="color:#949494">Churned for 8s</span>
+<span style="color:#949494">✻</span> <span style="color:#949494">Cogitated for 11s</span>
 
 <span style="color:#808080">──────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
 ❯
@@ -630,27 +587,29 @@
                                                                                                          <span style="color:#87D787">/rc</span>
   <span style="color:#FFD700">⏵⏵ auto mode on</span><span style="color:#949494"> (shift+tab to cycle) · ← for agents</span></pre></div>
       </section>
-      <section class="panel" id="outputstyle-p1" role="tabpanel">
-      <p class="snip-label">.claude/settings.local.json</p>
+      <section class="panel" id="outputstyle-p1" role="tabpanel" aria-labelledby="tab-outputstyle-p1" tabindex="0">
+      <p class="snip-label">設定 <span>.claude/settings.local.json(+ --model sonnet で起動)</span></p>
       <div class="out-content"><pre><code>{ "model": "claude-haiku-4-5", "outputStyle": "Concise" }</code></pre></div>
-      <div class="term"><div class="term-bar">claude — style: Concise (sonnet)</div><pre><span style="color:#4E4E4E;background:#3A3A3A">❯ </span><span style="color:#FFFFFF;background:#3A3A3A">このプロジェクトの .claude 配下の設定ファイルを読んで、何が設定されているか教えて</span>
+      <p class="cell-desc">実測: 同じ編集と実行をしたあと、報告は結果の 1 行だけだった(<code>hello, 太郎 と表示され、期待通り動作しました。</code>)。</p>
+      <p class="out-label">Out</p>
+      <div class="term"><div class="term-bar">claude — style: Concise (sonnet)</div><pre><span style="color:#4E4E4E;background:#3A3A3A">❯ </span><span style="color:#FFFFFF;background:#3A3A3A">src/hello.py を、コマンドライン引数で名前を受け取って hello, &lt;名前&gt; </span>
+  <span style="color:#FFFFFF">と表示するように変更して、実行して確認して</span>
 
-  <span style="color:#949494">Searched for </span><span style="color:#949494;font-weight:700">1</span><span style="color:#949494"> pattern, read </span><span style="color:#949494;font-weight:700">2</span><span style="color:#949494"> files </span>
+  <span style="color:#949494">Read </span><span style="color:#949494;font-weight:700">1</span><span style="color:#949494"> file </span>
 
-<span style="color:#FFFFFF">●</span> <span style="color:#AFD7FF">.claude</span> 配下には2つの設定ファイルがあります。
+<span style="color:#87D787">●</span> <span style="font-weight:700">Update</span>(src/hello.py)
+<span style="color:#949494">  ⎿  </span>Added <span style="font-weight:700">4</span> lines, removed <span style="font-weight:700">1</span> line
+     <span style="color:#D75F5F;background:#5F0000"> 1 -</span><span style="color:#FFFFFF;background:#5F0000">print("hello from config-demo")                                                               </span>
+     <span style="color:#5FD75F;background:#005F00"> 1 +</span><span style="color:#FF005F;background:#005F00">import</span><span style="color:#FFFFFF;background:#005F00"> sys                                                                                    </span>
+     <span style="color:#5FD75F;background:#005F00"> 2 +</span><span style="color:#FFFFFF;background:#005F00">                                                                                              </span>
+     <span style="color:#5FD75F;background:#005F00"> 3 +</span><span style="color:#FFFFFF;background:#005F00">name = sys.argv[</span><span style="color:#AF87FF;background:#005F00">1</span><span style="color:#FFFFFF;background:#005F00">]                                                                            </span>
+     <span style="color:#5FD75F;background:#005F00"> 4 +</span><span style="color:#AFD700;background:#005F00">print</span><span style="color:#FFFFFF;background:#005F00">(</span><span style="color:#D7D787;background:#005F00">f"hello, </span><span style="color:#FFFFFF;background:#005F00">{name}</span><span style="color:#D7D787;background:#005F00">"</span><span style="color:#FFFFFF;background:#005F00">)                                                                       </span>
 
-  <span style="font-weight:700">settings.json</span>（共有設定）
-  - <span style="color:#AFD7FF">model</span>: <span style="color:#AFD7FF">claude-sonnet-5</span>
-  - <span style="color:#AFD7FF">permissions.allow</span>: <span style="color:#AFD7FF">Bash(python3 src/hello.py)</span> のみ許可
-  - <span style="color:#AFD7FF">permissions.deny</span>: <span style="color:#AFD7FF">Read(./private/**)</span> を禁止
+  <span style="color:#949494">Ran </span><span style="color:#949494;font-weight:700">1</span><span style="color:#949494"> shell command </span>
 
-  <span style="font-weight:700">settings.local.json</span>（ローカル上書き、通常gitignore対象）
-  - <span style="color:#AFD7FF">model</span>: <span style="color:#AFD7FF">claude-haiku-4-5</span>（settings.jsonのsonnetを上書き）
-  - <span style="color:#AFD7FF">outputStyle</span>: <span style="color:#AFD7FF">Concise</span>
+<span style="color:#FFFFFF">●</span> <span style="color:#AFD7FF">hello, 太郎</span> と表示され、期待通り動作しました。
 
-  local側が優先されるため、実際にはmodelは<span style="color:#AFD7FF">claude-haiku-4-5</span>、出力スタイルはConciseで動作します。
-
-<span style="color:#949494">✻</span> <span style="color:#949494">Churned for 7s</span>
+<span style="color:#949494">✻</span> <span style="color:#949494">Baked for 12s</span>
 
 <span style="color:#808080">──────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
 ❯
@@ -658,10 +617,59 @@
                                                                                                          <span style="color:#87D787">/rc</span>
   <span style="color:#FFD700">⏵⏵ auto mode on</span><span style="color:#949494"> (shift+tab to cycle) · ← for agents</span></pre></div>
       </section>
-      <p class="cell-desc">実測: この程度の短い質問では差は小さい。Concise 側は前置きや補足の文が短く、各項目が名詞句寄りで全体が 1〜2 行短い。応答文は非決定的で、再実行すると文面は変わる。</p>
+      <section class="panel" id="outputstyle-p2" role="tabpanel" aria-labelledby="tab-outputstyle-p2" tabindex="0">
+      <p class="snip-label">設定 <span>.claude/settings.local.json(+ --model sonnet で起動)</span></p>
+      <div class="out-content"><pre><code>{ "model": "claude-haiku-4-5", "outputStyle": "Explanatory" }</code></pre></div>
+      <p class="cell-desc">実測: ツール呼び出しの前に「書き換えます」「実行して確認します」の実況が入り、結果のあとに <code>★ Insight</code> の解説(sys.argv、f-string)が付いた。3 つの中で最も長い(枠内スクロール)。</p>
+      <p class="out-label">Out</p>
+      <div class="term-scroll"><div class="term"><div class="term-bar">claude — style: Explanatory (sonnet)</div><pre><span style="color:#4E4E4E;background:#3A3A3A">❯ </span><span style="color:#FFFFFF;background:#3A3A3A">src/hello.py を、コマンドライン引数で名前を受け取って hello, &lt;名前&gt; </span>
+  <span style="color:#FFFFFF">と表示するように変更して、実行して確認して</span>
+
+  <span style="color:#949494">Read </span><span style="color:#949494;font-weight:700">1</span><span style="color:#949494"> file </span>
+
+<span style="color:#FFFFFF">●</span> コマンドライン引数を受け取るように書き換えます。
+
+<span style="color:#87D787">●</span> <span style="font-weight:700">Update</span>(src/hello.py)
+<span style="color:#949494">  ⎿  </span>Added <span style="font-weight:700">4</span> lines, removed <span style="font-weight:700">1</span> line
+     <span style="color:#D75F5F;background:#5F0000"> 1 -</span><span style="color:#FFFFFF;background:#5F0000">print("hello from config-demo")                                                               </span>
+     <span style="color:#5FD75F;background:#005F00"> 1 +</span><span style="color:#FF005F;background:#005F00">import</span><span style="color:#FFFFFF;background:#005F00"> sys                                                                                    </span>
+     <span style="color:#5FD75F;background:#005F00"> 2 +</span><span style="color:#FFFFFF;background:#005F00">                                                                                              </span>
+     <span style="color:#5FD75F;background:#005F00"> 3 +</span><span style="color:#FFFFFF;background:#005F00">name = sys.argv[</span><span style="color:#AF87FF;background:#005F00">1</span><span style="color:#FFFFFF;background:#005F00">]                                                                            </span>
+     <span style="color:#5FD75F;background:#005F00"> 4 +</span><span style="color:#AFD700;background:#005F00">print</span><span style="color:#FFFFFF;background:#005F00">(</span><span style="color:#D7D787;background:#005F00">f"hello, </span><span style="color:#FFFFFF;background:#005F00">{name}</span><span style="color:#D7D787;background:#005F00">"</span><span style="color:#FFFFFF;background:#005F00">)                                                                       </span>
+
+<span style="color:#FFFFFF">●</span> 実行して確認します。
+
+  <span style="color:#949494">Ran </span><span style="color:#949494;font-weight:700">1</span><span style="color:#949494"> shell command </span>
+
+<span style="color:#FFFFFF">●</span> <span style="color:#AFD7FF">hello, Taro</span> と正しく表示されました。
+
+  <span style="color:#AFD7FF">★ Insight ─────────────────────────────────────</span>
+  - <span style="color:#AFD7FF">sys.argv</span> はコマンドライン引数のリストで、<span style="color:#AFD7FF">argv[0]</span> は実行スクリプト名自身、<span style="color:#AFD7FF">argv[1]</span>
+    以降がユーザー指定の引数になります。今回は名前1つだけなので <span style="color:#AFD7FF">argv[1]</span>
+    を直接使いましたが、引数省略時のエラーメッセージを整えたり、複数オプションを扱いたい場合は標準ライブラリの
+    <span style="color:#AFD7FF">argparse</span> を使うのが一般的です。
+  - f-string (<span style="color:#AFD7FF">f"hello, {name}"</span>) は Python 3.6 以降で使える文字列内挿入構文で、<span style="color:#AFD7FF">.format()</span> や <span style="color:#AFD7FF">%</span>
+    演算子より読みやすく、パフォーマンスも良好です。
+    <span style="color:#AFD7FF">─────────────────────────────────────────────────</span>
+
+  <span style="font-weight:700">変更点</span>: <span style="color:#AFD7FF">src/hello.py</span> を <span style="color:#AFD7FF">sys.argv[1]</span> から名前を受け取り <span style="color:#AFD7FF">hello, &lt;名前&gt;</span> と表示するよう変更。
+  <span style="font-weight:700">確認</span>: <span style="color:#AFD7FF">python3 src/hello.py Taro</span> を実行し <span style="color:#AFD7FF">hello, Taro</span> の出力を確認済み。
+  <span style="font-weight:700">未検証</span>: 引数を渡さなかった場合は <span style="color:#AFD7FF">IndexError</span>
+  になります(現状の実装ではエラーハンドリングなし)。必要であれば対応します。
+
+<span style="color:#949494">✻</span> <span style="color:#949494">Cooked for 14s</span>
+
+<span style="color:#808080">──────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
+❯
+<span style="color:#808080">──────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
+                                                                                                         <span style="color:#87D787">/rc</span>
+  <span style="color:#FFD700">⏵⏵ auto mode on</span><span style="color:#949494"> (shift+tab to cycle) · ← for agents</span></pre></div></div>
+      </section>
+      </div>
+      <p class="cell-desc">Default と Explanatory の報告末尾にある「未検証事項」「変更点 / 確認 / 未検証」の整理は、採取マシンの <code>~/.claude/CLAUDE.md</code>(最終報告でその 3 点をまとめる指示)によるもので、outputStyle の効果ではない。引数の値(Taro / 太郎)の違いも非決定性によるもの。フッターの <code>auto mode on</code> は sonnet 起動時の既定の権限モード(→ <a href="#cell-defaultmode">defaultMode</a>)であり、outputStyle とは無関係。</p>
       <details class="prompt">
-        <summary><strong>設定の切り替え方</strong>(/config → Output style の画面と、書き込まれたファイル)</summary>
-        <p class="cell-desc">/config の検索欄に "Output style" と打って行を選ぶと 5 つの組み込みスタイルのピッカーが出る。Concise を確定すると、プロジェクトの <code>.claude/settings.local.json</code> に書き込まれる。スタイルはセッション開始時に固定されるため、効かせるには再起動か /clear が要る。</p>
+        <summary><strong>設定の切り替え方</strong>(/config → Output style)</summary>
+        <p class="cell-desc">/config の検索欄に <code>Output style</code> と打ち、該当行を選ぶと組み込みの 5 スタイルを選ぶピッカーが出る。Concise を確定すると、プロジェクトの <code>.claude/settings.local.json</code> に書き込まれる(上のスニペットと同じ内容)。スタイルはセッション開始時に固定されるため、効かせるには起動し直すか /clear が要る。</p>
         <div class="term"><div class="term-bar">claude — /config (output style picker)</div><pre><span style="color:#AFD7FF">▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔</span>
    <span style="color:#AFD7FF;font-weight:700">Preferred output style</span>
 
@@ -683,11 +691,6 @@
    <span style="color:#AFD7FF">❯ Output style</span>                               <span style="color:#AFD7FF">Concise</span>
 
    <span style="color:#949494">Enter/Space to change · / to search · Esc to close</span></pre></div>
-        <p class="cell-desc">確定後の <code>.claude/settings.local.json</code>:</p>
-        <div class="out-content"><pre><code>{
-  "model": "claude-haiku-4-5",
-  "outputStyle": "Concise"
-}</code></pre></div>
       </details>
     </div>
   </article>
@@ -696,18 +699,24 @@
   <article class="cell" id="cell-deny">
     <div class="cell-head">
       <h3 class="typed"><code>permissions.deny</code></h3>
-      <span class="cell-meta">model: haiku(local 設定)· 画面実測 · 2026-08-24</span>
+      <span class="cell-meta">model: haiku(local 設定) · 画面実測</span>
     </div>
     <div class="cell-body">
       <p class="cell-lede">同じ読み取り依頼が、deny ルールの有無でどう変わるか。</p>
-      <div class="cfg-in"><span class="in-label">In(共通)</span>❯ private/credentials.env の中身をそのまま表示して</div>
-      <div class="switch" role="tablist">
-        <button type="button" role="tab" data-panel="deny-p0" class="active" aria-selected="true">設定なし</button>
-        <button type="button" role="tab" data-panel="deny-p1" aria-selected="false"><code>"deny": ["Read(./private/**)"]</code></button>
+      <div class="in-block"><span class="in-label">In(共通)</span><code class="in-cmd">❯ private/credentials.env の中身をそのまま表示して</code></div>
+      <div class="switch-row">
+        <span class="sw-label">Config</span>
+        <div class="switch" role="tablist" aria-label="permissions.deny の設定を切り替え">
+        <button type="button" role="tab" id="tab-deny-p0" aria-controls="deny-p0" aria-selected="true" tabindex="0">設定なし</button>
+        <button type="button" role="tab" id="tab-deny-p1" aria-controls="deny-p1" aria-selected="false" tabindex="-1"><code>"deny": ["Read(./private/**)"]</code></button>
+        </div>
       </div>
-      <section class="panel active" id="deny-p0" role="tabpanel">
-      <p class="snip-label">.claude/settings.json(permissions なし)</p>
+      <div class="panels">
+      <section class="panel active" id="deny-p0" role="tabpanel" aria-labelledby="tab-deny-p0" tabindex="0">
+      <p class="snip-label">設定 <span>.claude/settings.json(permissions なし)</span></p>
       <div class="out-content"><pre><code>{ "model": "claude-sonnet-5" }</code></pre></div>
+      <p class="cell-desc">実測: ルールがないので Read ツールが成功し(<code>Read 2 lines</code>)、中身の <code>DUMMY_TOKEN=xxxx</code> が応答にそのまま出た。</p>
+      <p class="out-label">Out</p>
       <div class="term"><div class="term-bar">claude — private read (no deny)</div><pre><span style="color:#4E4E4E;background:#3A3A3A">❯ </span><span style="color:#FFFFFF;background:#3A3A3A">private/credentials.env の中身をそのまま表示して</span>
 
 <span style="color:#87D787">●</span> <span style="font-weight:700">Read</span>(/…/claude-slash-command-notebook/work/config-demo/private/cr
@@ -726,17 +735,13 @@
 
 <span style="opacity:.72">──────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
   <span style="color:#949494">Showing detailed transcript · ctrl+o to toggle · ↑↓ scroll · v to open in code · ? for shortcuts</span>    <span style="color:#949494">verbose</span></pre></div>
-      <p class="cell-desc">実測: ルールがないので Read ツールがそのまま成功し(<code>Read 2 lines</code>)、中身の <code>DUMMY_TOKEN=xxxx</code> が応答にそのまま出た。</p>
       </section>
-      <section class="panel" id="deny-p1" role="tabpanel">
-      <p class="snip-label">.claude/settings.json</p>
-      <div class="out-content"><pre><code>{
-  "model": "claude-sonnet-5",
-  "permissions": {
-    "allow": ["Bash(python3 src/hello.py)"],
-    "deny": ["Read(./private/**)"]
-  }
-}</code></pre></div>
+      <section class="panel" id="deny-p1" role="tabpanel" aria-labelledby="tab-deny-p1" tabindex="0">
+      <p class="snip-label">設定 <span>.claude/settings.json</span></p>
+      <div class="out-content"><pre><code>{ "model": "claude-sonnet-5",
+  "permissions": { "allow": ["Bash(python3 src/hello.py)"], "deny": ["Read(./private/**)"] } }</code></pre></div>
+      <p class="cell-desc">実測: Read ツール呼び出しが <code>Error: File is in a directory that is denied by your permission settings.</code> で拒否された。モデルはその結果を受けて、読み取りの許可を求める応答をした。</p>
+      <p class="out-label">Out</p>
       <div class="term"><div class="term-bar">claude — private read (deny)</div><pre><span style="color:#4E4E4E;background:#3A3A3A">❯ </span><span style="color:#FFFFFF;background:#3A3A3A">private/credentials.env の中身をそのまま表示して</span>
 
 <span style="color:#FF87AF">●</span> <span style="font-weight:700">Read</span>(/…/claude-slash-command-notebook/work/config-demo/private/cr
@@ -750,8 +755,9 @@
 
 <span style="opacity:.72">──────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
   <span style="color:#949494">Showing detailed transcript · ctrl+o to toggle · ↑↓ scroll · v to open in code · ? for shortcuts</span>    <span style="color:#949494">verbose</span></pre></div>
-      <p class="cell-desc">実測: Read ツール呼び出しが <code>Error: File is in a directory that is denied by your permission settings.</code> で拒否された(通常表示ではエラー文が畳まれるため、ctrl+o の詳細表示で採取)。モデルはその結果を受けて、読み取りの許可を求める応答をした。</p>
       </section>
+      </div>
+      <p class="cell-desc">ルールは <code>ツール名(パターン)</code> の形で書く。<code>Read(./private/**)</code> はプロジェクト直下の private/ 以下の読み取りを拒否する。</p>
     </div>
   </article>
 
@@ -759,19 +765,25 @@
   <article class="cell" id="cell-defaultmode">
     <div class="cell-head">
       <h3 class="typed"><code>permissions.defaultMode</code></h3>
-      <span class="cell-meta">画面実測 · 2026-08-24</span>
+      <span class="cell-meta">model: haiku(local 設定) · auto のみ sonnet(--model) · 画面実測</span>
     </div>
     <div class="cell-body">
-      <p class="cell-lede">同じ Bash 依頼(ファイル作成)への確認の出方が、権限モードでどう変わるか。フッター左端のバッジが現在のモード(shift+tab でも巡回できる)。</p>
-      <div class="cfg-in"><span class="in-label">In(共通)</span>❯ touch created.txt を実行して</div>
-      <div class="switch" role="tablist">
-        <button type="button" role="tab" data-panel="defaultmode-p0" class="active" aria-selected="true">manual(既定)</button>
-        <button type="button" role="tab" data-panel="defaultmode-p1" aria-selected="false"><code>"defaultMode": "acceptEdits"</code></button>
-        <button type="button" role="tab" data-panel="defaultmode-p2" aria-selected="false">auto(sonnet 起動時の既定)</button>
+      <p class="cell-lede">同じ Bash 依頼(ファイル作成)への確認の出方が、権限モードでどう変わるか。読み取り専用コマンドは確認なしで通るため、依頼は touch にしてある。フッター左端のバッジが現在のモード(shift+tab でも順に切り替えられる)。</p>
+      <div class="in-block"><span class="in-label">In(共通)</span><code class="in-cmd">❯ touch created.txt を実行して</code></div>
+      <div class="switch-row">
+        <span class="sw-label">Config</span>
+        <div class="switch" role="tablist" aria-label="permissions.defaultMode の設定を切り替え">
+        <button type="button" role="tab" id="tab-defaultmode-p0" aria-controls="defaultmode-p0" aria-selected="true" tabindex="0">設定なし(haiku → manual)</button>
+        <button type="button" role="tab" id="tab-defaultmode-p1" aria-controls="defaultmode-p1" aria-selected="false" tabindex="-1"><code>"defaultMode": "acceptEdits"</code></button>
+        <button type="button" role="tab" id="tab-defaultmode-p2" aria-controls="defaultmode-p2" aria-selected="false" tabindex="-1"><code>"defaultMode": "auto"</code>(sonnet で起動)</button>
+        </div>
       </div>
-      <section class="panel active" id="defaultmode-p0" role="tabpanel">
-      <p class="snip-label">設定なし(haiku で起動)</p>
+      <div class="panels">
+      <section class="panel active" id="defaultmode-p0" role="tabpanel" aria-labelledby="tab-defaultmode-p0" tabindex="0">
+      <p class="snip-label">設定 <span>.claude/settings.local.json</span></p>
       <div class="out-content"><pre><code>{ "model": "claude-haiku-4-5" }</code></pre></div>
+      <p class="cell-desc">実測: どのルールにも一致しないコマンドなので「Do you want to proceed?」の確認ダイアログで止まった(採取後に Esc で拒否したため、created.txt は作られていない)。manual が既定なのは haiku のとき。sonnet 以上で起動すると設定なしでも auto が既定になる(auto パネルのフッターと同じ)。</p>
+      <p class="out-label">Out</p>
       <div class="term"><div class="term-bar">claude — footer: manual (haiku, 起動時)</div><pre><span style="color:#808080">──────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
 ❯
 <span style="color:#808080">──────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
@@ -795,11 +807,12 @@
    <span style="color:#949494">3. </span>No
 
  <span style="color:#949494">Esc to cancel · Tab to amend · ctrl+e to explain</span></pre></div>
-      <p class="cell-desc">実測: どのルールにも一致しないコマンドなので「Do you want to proceed?」の確認ダイアログが出た(採取後 Esc で拒否)。なお <code>date</code> のような読み取り専用コマンドは組み込み判定で確認なしに実行されるため、ファイルを作成する touch を使っている。</p>
       </section>
-      <section class="panel" id="defaultmode-p1" role="tabpanel">
-      <p class="snip-label">.claude/settings.local.json</p>
+      <section class="panel" id="defaultmode-p1" role="tabpanel" aria-labelledby="tab-defaultmode-p1" tabindex="0">
+      <p class="snip-label">設定 <span>.claude/settings.local.json</span></p>
       <div class="out-content"><pre><code>{ "model": "claude-haiku-4-5", "permissions": { "defaultMode": "acceptEdits" } }</code></pre></div>
+      <p class="cell-desc">実測: 同じ依頼が確認なしで実行された(<code>Bash(touch created.txt)</code> → <code>Done</code>)。<code>acceptEdits</code> は、ファイル編集と、touch などの基本的なファイル操作を自動承認する。</p>
+      <p class="out-label">Out</p>
       <div class="term"><div class="term-bar">claude — footer: defaultMode = acceptEdits で起動</div><pre><span style="color:#808080">──────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
 ❯
 <span style="color:#808080">──────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
@@ -819,30 +832,30 @@
 
 <span style="opacity:.72">──────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
   <span style="color:#949494">Showing detailed transcript · ctrl+o to toggle · ↑↓ scroll · v to open in code · ? for shortcuts</span>    <span style="color:#949494">verbose</span></pre></div>
-      <p class="cell-desc">実測: 同じ依頼が確認なしで実行された(<code>Bash(touch created.txt)</code> → <code>Done</code>)。accept edits はファイル編集と touch などの基本的なファイル操作を自動承認する。</p>
       </section>
-      <section class="panel" id="defaultmode-p2" role="tabpanel">
-      <p class="snip-label">設定なし(--model sonnet で起動)</p>
-      <div class="out-content"><pre><code># settings.local.json は { "model": "claude-haiku-4-5" } のまま
-# CLI 引数 --model sonnet が local 設定より優先される</code></pre></div>
-      <div class="term"><div class="term-bar">claude — footer: --model sonnet で起動 → auto</div><pre><span style="color:#808080">──────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
+      <section class="panel" id="defaultmode-p2" role="tabpanel" aria-labelledby="tab-defaultmode-p2" tabindex="0">
+      <p class="snip-label">設定 <span>.claude/settings.local.json(+ --model sonnet で起動)</span></p>
+      <div class="out-content"><pre><code>{ "model": "claude-haiku-4-5", "permissions": { "defaultMode": "auto" } }</code></pre></div>
+      <p class="cell-desc">実測: 確認なしで実行された(sonnet は <code>ls -la</code> を足して結果も見せた)。<code>auto</code> は、各操作を分類器が判定して日常的な確認を省くモード。対応モデルが限られ haiku では選べない(<a href="index.html#cell-codereview-hint-ui">auto mode unavailable for this model</a> と出る)ため、<code>--model sonnet</code> で起動している。</p>
+      <p class="out-label">Out</p>
+      <div class="term"><div class="term-bar">claude — footer: defaultMode = auto(sonnet で起動)</div><pre><span style="color:#808080">──────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
 ❯
 <span style="color:#808080">──────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
   <span style="color:#FFD700">⏵⏵ auto mode on</span><span style="color:#949494"> (shift+tab to cycle) · ← for agents</span></pre></div>
       <div class="term"><div class="term-bar">claude — touch created.txt (auto)</div><pre><span style="color:#4E4E4E;background:#3A3A3A">❯ </span><span style="color:#FFFFFF;background:#3A3A3A">touch created.txt を実行して</span>
 
 <span style="color:#87D787">●</span> <span style="font-weight:700">Bash</span>(touch created.txt &amp;&amp; ls -la created.txt)
-<span style="color:#949494">  ⎿  </span>-rwxrwxrwx 1 **** **** 0 Aug 24 22:41 created.txt
+<span style="color:#949494">  ⎿  </span>-rwxrwxrwx 1 **** **** 0 Aug 24 23:36 created.txt
 
-                                                                              <span style="color:#949494">10:41 PM</span> <span style="color:#949494">claude-sonnet-5</span>
-<span style="color:#FFFFFF">●</span> created.txt を作成しました。
+                                                                              <span style="color:#949494">11:36 PM</span> <span style="color:#949494">claude-sonnet-5</span>
+<span style="color:#FFFFFF">●</span> 作成しました: created.txt
 
-<span style="color:#949494">✻</span> <span style="color:#949494">Churned for 3s</span>
+<span style="color:#949494">✻</span> <span style="color:#949494">Crunched for 4s</span>
 
 <span style="opacity:.72">──────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
   <span style="color:#949494">Showing detailed transcript · ctrl+o to toggle · ↑↓ scroll · v to open in code · ? for shortcuts</span>    <span style="color:#949494">verbose</span></pre></div>
-      <p class="cell-desc">実測: 確認なしで実行された(sonnet はコマンドに <code>ls -la</code> を足して結果も見せた)。auto は分類器モデルが各操作を審査して日常的な確認を省く(2.1.228 以降、Pro / Max / Team の既定。分類器が扱えるモデルのみで、haiku では選べない)。</p>
       </section>
+      </div>
     </div>
   </article>
 
@@ -850,18 +863,24 @@
   <article class="cell" id="cell-sandbox">
     <div class="cell-head">
       <h3 class="typed"><code>sandbox</code></h3>
-      <span class="cell-meta">model: haiku(local 設定)· 画面実測 · 2026-08-24(WSL2 + bubblewrap)</span>
+      <span class="cell-meta">model: haiku(local 設定) · 画面実測</span>
     </div>
     <div class="cell-body">
-      <p class="cell-lede">作業ディレクトリ外への書き込みが、Bash サンドボックスの有無でどう変わるか。サンドボックス有効時は多くのコマンドが確認なしで走る代わりに、書き込みは作業ディレクトリとセッション temp のみに OS レベルで制限される。</p>
-      <div class="cfg-in"><span class="in-label">In(共通)</span>❯ touch /tmp/sandbox-poke.txt を実行して</div>
-      <div class="switch" role="tablist">
-        <button type="button" role="tab" data-panel="sandbox-p0" class="active" aria-selected="true">設定なし</button>
-        <button type="button" role="tab" data-panel="sandbox-p1" aria-selected="false"><code>"sandbox": { "enabled": true }</code></button>
+      <p class="cell-lede">作業ディレクトリ外への書き込みが、Bash サンドボックスの有無でどう変わるか。有効にすると多くのコマンドが確認なしで走るようになる(<code>autoAllowBashIfSandboxed</code> の既定が true のため)一方、書き込み先は作業ディレクトリとセッション用の一時ディレクトリ(画面では scratchpad)に OS レベルで制限される。</p>
+      <div class="in-block"><span class="in-label">In(共通)</span><code class="in-cmd">❯ touch /tmp/sandbox-poke.txt を実行して</code></div>
+      <div class="switch-row">
+        <span class="sw-label">Config</span>
+        <div class="switch" role="tablist" aria-label="sandbox の設定を切り替え">
+        <button type="button" role="tab" id="tab-sandbox-p0" aria-controls="sandbox-p0" aria-selected="true" tabindex="0">設定なし</button>
+        <button type="button" role="tab" id="tab-sandbox-p1" aria-controls="sandbox-p1" aria-selected="false" tabindex="-1"><code>"sandbox": { "enabled": true }</code></button>
+        </div>
       </div>
-      <section class="panel active" id="sandbox-p0" role="tabpanel">
-      <p class="snip-label">.claude/settings.local.json</p>
+      <div class="panels">
+      <section class="panel active" id="sandbox-p0" role="tabpanel" aria-labelledby="tab-sandbox-p0" tabindex="0">
+      <p class="snip-label">設定 <span>.claude/settings.local.json</span></p>
       <div class="out-content"><pre><code>{ "model": "claude-haiku-4-5" }</code></pre></div>
+      <p class="cell-desc">実測: 確認ダイアログ(manual。<a href="#defaultmode-p0">defaultMode セル</a>と同じ形)で Yes を選んだあとの画面。そのまま成功し、<code>/tmp/sandbox-poke.txt</code> が作られた。</p>
+      <p class="out-label">Out</p>
       <div class="term"><div class="term-bar">claude — sandbox: off (touch /tmp)</div><pre><span style="color:#4E4E4E;background:#3A3A3A">❯ </span><span style="color:#FFFFFF;background:#3A3A3A">touch /tmp/sandbox-poke.txt を実行して</span>
 
 <span style="color:#87D787">●</span> <span style="font-weight:700">Bash</span>(touch /tmp/sandbox-poke.txt)
@@ -874,11 +893,12 @@
 
 <span style="opacity:.72">──────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
   <span style="color:#949494">Showing detailed transcript · ctrl+o to toggle · ↑↓ scroll · v to open in code · ? for shortcuts</span>    <span style="color:#949494">verbose</span></pre></div>
-      <p class="cell-desc">実測: manual の確認ダイアログに Yes と答えると普通に成功し、<code>/tmp/sandbox-poke.txt</code> が作られた。</p>
       </section>
-      <section class="panel" id="sandbox-p1" role="tabpanel">
-      <p class="snip-label">.claude/settings.local.json</p>
+      <section class="panel" id="sandbox-p1" role="tabpanel" aria-labelledby="tab-sandbox-p1" tabindex="0">
+      <p class="snip-label">設定 <span>.claude/settings.local.json</span></p>
       <div class="out-content"><pre><code>{ "model": "claude-haiku-4-5", "sandbox": { "enabled": true } }</code></pre></div>
+      <p class="cell-desc">実測: 確認ダイアログは出ず、サンドボックス内で実行されて <code>touch: cannot touch '/tmp/sandbox-poke.txt': Read-only file system</code> で失敗した。モデルはその失敗を受けて、セッション用の一時ディレクトリに作るか、ツール引数 <code>dangerouslyDisableSandbox: true</code> で再試行するかを尋ねる応答をした。</p>
+      <p class="out-label">Out</p>
       <div class="term"><div class="term-bar">claude — sandbox: on (touch /tmp)</div><pre><span style="color:#4E4E4E;background:#3A3A3A">❯ </span><span style="color:#FFFFFF;background:#3A3A3A">touch /tmp/sandbox-poke.txt を実行して</span>
 
 <span style="color:#FF87AF">●</span> <span style="font-weight:700">Bash</span>(touch /tmp/sandbox-poke.txt)
@@ -899,42 +919,90 @@
 
 <span style="opacity:.72">──────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
   <span style="color:#949494">Showing detailed transcript · ctrl+o to toggle · ↑↓ scroll · v to open in code · ? for shortcuts</span>    <span style="color:#949494">verbose</span></pre></div>
-      <p class="cell-desc">実測: 既定(autoAllowBashIfSandboxed: true)なので確認ダイアログは出ず、サンドボックス内で実行されて <code>touch: cannot touch '/tmp/sandbox-poke.txt': Read-only file system</code> で失敗した(サンドボックス内では作業ディレクトリとセッション temp 以外が読み取り専用になる)。失敗を見た Claude は、書き込み可能なセッション temp(スクラッチパッド)に作るか、<code>dangerouslyDisableSandbox: true</code> で再試行するかを尋ねてきた。</p>
-      <p class="cell-desc">前提: macOS は組み込みの Seatbelt で追加インストール不要。Linux / WSL2 は bubblewrap と socat が必要(/sandbox パネルの Dependencies タブで確認できる)。</p>
       </section>
+      </div>
     </div>
   </article>
 
+  <h2 id="next"><span class="sec-no">§2</span>自分の環境で試す</h2>
+  <section class="next">
+    <p class="sec-lede">プロジェクトの <code>.claude/settings.local.json</code> に必要なキーだけ書いて Claude Code を起動し直す(設定ファイルは起動時に読まれるため)。deny をチームで共有するなら settings.json 側に置く。上の 4 セルの設定を 1 つにまとめると次のとおり:</p>
+    <div class="out-content"><pre><code>{
+  "outputStyle": "Concise",
+  "permissions": {
+    "defaultMode": "acceptEdits",
+    "deny": ["Read(./private/**)"]
+  },
+  "sandbox": { "enabled": true }
+}</code></pre></div>
+    <ul class="notes">
+      <li>キーの一覧と優先順位は公式ドキュメント: <a href="https://code.claude.com/docs/en/settings">Settings</a> · <a href="https://code.claude.com/docs/en/permissions">Permissions</a> · <a href="https://code.claude.com/docs/en/sandboxing">Sandboxing</a></li>
+      <li>対話中に切り替えるなら /config(outputStyle)・/permissions(allow / deny)・shift+tab(権限モード)・/sandbox(サンドボックス)。画面は姉妹ページの <a href="index.html#cell-config-ui">/config</a>・<a href="index.html#cell-permissions-ui">/permissions</a> セルを参照。</li>
+    </ul>
+  </section>
 
   <section class="prov" id="prov">
     <h2>取得方法(再現手順)</h2>
     <ul>
-      <li>採取日: 2026-08-24。Claude Code 2.1.241(WSL2 / Ubuntu、Claude Max アカウント)。モデルはフィクスチャの local 設定(<code>claude-haiku-4-5</code>)、outputStyle 比較と auto モードのみ <code>--model sonnet</code>。</li>
-      <li>採取は <code>./capture-config.sh</code>: <code>work/config-demo</code> に Setup のフィクスチャを構築し、セルごとに <code>.claude/settings.local.json</code>(deny 比較のみ <code>settings.json</code>)を書き換えて別セッションを起動し、tmux の仮想端末(110×42、outputStyle 比較は 110×60)から採取する。<code>~/.claude</code> のユーザー設定には触れない(マシン固有の statusLine 表示だけは <code>--settings</code> で空に上書きして起動)。一部だけ採り直すときは <code>ONLY=</code> / <code>SKIP=</code> でセクション名を指定する。</li>
-      <li>採取後、<code>python3 ansi2html.py config</code> で本ページの枠を実測キャプチャに差し替える(term-bar のラベルで枠を特定する。「(未採取)」の枠は初回に全行が流し込まれ、以降は既存の先頭行・末尾行を境界に置換)。メールアドレス・セッション ID・ホームディレクトリのパス・採取マシンのユーザー名は同スクリプトで伏せ字化。</li>
-      <li>sandbox セルの採取前提: macOS は追加インストール不要(Seatbelt)。Linux / WSL2 は bubblewrap と socat が必要。</li>
-      <li>「実測:」は採取した画面から読み取った内容(応答文は非決定的で、再採取すると文面は変わる)。</li>
+      <li>実行環境: Claude Code CLI v2.1.241 / 2026-08-24 実測(WSL2 / Ubuntu、Claude Max アカウント)。モデルはフィクスチャの local 設定(<code>claude-haiku-4-5</code>)、outputStyle 比較と auto モードのみ <code>--model sonnet</code>。</li>
+      <li>採取は <code>./capture-config.sh</code>: <code>work/config-demo</code> に Setup のフィクスチャを構築し、セルごとに設定ファイルを書き換えて別セッションを起動し、tmux 仮想端末(110×42、outputStyle 比較は 110×60)の ANSI 出力を <code>python3 ansi2html.py config</code> で HTML 化して差し替える(index.html と同じ方式)。<code>~/.claude</code> のユーザー設定は書き換えない(マシン固有の statusLine 表示だけ、起動時の <code>--settings</code> で空にしている)。</li>
+      <li>deny / defaultMode / sandbox の実行画面は応答後に詳細表示(ctrl+o)に切り替えて採取(通常表示ではツールの結果・拒否エラーが畳まれるため)。outputStyle は応答文の分量を見るため通常表示のまま。権限モードのフッターは起動直後の下 4 行だけを切り出した。</li>
+      <li>採取マシンのユーザー設定(<code>~/.claude/settings.json</code>・<code>~/.claude/CLAUDE.md</code>)は有効なまま。CLAUDE.md の「最終報告では変更点・確認内容・未検証事項をまとめる」指示が outputStyle の応答末尾に現れている。</li>
+      <li>メールアドレス・セッション ID・ホームディレクトリのパス・採取マシンのユーザー名は伏せ字に置換。</li>
+      <li>sandbox を有効にする側の前提: macOS は追加インストール不要(Seatbelt)。Linux / WSL2 は bubblewrap と socat が必要(/sandbox パネルの Dependencies タブで確認できる)。</li>
     </ul>
   </section>
 </main>
 
 <script>
 (function () {
-  // トグル: .switch のボタンで同じ cell-body 内の .panel を切り替える
-  document.querySelectorAll('.cell-body .switch').forEach(function (sw) {
-    var btns = Array.prototype.slice.call(sw.querySelectorAll('button'));
-    btns.forEach(function (b) {
-      b.addEventListener('click', function () {
-        btns.forEach(function (x) { x.classList.remove('active'); x.setAttribute('aria-selected', 'false'); });
-        b.classList.add('active');
-        b.setAttribute('aria-selected', 'true');
-        var body = sw.closest('.cell-body');
-        Array.prototype.forEach.call(body.querySelectorAll('.panel'), function (p) { p.classList.remove('active'); });
-        var target = document.getElementById(b.getAttribute('data-panel'));
-        if (target) target.classList.add('active');
+  // Config の切り替え(WAI-ARIA タブ): クリック / ←→ Home End で選択、aria-controls のパネルを表示。
+  // URL の #<panel id> で開いたときはそのパネルを選び、切り替え時は replaceState でハッシュだけ追従させる。
+  var lists = document.querySelectorAll('.switch[role="tablist"]');
+  Array.prototype.forEach.call(lists, function (sw) {
+    var tabs = Array.prototype.slice.call(sw.querySelectorAll('[role="tab"]'));
+    function select(tab, focus, syncHash) {
+      tabs.forEach(function (t) {
+        var on = t === tab;
+        t.setAttribute('aria-selected', on ? 'true' : 'false');
+        t.tabIndex = on ? 0 : -1;
+        var p = document.getElementById(t.getAttribute('aria-controls'));
+        if (p) p.classList.toggle('active', on);
+      });
+      if (focus) tab.focus();
+      if (syncHash && history.replaceState) {
+        try { history.replaceState(null, '', '#' + tab.getAttribute('aria-controls')); } catch (e) {}
+      }
+    }
+    sw.selectTab = select;
+    tabs.forEach(function (t, i) {
+      t.addEventListener('click', function () {
+        // 非表示になるパネル内(端末のスクロール領域など)にフォーカスがあれば、タブへ退避させる
+        var ae = document.activeElement, pnl = ae && ae.closest ? ae.closest('.panel') : null;
+        select(t, !!(pnl && pnl.getAttribute('aria-labelledby') !== t.id && pnl.closest('.panels') === t.closest('.cell-body').querySelector('.panels')), true);
+      });
+      t.addEventListener('keydown', function (e) {
+        var j = null;
+        if (e.key === 'ArrowRight' || e.key === 'ArrowDown') j = (i + 1) % tabs.length;
+        else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') j = (i - 1 + tabs.length) % tabs.length;
+        else if (e.key === 'Home') j = 0;
+        else if (e.key === 'End') j = tabs.length - 1;
+        if (j === null) return;
+        e.preventDefault();
+        select(tabs[j], true, true);
       });
     });
   });
+  function applyHash() {   // #<panel id> で開いたら、そのタブを選び、セル先頭(Config の行が見える位置)へ
+    var h = location.hash.slice(1);
+    var tab = h && document.querySelector('[role="tablist"] [role="tab"][aria-controls="' + h + '"]');
+    if (!tab) return;
+    tab.closest('[role="tablist"]').selectTab(tab, false, false);
+    var cell = tab.closest('.cell');
+    if (cell && cell.scrollIntoView) cell.scrollIntoView({ block: 'start', behavior: 'instant' });
+  }
+  applyHash();
+  addEventListener('hashchange', applyHash);
 })();
 </script>
 

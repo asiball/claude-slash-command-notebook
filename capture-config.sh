@@ -236,9 +236,9 @@ if run_section acceptedits; then
   tmux kill-session -t $S 2>/dev/null
 fi
 
-# ---- (h) permissions.defaultMode: auto(--model sonnet で起動。2.1.228 以降の既定)----
+# ---- (h) permissions.defaultMode: auto(local に defaultMode: auto を置き、auto を選べる sonnet で起動)----
 if run_section auto; then
-  write_local "$LOCAL_FIXTURE"
+  write_local '{ "model": "claude-haiku-4-5", "permissions": { "defaultMode": "auto" } }'
   start_claude --model sonnet
   footer mode-sonnet-start
   ask perm-auto-run "touch created.txt を実行して" 90 verbose
@@ -266,18 +266,29 @@ if run_section sandbox-on; then
   tmux kill-session -t $S 2>/dev/null
 fi
 
-# ---- (k) outputStyle 比較(同一プロンプト、Default と Concise で別セッション。--model sonnet: CLI 引数が local の haiku より優先)----
+# ---- (k) outputStyle 比較(同一プロンプト、Default / Concise / Explanatory で別セッション。--model sonnet: CLI 引数が local の haiku より優先)----
+# 依頼は小さなコード変更+実行確認(複数ステップ)。Default は途中の実況と要約、Concise は結果だけ、
+# Explanatory は ★ Insight の解説が付き、スタイル差がはっきり出る。auto モード(sonnet)なので編集・実行は確認なしで通る
 if run_section style; then
-  STYLE_PROMPT="このプロジェクトの .claude 配下の設定ファイルを読んで、何が設定されているか教えて"
+  STYLE_PROMPT="src/hello.py を、コマンドライン引数で名前を受け取って hello, <名前> と表示するように変更して、実行して確認して"
+  reset_src() { (cd "$DIR" && git checkout -q -- src/hello.py); }   # 前のセッションの変更を戻し、毎回同じ入力にする
   write_local "$LOCAL_FIXTURE"
   ROWS=60 start_claude --model sonnet
   ask style-default "$STYLE_PROMPT" 150
   tmux kill-session -t $S 2>/dev/null
+  reset_src
 
   write_local '{ "model": "claude-haiku-4-5", "outputStyle": "Concise" }'
   ROWS=60 start_claude --model sonnet
   ask style-concise "$STYLE_PROMPT" 150
   tmux kill-session -t $S 2>/dev/null
+  reset_src
+
+  write_local '{ "model": "claude-haiku-4-5", "outputStyle": "Explanatory" }'
+  ROWS=60 start_claude --model sonnet
+  ask style-explanatory "$STYLE_PROMPT" 150
+  tmux kill-session -t $S 2>/dev/null
+  reset_src
 fi
 
 write_local "$LOCAL_FIXTURE"

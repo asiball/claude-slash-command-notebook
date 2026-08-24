@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Slash Command Notebook</title>
-<meta name="description" content="Claude Code のスラッシュコマンド25個を実際に実行し、入力と出力・端末画面をノートブック形式で記録した実測リファレンス。">
+<meta name="description" content="Claude Code のスラッシュコマンド 35 個を実際に実行し、入力と出力・端末画面をノートブック形式で記録した実測リファレンス。">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='80' font-size='85' fill='%23B4552D' font-family='monospace'%3E%E2%9D%AF%3C/text%3E%3C/svg%3E">
 <style>
   :root {
@@ -504,14 +504,14 @@
   <header class="page-head" id="top">
     <p class="eyebrow">claude code / commands</p>
     <h1>Slash Command Notebook</h1>
-    <p>Claude Code(ターミナルで動く Anthropic のコーディングエージェント CLI)では、対話シェルに <code>/</code> で始まる「スラッシュコマンド」を打って機能を呼び出す。本ページはそれらを実際に実行し、「ユーザーの入力」と「Claude の最終出力・画面」のペアを Notebook 形式で記録したもの。対象は、公式ドキュメント <a href="https://code.claude.com/docs/en/commands">code.claude.com/docs/en/commands</a> に掲載の全80超のコマンドからよく使う組み込み34個と、カスタムコマンドの実例1個(<code>/explain</code>)。</p>
-    <p>コマンドは2種類に大別される: <strong>プロンプト注入型</strong>(コマンドの実体として登録された指示プロンプトがモデルに渡り、出力が返る。Claude Code ではこの仕組みを <strong>Skill</strong> と呼ぶ)と <strong>UI/ハーネス型</strong>(CLI 本体=ハーネスが画面上で処理し、モデルは関与しない)。<code>/compact</code> や <code>/recap</code> のように、モデル呼び出しがセッションの外側で行われる中間形も少数ある。前者は §1 で入力と出力を、後者は §2 で端末画面を実測した(中間形は §1 に含めた)。</p>
+    <p>Claude Code(ターミナルで動く Anthropic のコーディングエージェント CLI)では、対話シェルに <code>/</code> で始まる「スラッシュコマンド」を打って機能を呼び出す。本ページはそれらを実際に実行し、「ユーザーの入力」と「Claude の最終出力・画面」のペアを Notebook 形式で記録したもの。対象は、公式ドキュメント <a href="https://code.claude.com/docs/en/commands">code.claude.com/docs/en/commands</a> に掲載の全 80 超のコマンドからよく使う組み込み 34 個と、カスタムコマンドの実例 1 個(<code>/explain</code>)。</p>
+    <p>コマンドは 2 種類に大別される: <strong>プロンプト注入型</strong>(コマンドの実体として登録された指示プロンプト — Claude Code でいう <strong>Skill</strong> — がモデルに渡り、出力が返る)と <strong>UI/ハーネス型</strong>(CLI 本体=ハーネスが画面上で処理し、モデルは関与しない)。<code>/compact</code> や <code>/recap</code> のように、モデル呼び出しがセッションの外側で行われる中間形も少数ある。前者は §1 で入力と出力を、後者は §2 で端末画面を実測した(中間形は §1 に含めた)。</p>
     <p>姉妹ページ: <a href="config.html">Config Notebook</a> — 同じ依頼文のまま設定(outputStyle・deny・defaultMode・sandbox)を切り替えると出力がどう変わるかの実測比較。</p>
     <div class="meta-chips">
       <span>Claude Code CLI v2.1.233(追加分 v2.1.241)</span>
       <span>2026-08-17 実測 · 追加 2026-08-23</span>
       <span>実測 35 コマンド(§1: 9 · §2: 26 · うちカスタム 1)</span>
-      <span>対象: sample-project (Python)</span>
+      <span>対象: sample-project(Python)</span>
     </div>
   </header>
   <details class="toc-inline">
@@ -560,7 +560,7 @@
   </details>
 
   <h2 id="demos"><span class="sec-no">§1</span>実行デモ — プロンプトと出力の実測</h2>
-  <p class="sec-lede">デモ用サンプルプロジェクト(Python 製の小さな電卓。意図的にバグと脆弱性を仕込んである)に対して <code>claude -p "/コマンド"</code> でヘッドレス実行(対話 UI なしで1回だけ実行するモード)して最終出力を Out に採取した。例外として <code>/btw</code> と <code>/compact</code> は対話モードでの実測(各セルの注記を参照)。セルは Setup と <code>/init</code> を先頭に置き、以降はアルファベット順。カスタムコマンドの <code>/explain</code> だけは組み込みコマンドと区別するため末尾に置いた。多くのセル末尾に付けた「端末画面(実測)」は対話モードでの<strong>別回の実行</strong>のため、Out と内容が一致しないことがある。</p>
+  <p class="sec-lede">デモ用サンプルプロジェクト(Python 製の小さな電卓で、意図的にバグと脆弱性を仕込んである)に対して <code>claude -p "/コマンド"</code> によるヘッドレス実行(対話 UI なしで 1 回だけ実行するモード)で最終出力を Out に採取した。例外として <code>/btw</code> と <code>/compact</code> は対話モードでの実測(各セルの注記を参照)。セルは Setup と <code>/init</code> を先頭に置き、以降はアルファベット順。カスタムコマンドの <code>/explain</code> だけは組み込みコマンドと区別するため末尾に置いた。多くのセル末尾に付けた「端末画面(実測)」は対話モードでの<strong>別回の実行</strong>のため、Out と内容が一致しないことがある。</p>
 
   <!-- CELL:sample-project -->
   <article class="cell setup" id="cell-sample-project">
@@ -571,7 +571,7 @@
     </div>
     <div class="cell-body">
       <p class="cell-lede">§1 の各コマンドは、この最小 Python プロジェクトに対して実行した。</p>
-      <p class="cell-desc">デモ用に <code>divide()</code> のゼロ除算、<code>average()</code> の空リスト、<code>user_db.py</code> の SQL インジェクション・コマンドインジェクション・ハードコードされたパスワードを意図的に含めてある。§1 の実測には「初期状態」と「user_db.py 追加後」の2時点が混在する(各セルの注記を参照)。git は <code>main</code> → <code>feature/user-db</code> のブランチ構成で、隣に bare リモート <code>origin</code> を持つ。</p>
+      <p class="cell-desc">デモ用に <code>divide()</code> のゼロ除算、<code>average()</code> の空リスト、<code>user_db.py</code> の SQL インジェクション・コマンドインジェクション・ハードコードされたパスワードを意図的に含めてある。§1 の実測には「初期状態」と「user_db.py 追加後」の 2 時点が混在する(各セルの注記を参照)。git は <code>main</code> → <code>feature/user-db</code> のブランチ構成で、隣に bare リモート <code>origin</code> を持つ。</p>
       <div class="out-content"><pre><code>sample-project/
 ├── README.md
 ├── src/
@@ -591,12 +591,12 @@
     </div>
     <div class="cell-body">
       <p class="cell-lede">プロジェクトを解析して、Claude Code 向けのプロジェクトガイド <code>CLAUDE.md</code> を自動生成する。</p>
-      <p class="cell-desc">この実測は <code>user_db.py</code> を追加する前の初期状態に対して実行したため、出力は calc.py のみに言及している。</p>
+      <p class="cell-desc">この実測は <code>user_db.py</code> を追加する前の初期状態に対して実行したため、出力は calc.py だけに言及している。</p>
       <div class="in-block"><span class="in-label">In</span><code class="in-cmd">/init</code></div>
       <div class="out-block">
         <span class="out-label">Out</span>
         <div class="out-content">
-          <p class="gist">要旨: CLAUDE.md を作成した完了報告。記載した5セクションの内訳を説明している。</p>
+          <p class="gist">要旨: CLAUDE.md を作成した完了報告。記載した 5 セクションの内訳を説明している。</p>
           <p lang="en">Done! I've created a <strong>CLAUDE.md</strong> file for this repository. Here's what I included:</p>
           <p lang="en"><strong>Key sections:</strong></p>
           <ul lang="en">
@@ -669,7 +669,7 @@
       <div class="out-block">
         <span class="out-label">Out</span>
         <div class="out-content">
-          <p class="gist">要旨: average() が空リストで ZeroDivisionError になるバグ1件を指摘。</p>
+          <p class="gist">要旨: average() が空リストで ZeroDivisionError になるバグ 1 件を指摘。</p>
           <p lang="en">1 finding reported (see above): <code>src/calc.py:12</code> — new <code>average(values)</code> divides by <code>len(values)</code> with no empty-list guard, so <code>average([])</code> raises <code>ZeroDivisionError</code>.</p>
           <p lang="en">Note: <code>src/user_db.py</code> is untracked (new file) and not part of the diff, so per the low-effort diff-review scope it wasn't reviewed here.</p>
         </div>
@@ -736,7 +736,7 @@ further questions. Resume directly — do not acknowledge the summary, …</pre>
       <div class="out-block">
         <span class="out-label">Out</span>
         <div class="out-content">
-          <p>画面出力は1行のみ: <code>Compacted (ctrl+o to see full summary)</code></p>
+          <p>画面出力は 1 行のみ: <code>Compacted (ctrl+o to see full summary)</code></p>
           <p>トランスクリプトには圧縮境界(<code>compact_boundary</code>)が記録される: <code>trigger: manual, preTokens: 30723, durationMs: 17679</code></p>
         </div>
       </div>
@@ -767,23 +767,23 @@ further questions. Resume directly — do not acknowledge the summary, …</pre>
     </div>
     <div class="cell-body">
       <p class="cell-lede">Claude Code のセットアップ全体を健全性チェックし、改善案を提案する。</p>
-      <p class="cell-desc">Check 0〜9(インストール健全性 / 未使用スキル・プラグイン検出 / CLAUDE.md の重複排除と削減 / 遅いフック / バージョン確認 / 権限モード提案 など)を読み取り専用で実行してから、変更をまとめて確認する。</p>
+      <p class="cell-desc">Check 0〜9(インストール健全性 / 未使用スキル・プラグイン検出 / CLAUDE.md の重複排除と削減 / 遅いフック / バージョン確認 / 権限モード提案など)を読み取り専用で実行してから、変更をまとめて確認する。</p>
       <div class="in-block"><span class="in-label">In</span><code class="in-cmd">/doctor</code></div>
       <div class="out-block">
         <span class="out-label">Out</span>
         <div class="out-content">
-          <p class="gist">要旨: セットアップは概ね健全。使用頻度の低いスキル7件と未使用プラグイン1件の削除・CLAUDE.md の削減・auto モード化を提案し、確認質問で終了。(全154行の出力から抜粋。Check 番号の飛びは省略による)</p>
+          <p class="gist">要旨: セットアップは概ね健全。使用頻度の低いスキル 7 件と未使用プラグイン 1 件の削除・CLAUDE.md の削減・auto モード化を提案し、確認質問で終了(全 154 行の出力からの抜粋で、Check 番号の飛びは省略による)。</p>
           <p lang="en"><strong>## Health Check Report — Summary</strong>: Your Claude Code installation is generally healthy. One file has invalid JSON (project settings), auto updates are disabled, and your permission mode isn't set to auto-mode. There are 7 barely-used skills and 1 unused plugin you can clean up, and the project CLAUDE.md has ~400-500 bytes of derivable content that can be trimmed.</p>
           <ul>
             <li>Check 0 セットアップ健全性: ✓ Native install / ⚠ project settings.json parse error / ✓ v2.1.233 current</li>
-            <li>Check 1 未使用スキル: 使用1回以下のスキル7件+未使用プラグイン1件を削除候補に(利用回数の実測表つき)</li>
-            <li>Check 3 CLAUDE.md 削減: コードから導出可能な3セクション(~60-70 tokens/session)を削除提案</li>
+            <li>Check 1 未使用スキル: 使用 1 回以下のスキル 7 件 + 未使用プラグイン 1 件を削除候補に(利用回数の実測表つき)</li>
+            <li>Check 3 CLAUDE.md 削減: コードから導出可能な 3 セクション(~60-70 tokens/session)を削除提案</li>
             <li>Check 8 権限モード: <code>permissions.defaultMode: "auto"</code> の設定を提案</li>
           </ul>
           <p><strong>最後は確認質問で終了(変更は未適用)</strong>: "Should I apply all three cleanup groups plus the auto-mode setting?" — 1. Yes, apply all (recommended) / 2. Let me pick which groups / 3. No, keep everything as-is</p>
         </div>
       </div>
-      <p class="term-note"><strong>端末画面(実測)</strong>— 診断の実行から、最後の選択式ダイアログ(AskUserQuestion)まで。別回の実行で診断対象の環境・時点が異なるため、Out の診断結果(JSON エラー等)とは一致しない。Esc でキャンセルし変更は未適用</p>
+      <p class="term-note"><strong>端末画面(実測)</strong>— 診断の実行から、最後の選択式ダイアログ(AskUserQuestion)まで。別回の実行で診断対象の環境・時点が異なるため、Out の診断結果(JSON エラーなど)とは一致しない。Esc でキャンセルし変更は未適用</p>
       <div class="term"><div class="term-bar">claude — /doctor(実行中 → 確認ダイアログ)</div><pre>❯ /doctor
 ● I'll perform a comprehensive health check of your Claude Code setup. This
   will take a moment as I scan your installation, settings, transcripts, and
@@ -820,17 +820,17 @@ Enter to select · ↑/↓ to navigate · Esc to cancel</pre></div>
       <span class="cell-meta">model: haiku · 2026-08-17 実測</span>
     </div>
     <div class="cell-body">
-      <p class="cell-lede">現在のセッションの内容を、1行のサマリーにまとめて表示する。</p>
+      <p class="cell-lede">現在のセッションの内容を、1 行のサマリーにまとめて表示する。</p>
       <p class="cell-desc">会話には追加されないローカルコマンドとして即時実行され、トランスクリプトには結果だけが残る。/init セッションを <code>--resume</code> で再開して実行した。</p>
       <div class="in-block"><span class="in-label">In</span><code class="in-cmd">/recap</code></div>
       <div class="out-block">
         <span class="out-label">Out</span>
         <div class="out-content">
-          <p class="gist">要旨: 「CLAUDE.md を作成して完了」というセッションの1行サマリー。</p>
+          <p class="gist">要旨: 「CLAUDE.md を作成して完了」というセッションの 1 行サマリー。</p>
           <p lang="en">Created a CLAUDE.md file documenting this Python calculator project's structure, quick commands, and known issues. The file is complete and ready for future Claude instances to use.</p>
         </div>
       </div>
-      <p class="term-note"><strong>端末画面(実測)</strong>— 会話ログに <code>⎿</code> 付きの1行サマリーが即時表示される(別回の実行)</p>
+      <p class="term-note"><strong>端末画面(実測)</strong>— 会話ログに <code>⎿</code> 付きの 1 行サマリーが即時表示される(別回の実行)</p>
       <div class="term"><div class="term-bar">claude — /recap</div><pre>❯ /recap
   ⎿  Created CLAUDE.md documenting this sample-calc project: calculator functions,
      user database module, security issues, and custom commands. Ready to review
@@ -846,12 +846,12 @@ Enter to select · ↑/↓ to navigate · Esc to cancel</pre></div>
     </div>
     <div class="cell-body">
       <p class="cell-lede">現在のブランチの変更(diff)をセキュリティ観点でレビューし、脆弱性を報告する。</p>
-      <p class="cell-desc">レビュー対象は diff だけなので、既存コード側の SQL インジェクションは対象外。<code>origin</code> リモートのないリポジトリでは、プロンプト展開時の <code>git log origin/HEAD...</code> が失敗しコマンド自体が実行されない(実測で確認。本デモは origin を用意したうえで実行している)。</p>
+      <p class="cell-desc">レビュー対象は diff だけなので、既存コード側の SQL インジェクションは対象外。<code>origin</code> リモートのないリポジトリでは、プロンプト展開時の <code>git log origin/HEAD...</code> が失敗しコマンド自体が実行されない(実測で確認した挙動で、本デモは origin を用意したうえで実行している)。</p>
       <div class="in-block"><span class="in-label">In</span><code class="in-cmd">/security-review</code></div>
       <div class="out-block">
         <span class="out-label">Out</span>
         <div class="out-content">
-          <p class="gist">要旨: High 2件(コマンドインジェクション、認証バイパス)を確信度 8/10 で報告。</p>
+          <p class="gist">要旨: High 2 件(コマンドインジェクション、認証バイパス)を確信度 8/10 で報告。</p>
           <p lang="en">Both findings scored 8/10 confidence — above the ≥8 threshold — so both are retained.</p>
           <p lang="en"><strong># Vuln 1: Command Injection: <code>src/user_db.py:18</code></strong></p>
           <ul lang="en">
@@ -869,7 +869,7 @@ Enter to select · ↑/↓ to navigate · Esc to cancel</pre></div>
           </ul>
         </div>
       </div>
-      <p class="term-note"><strong>端末画面(実測)</strong>— プロンプトの指示どおり「検出用サブエージェント→偽陽性フィルタ」の多段実行になる様子(別回の実行では3件検出)。画面側の実行モデルは haiku(Out は sonnet)</p>
+      <p class="term-note"><strong>端末画面(実測)</strong>— プロンプトの指示どおり「検出用サブエージェント→偽陽性フィルタ」の多段実行になる様子(別回の実行では 3 件検出)。画面側の実行モデルは haiku(Out は sonnet)</p>
       <div class="term"><div class="term-bar">claude — /security-review(実行中 → 完了)</div><pre>❯ /security-review
 ● I'll perform a security review of the changes on this branch. Let me start by
   identifying vulnerabilities and then validating them against false-positive
@@ -902,20 +902,20 @@ Enter to select · ↑/↓ to navigate · Esc to cancel</pre></div>
     </div>
     <div class="cell-body">
       <p class="cell-lede">直近の変更が「主張どおり動くか」を、実際にコードを動かして検証する。</p>
-      <p class="cell-desc">直近コミットの内容をクレームとして取り出し、テストや直接実行で裏取りして PASS/FAIL を判定する。実測ではコマンドインジェクションを実際に実行して実証したうえで PASS(懸念2件付き)を返した。</p>
+      <p class="cell-desc">直近コミットの内容を主張(claim)として取り出し、テストや直接実行で裏取りして PASS/FAIL を判定する。実測ではコマンドインジェクションを実際に実行して実証したうえで PASS(懸念 2 件付き)を返した。</p>
       <div class="in-block"><span class="in-label">In</span><code class="in-cmd">/verify</code></div>
       <div class="out-block">
         <span class="out-label">Out</span>
         <div class="out-content">
-          <p class="gist">要旨: 直近コミット(login/ping_host 追加)の主張を実挙動で検証し PASS。副産物としてコマンドインジェクションを実証。</p>
+          <p class="gist">要旨: 直近コミット(login / ping_host 追加)の主張を実挙動で検証し PASS。副産物としてコマンドインジェクションを実証。</p>
           <p lang="en"><strong>Verdict: PASS</strong> — Verification: add login and ping helpers</p>
           <p lang="en"><strong>Method:</strong> Cold start. Imported the module and tested the functions directly by calling them with various inputs.</p>
           <ul>
             <li>✅ <code>login("admin", "hunter2")</code> → <code>True</code> / 誤パスワード・空文字・<code>None</code> → <code>False</code>(クラッシュなし)</li>
-            <li>✅ <code>ping_host("localhost")</code> → 正常にping</li>
+            <li>✅ <code>ping_host("localhost")</code> → 正常に ping</li>
             <li>🔍 <code>ping_host("localhost; echo INJECTED")</code> → 注入した <code>echo</code> が実行され、未サニタイズ入力が <code>os.system()</code> に届くことを実証</li>
           </ul>
-          <p>⚠️ Findings: <strong>Command injection in <code>ping_host()</code></strong> / <strong>Hardcoded credential</strong>(環境変数やシークレットマネージャへの移行を推奨)</p>
+          <p>⚠️ Findings: <strong>Command injection in <code>ping_host()</code></strong> / <strong>Hardcoded credential</strong>(環境変数やシークレットマネージャーへの移行を推奨)</p>
         </div>
       </div>
     </div>
@@ -967,14 +967,14 @@ Explain what the function `$ARGUMENTS` does, in two sentences, and point out any
   </article>
 
   <h2 id="tui"><span class="sec-no">§2</span>UI/ハーネス型コマンド — 画面の実測</h2>
-  <p class="sec-lede">以下のコマンドは CLI 自身が処理し、コマンド自体のプロンプトはモデルに送られない(ただし /goal のように、設定をきっかけに通常ターンの自律動作が始まるものはある)。「出力」は端末画面なので、対話モードで実行した直後の画面をカラー付きで採取した(採取条件の詳細は末尾の「取得方法」)。表示内容(モデル一覧・使用量・セッション一覧など)は環境依存であり、この環境での一例。メールアドレス等は伏せ字にしてある。セルはアルファベット順。</p>
+  <p class="sec-lede">以下のコマンドは CLI 自身が処理し、コマンド自体のプロンプトはモデルに送られない(ただし /goal のように、設定をきっかけに通常ターンの自律動作が始まるものはある)。「出力」は端末画面なので、対話モードで実行した直後の画面をカラー付きで採取した(採取条件の詳細は末尾の「取得方法」)。表示内容(モデル一覧・使用量・セッション一覧など)は環境依存であり、この環境での一例。メールアドレスなどは伏せ字にしてある。セルはアルファベット順。</p>
 
   <!-- CELL:clear-ui -->
   <article class="cell" id="cell-clear-ui">
     <div class="cell-head"><h3 class="typed"><code>/clear</code></h3><span class="cell-meta">画面実測 · 2026-08-17</span></div>
     <div class="cell-body">
       <p class="cell-lede">会話をリセットし、空のコンテキストで新しい会話を始める。</p>
-      <p class="cell-desc">画面にはヘッダと空のプロンプトだけが残る。</p>
+      <p class="cell-desc">画面にはヘッダーと空のプロンプトだけが残る。</p>
       <div class="term"><div class="term-bar">claude — /clear</div><pre><span style="color:#D78787"> ▐</span><span style="color:#D78787;background:#000000">▛███▜</span><span style="color:#D78787">▌</span>   <span style="font-weight:700">Claude Code</span> <span style="color:#949494">v2.1.233</span>
 <span style="color:#D78787">▝▜</span><span style="color:#D78787;background:#000000">█████</span><span style="color:#D78787">▛▘</span>  <span style="color:#949494">Fable 5 · Claude Max</span>
 <span style="color:#D78787">  ▘▘ ▝▝  </span>  <span style="color:#949494">/…/****************-****/scratchpad/sample-project</span>
@@ -1134,7 +1134,7 @@ Explain what the function `$ARGUMENTS` does, in two sentences, and point out any
     <div class="cell-head"><h3 class="typed"><code>/mcp</code></h3><span class="cell-meta">画面実測 · 2026-08-17</span></div>
     <div class="cell-body">
       <p class="cell-lede">MCP サーバー(外部ツール連携)の接続を管理する。</p>
-      <p class="cell-desc">一覧と接続状態が表示され、選択して有効化/無効化や認証ができる。</p>
+      <p class="cell-desc">一覧と接続状態が表示され、選択して有効化 / 無効化や認証ができる。</p>
       <div class="term"><div class="term-bar">claude — /mcp</div><pre>   <span style="color:#AFD7FF;font-weight:700">Manage MCP servers</span>
    <span style="color:#949494">1 server</span>
 
@@ -1151,7 +1151,7 @@ Explain what the function `$ARGUMENTS` does, in two sentences, and point out any
     <div class="cell-head"><h3 class="typed"><code>/memory</code></h3><span class="cell-meta">画面実測 · 2026-08-17</span></div>
     <div class="cell-body">
       <p class="cell-lede">CLAUDE.md とメモリ(自動記憶)ファイルを管理する。</p>
-      <p class="cell-desc">ユーザー指示(<code>~/.claude/CLAUDE.md</code>)・プロジェクト指示(<code>./CLAUDE.md</code>)の編集と、自動メモリフォルダを開く操作を選べる。Auto-memory の有効/無効もここで確認できる。</p>
+      <p class="cell-desc">ユーザー指示(<code>~/.claude/CLAUDE.md</code>)・プロジェクト指示(<code>./CLAUDE.md</code>)の編集と、自動メモリフォルダーを開く操作を選べる。Auto-memory の有効 / 無効もここで確認できる。</p>
       <div class="term"><div class="term-bar">claude — /memory</div><pre>   <span style="color:#AFD7FF;font-weight:700">Memory</span>
 
      Auto-memory: on
@@ -1193,7 +1193,7 @@ Explain what the function `$ARGUMENTS` does, in two sentences, and point out any
     <div class="cell-head"><h3 class="typed"><code>/permissions</code></h3><span class="cell-meta">画面実測 · 2026-08-17</span></div>
     <div class="cell-body">
       <p class="cell-lede">ツール実行の権限ルールを管理する。</p>
-      <p class="cell-desc">Allow / Ask / Deny / Workspace のタブを横断でき、最近拒否した操作からルールを作ることもできる(一覧が空なのは、この計測環境ではルール未設定のため)。</p>
+      <p class="cell-desc">Allow / Ask / Deny / Workspace のタブを横断でき、最近拒否した操作からルールを作ることもできる(一覧が空なのは、この環境ではルール未設定のため)。</p>
       <div class="term"><div class="term-bar">claude — /permissions</div><pre>   <span style="color:#AFD7FF;font-weight:700">Permissions</span>  Recently denied  <span style="color:#000000;background:#AFD7FF;font-weight:700"> Allow </span>  Ask   Deny   Workspace
 
    Claude Code won't ask before using allowed tools.
@@ -1254,7 +1254,7 @@ Explain what the function `$ARGUMENTS` does, in two sentences, and point out any
     <div class="cell-head"><h3 class="typed"><code>/rewind</code></h3><span class="cell-meta">画面実測 · 2026-08-17</span></div>
     <div class="cell-body">
       <p class="cell-lede">コードと会話を、チェックポイント時点まで巻き戻す。</p>
-      <p class="cell-desc">チェックポイント選択画面が開く。このセッションはまだ編集がないため巻き戻し先なし。</p>
+      <p class="cell-desc">チェックポイント選択画面が開く。このセッションではまだ編集がないため、巻き戻し先は表示されていない。</p>
       <div class="term"><div class="term-bar">claude — /rewind</div><pre>  <span style="color:#AFD7FF;font-weight:700">Rewind</span>
 
   <span style="color:#949494">Nothing to rewind to yet.</span>
@@ -1268,7 +1268,7 @@ Explain what the function `$ARGUMENTS` does, in two sentences, and point out any
     <div class="cell-head"><h3 class="typed"><code>/status</code></h3><span class="cell-meta">画面実測 · 2026-08-17</span></div>
     <div class="cell-body">
       <p class="cell-lede">セッションの現在状態をまとめて表示する。</p>
-      <p class="cell-desc">設定パネルの Status タブが開き、バージョン、セッションID、cwd、ログイン情報、モデル、MCP 接続数などを一覧できる。</p>
+      <p class="cell-desc">設定パネルの Status タブが開き、バージョン・セッション ID・cwd・ログイン情報・モデル・MCP 接続数などを一覧できる。</p>
       <div class="term"><div class="term-bar">claude — /status</div><pre>   <span style="color:#AFD7FF;font-weight:700">Settings</span> <span style="color:#000000;background:#AFD7FF;font-weight:700"> Status </span>  Config   Usage   Stats
 
    <span style="font-weight:700">Version:</span>          2.1.233
@@ -1294,7 +1294,7 @@ Explain what the function `$ARGUMENTS` does, in two sentences, and point out any
     <div class="cell-head"><h3 class="typed"><code>/tasks</code></h3><span class="cell-meta">画面実測 · 2026-08-17</span></div>
     <div class="cell-body">
       <p class="cell-lede">バックグラウンドで走っている作業を一覧する。</p>
-      <p class="cell-desc">応答を中断せず即時実行されるタイプのコマンド(一覧が空なのは、この計測セッションでは何も走らせていないため)。</p>
+      <p class="cell-desc">応答を中断せず即時実行されるタイプのコマンド(一覧が空なのは、このセッションでは何も走らせていないため)。</p>
       <div class="term"><div class="term-bar">claude — /tasks</div><pre>   <span style="color:#00D7D7;font-weight:700">Background</span>
 
    <span style="color:#949494">No tasks currently running</span>
@@ -1305,10 +1305,10 @@ Explain what the function `$ARGUMENTS` does, in two sentences, and point out any
 
   <!-- CELL:advisor-ui -->
   <article class="cell" id="cell-advisor-ui">
-    <div class="cell-head"><h3 class="typed"><code>/advisor</code></h3><span class="cell-meta">画面実測 · 2026-08-23 · CLI 2.1.241</span></div>
+    <div class="cell-head"><h3 class="typed"><code>/advisor</code></h3><span class="cell-meta">画面実測 · 2026-08-23 · CLI v2.1.241</span></div>
     <div class="cell-body">
       <p class="cell-lede">要所でより強いモデルに相談する「advisor」を有効化する(experimental)。</p>
-      <p class="cell-desc">実測: Opus 5 / Sonnet 5 / No advisor のピッカーが出る(選んだモデルに、判断に迷う場面でだけ助言を求めるようになる)。画面は haiku セッションで起動したもの。</p>
+      <p class="cell-desc">実測: Opus 5 / Sonnet 5 / No advisor のピッカーが出た(選んだモデルに、判断に迷う場面でだけ助言を求めるようになる)。画面は haiku セッションで起動したもの。</p>
       <div class="term"><div class="term-bar">claude — /advisor</div><pre><span style="color:#AFD7FF">▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔</span>
    <span style="color:#AFD7FF;font-weight:700">Advisor (experimental)</span>
 
@@ -1332,10 +1332,10 @@ Explain what the function `$ARGUMENTS` does, in two sentences, and point out any
 
   <!-- CELL:autocompact-ui -->
   <article class="cell" id="cell-autocompact-ui">
-    <div class="cell-head"><h3 class="typed"><code>/autocompact</code></h3><span class="cell-meta">画面実測 · 2026-08-23 · CLI 2.1.241</span></div>
+    <div class="cell-head"><h3 class="typed"><code>/autocompact</code></h3><span class="cell-meta">画面実測 · 2026-08-23 · CLI v2.1.241</span></div>
     <div class="cell-body">
       <p class="cell-lede">自動コンパクトが走るコンテキストの閾値を設定する。</p>
-      <p class="cell-desc">実測: "Auto-compact window" のパネルが開き、現在値(auto)と説明が出て ↑/↓ で閾値を選ぶ(Esc で抜けると "Auto-compact window unchanged: auto")。<code>/autocompact 200k</code> のように直接トークン数を渡すこともできる。</p>
+      <p class="cell-desc">実測: "Auto-compact window" のパネルが開き、現在値(auto)と説明が出た。↑/↓ で閾値を選ぶ(Esc で抜けると "Auto-compact window unchanged: auto")。<code>/autocompact 200k</code> のように直接トークン数を渡すこともできる。</p>
       <div class="term"><div class="term-bar">claude — /autocompact</div><pre><span style="color:#AFD7FF">▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔</span>
    <span style="color:#AFD7FF;font-weight:700">Auto-compact window</span>
    <span style="color:#949494">Current setting: auto</span>
@@ -1354,10 +1354,10 @@ Explain what the function `$ARGUMENTS` does, in two sentences, and point out any
 
   <!-- CELL:branch-ui -->
   <article class="cell" id="cell-branch-ui">
-    <div class="cell-head"><h3 class="typed"><code>/branch</code></h3><span class="cell-meta">画面実測 · 2026-08-23 · CLI 2.1.241</span></div>
+    <div class="cell-head"><h3 class="typed"><code>/branch</code></h3><span class="cell-meta">画面実測 · 2026-08-23 · CLI v2.1.241</span></div>
     <div class="cell-body">
       <p class="cell-lede">この時点で会話を分岐させたコピーを作る。</p>
-      <p class="cell-desc">実測: 下の画面のとおり(分岐後はセッション名が変わり、元の会話は /resume から戻れる)。</p>
+      <p class="cell-desc">実測: 実行すると下の画面のとおり分岐した(分岐後はセッション名が変わり、元の会話には /resume から戻れる)。</p>
       <div class="term"><div class="term-bar">claude — /branch</div><pre><span style="color:#4E4E4E;background:#3A3A3A">❯</span><span style="background:#3A3A3A"> </span><span style="color:#FFFFFF;background:#3A3A3A">/branch</span><span style="background:#3A3A3A"> </span>
 <span style="color:#949494">  ⎿  </span>Branched conversation. You are now in the new branch (session ****************-****). Use
      /resume ****************-**** ("autocompact-window-status") to return to the original, or
@@ -1372,10 +1372,10 @@ Explain what the function `$ARGUMENTS` does, in two sentences, and point out any
 
   <!-- CELL:diff-ui -->
   <article class="cell" id="cell-diff-ui">
-    <div class="cell-head"><h3 class="typed"><code>/diff</code></h3><span class="cell-meta">画面実測 · 2026-08-23 · CLI 2.1.241</span></div>
+    <div class="cell-head"><h3 class="typed"><code>/diff</code></h3><span class="cell-meta">画面実測 · 2026-08-23 · CLI v2.1.241</span></div>
     <div class="cell-body">
       <p class="cell-lede">未コミットの変更とターンごとの差分を見る。</p>
-      <p class="cell-desc">実測: "Uncommitted changes (git diff HEAD)" として変更ファイルの一覧(ここでは README.md +2)が出て、Enter で差分本体を開く。git 管理下で未コミットの変更がある状態で有効(未追跡の tests/ は一覧に出ない)。</p>
+      <p class="cell-desc">実測: "Uncommitted changes (git diff HEAD)" として変更ファイルの一覧(ここでは README.md +2)が出た。Enter で差分本体を開く。git 管理下で未コミットの変更がある状態で有効(未追跡の tests/ は一覧に出ない)。</p>
       <div class="term"><div class="term-bar">claude — /diff</div><pre><span style="color:#AFD7FF">▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔</span>
    <span style="color:#00D7D7;font-weight:700">Uncommitted changes</span><span style="color:#949494;font-weight:700"> (git diff HEAD)</span>
 
@@ -1389,10 +1389,10 @@ Explain what the function `$ARGUMENTS` does, in two sentences, and point out any
 
   <!-- CELL:fast-ui -->
   <article class="cell" id="cell-fast-ui">
-    <div class="cell-head"><h3 class="typed"><code>/fast</code></h3><span class="cell-meta">画面実測 · 2026-08-23 · CLI 2.1.241</span></div>
+    <div class="cell-head"><h3 class="typed"><code>/fast</code></h3><span class="cell-meta">画面実測 · 2026-08-23 · CLI v2.1.241</span></div>
     <div class="cell-body">
-      <p class="cell-lede">Fast mode(高速出力)の切り替え。</p>
-      <p class="cell-desc">実測: Fast mode は research preview で、このアカウント/モデルでは "Fast mode requires usage credits · /usage-credits to turn them on" と表示され有効化できなかった(画面)。</p>
+      <p class="cell-lede">Fast mode(高速出力)を切り替える。</p>
+      <p class="cell-desc">実測: Fast mode は research preview で、このアカウント / モデルでは "Fast mode requires usage credits · /usage-credits to turn them on" と表示され有効化できなかった(画面)。</p>
       <div class="term"><div class="term-bar">claude — /fast</div><pre><span style="color:#AFD7FF">▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔</span>
    <span style="color:#FF8700;font-weight:700">↯ Fast mode (research preview)</span>
    <span style="color:#949494">High-speed mode for Opus 5. Draws from usage credits at a higher rate. Separate rate limits apply.</span>
@@ -1407,10 +1407,10 @@ Explain what the function `$ARGUMENTS` does, in two sentences, and point out any
 
   <!-- CELL:rename-ui -->
   <article class="cell" id="cell-rename-ui">
-    <div class="cell-head"><h3 class="typed"><code>/rename</code></h3><span class="cell-meta">画面実測 · 2026-08-23 · CLI 2.1.241</span></div>
+    <div class="cell-head"><h3 class="typed"><code>/rename</code></h3><span class="cell-meta">画面実測 · 2026-08-23 · CLI v2.1.241</span></div>
     <div class="cell-body">
       <p class="cell-lede">現在のセッションに名前を付ける。</p>
-      <p class="cell-desc">実測: 引数なしで実行すると自動生成の名前("autocompact-window-status")が付き、入力欄の右上にも表示される。<code>/rename 名前</code> で任意の名前にできる。名前は /resume の一覧に出るので、後から探しやすくなる。</p>
+      <p class="cell-desc">実測: 引数なしで実行すると自動生成の名前("autocompact-window-status")が付き、入力欄の右上にも表示された。<code>/rename 名前</code> で任意の名前にできる。名前は /resume の一覧に出るので、あとから探しやすくなる。</p>
       <div class="term"><div class="term-bar">claude — /rename</div><pre><span style="color:#4E4E4E;background:#3A3A3A">❯</span><span style="background:#3A3A3A"> </span><span style="color:#FFFFFF;background:#3A3A3A">/rename</span><span style="background:#3A3A3A"> </span>
 <span style="color:#949494">  ⎿  </span>Session renamed to: autocompact-window-status
 
@@ -1423,10 +1423,10 @@ Explain what the function `$ARGUMENTS` does, in two sentences, and point out any
 
   <!-- CELL:workflows-ui -->
   <article class="cell" id="cell-workflows-ui">
-    <div class="cell-head"><h3 class="typed"><code>/workflows</code></h3><span class="cell-meta">画面実測 · 2026-08-23 · CLI 2.1.241</span></div>
+    <div class="cell-head"><h3 class="typed"><code>/workflows</code></h3><span class="cell-meta">画面実測 · 2026-08-23 · CLI v2.1.241</span></div>
     <div class="cell-body">
       <p class="cell-lede">動的ワークフロー(ultracode)の実行状況を見る。</p>
-      <p class="cell-desc">実測: まだ何も走っていないセッションでは "No dynamic workflows in this session." の空パネル。ワークフローが走ると、エージェントごとの進捗とトークン使用量がここに並ぶ。</p>
+      <p class="cell-desc">実測: まだ何も走っていないセッションでは "No dynamic workflows in this session." の空パネルが出た。ワークフローが走ると、エージェントごとの進捗とトークン使用量がここに並ぶ。</p>
       <div class="term"><div class="term-bar">claude — /workflows</div><pre><span style="color:#AFD7FF">▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔</span>
    <span style="color:#00D7D7;font-weight:700">Dynamic workflows</span>
 
@@ -1438,11 +1438,11 @@ Explain what the function `$ARGUMENTS` does, in two sentences, and point out any
 
   <!-- CELL:ultracode-ui -->
   <article class="cell" id="cell-ultracode-ui">
-    <div class="cell-head"><h3 class="typed"><code>ultracode(入力キーワード)</code></h3><span class="cell-meta">画面実測 · 2026-08-23 · CLI 2.1.241</span></div>
+    <div class="cell-head"><h3 class="typed"><code>ultracode(入力キーワード)</code></h3><span class="cell-meta">画面実測 · 2026-08-23 · CLI v2.1.241</span></div>
     <div class="cell-body">
       <p class="cell-lede">プロンプトに <code>ultracode</code> を含めると、そのターンは Claude が動的ワークフロー(多数のサブエージェントの並列実行)を組んで取り組む。</p>
-      <p class="cell-desc">実測: 入力欄に <code>ultracode</code> と打った時点で、入力欄の上に "Dynamic workflow requested for this turn · opt+w to ignore" と出る(キーワードは紫でハイライトされる)。キーワードは人が打った入力にだけ効き、<code>-p</code> 実行や webhook 由来の入力では発火しない。本ページでは本実行はしていない(多数のエージェントを起こすため)。</p>
-      <div class="term"><div class="term-bar">claude — ultracode (キーワード検知)</div><pre>                                                  <span style="color:#949494">Dynamic workflow requested for this turn · opt+w to ignore</span>
+      <p class="cell-desc">実測: 入力欄に <code>ultracode</code> と打った時点で、入力欄の上に "Dynamic workflow requested for this turn · opt+w to ignore" と出た(キーワードは紫でハイライトされる)。キーワードは人が打った入力にだけ効き、<code>-p</code> 実行や webhook 由来の入力では発火しない。本ページでは本実行はしていない(多数のエージェントを起こすため)。</p>
+      <div class="term"><div class="term-bar">claude — ultracode(キーワード検知)</div><pre>                                                  <span style="color:#949494">Dynamic workflow requested for this turn · opt+w to ignore</span>
 <span style="color:#808080">──────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
 ❯ <span style="color:#AFAFFF">ultracode</span>
 <span style="color:#808080">──────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
@@ -1452,16 +1452,16 @@ Explain what the function `$ARGUMENTS` does, in two sentences, and point out any
 
   <!-- CELL:codereview-hint-ui -->
   <article class="cell" id="cell-codereview-hint-ui">
-    <div class="cell-head"><h3 class="typed"><code>/code-review(引数ヒント)と /ultra 補完</code></h3><span class="cell-meta">画面実測 · 2026-08-23 · CLI 2.1.241</span></div>
+    <div class="cell-head"><h3 class="typed"><code>/code-review(引数ヒント)と /ultra 補完</code></h3><span class="cell-meta">画面実測 · 2026-08-23 · CLI v2.1.241</span></div>
     <div class="cell-body">
       <p class="cell-lede"><code>/code-review</code> の引数と、ultrareview の入口を確認する。</p>
       <p class="cell-desc">実測: <code>/code-review </code> と打つと引数ヒント <code>[low|medium|high|xhigh|max|ultra] [--fix] [--comment] [&lt;pr#&gt;|&lt;branch&gt;|&lt;path&gt;]</code> が出る(<code>ultra</code> が最上位レベル)。<code>/ultra</code> まで打つと補完に旧名 <code>/ultrareview</code>("3 free left · Start a cloud agent that finds and verifies bugs in your branch (~5-10 min, $5-$25 USD) · Runs in Claude Code on the web")と <code>/code-review</code> が並ぶ。本実行は下の <a href="#cell-codereview-ultra">/code-review ultra</a> セルを参照。ヒント行の上に "auto mode unavailable for this model" と出ているのは、haiku では auto mode が選べないことを示す(姉妹ページの<a href="config.html#cell-defaultmode">権限モードの比較セル</a>参照)。</p>
-      <div class="term"><div class="term-bar">claude — /code-review (引数ヒント)</div><pre>                                                                        <span style="color:#FFD700">auto mode unavailable for this model</span>
+      <div class="term"><div class="term-bar">claude — /code-review(引数ヒント)</div><pre>                                                                        <span style="color:#FFD700">auto mode unavailable for this model</span>
 <span style="color:#808080">──────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
 ❯ <span style="color:#AFD7FF">/code-review</span>  <span style="color:#949494">[low|medium|high|xhigh|max|ultra] [--fix] [--comment] [&lt;pr#&gt;|&lt;branch&gt;|&lt;path&gt;]</span>
 <span style="color:#808080">──────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
   <span style="color:#949494">⏸ manual mode on</span>                                                                                       <span style="color:#87D787">/rc</span></pre></div>
-      <div class="term"><div class="term-bar">claude — /ultra (補完)</div><pre>  <span style="color:#AFD7FF">/</span><span style="color:#AFD7FF;font-weight:700">ultra</span><span style="color:#AFD7FF">review                  3 free left · Start a cloud agent that finds and verifies bugs in your</span>
+      <div class="term"><div class="term-bar">claude — /ultra(補完)</div><pre>  <span style="color:#AFD7FF">/</span><span style="color:#AFD7FF;font-weight:700">ultra</span><span style="color:#AFD7FF">review                  3 free left · Start a cloud agent that finds and verifies bugs in your</span>
                                 <span style="color:#AFD7FF">branch (~5-10 min, $5-$25 USD) · Runs in Claude Code on the web. See https:…</span>
   <span style="color:#949494">/code-review                  3 free /</span><span style="font-weight:700">ultra</span><span style="color:#949494">review · Review the current diff, or a PR number/branch/path</span>
                                 <span style="color:#949494">target, for correctness bugs and reuse/simplification/efficiency cleanups a…</span>
@@ -1474,11 +1474,11 @@ Explain what the function `$ARGUMENTS` does, in two sentences, and point out any
 
   <!-- CELL:codereview-ultra -->
   <article class="cell" id="cell-codereview-ultra">
-    <div class="cell-head"><h3 class="typed"><code>/code-review ultra</code>(ultrareview)</h3><span class="cell-meta">画面実測 · 2026-08-23 · CLI 2.1.241 · クラウド実行(無料枠 1 回消費)</span></div>
+    <div class="cell-head"><h3 class="typed"><code>/code-review ultra</code>(ultrareview)</h3><span class="cell-meta">画面実測 · 2026-08-23 · CLI v2.1.241 · クラウド実行(無料枠 1 回消費)</span></div>
     <div class="cell-body">
       <p class="cell-lede">クラウド上で多数のエージェントがブランチのバグを探して検証する「ultrareview」を、sample-project の <code>feature/user-db</code> ブランチ(意図的に脆弱なコード)に対して 1 回だけ本実行した。</p>
-      <p class="cell-desc">実測の流れ: (1) <code>/code-review ultra</code> を実行すると課金確認ダイアログ "Run ultrareview in the cloud?" が出る(Free ultrareview 1 of 3 / Reviewing feature/user-db against main / Scope: 2 files changed / This will upload your repository to Claude Code on the web)。(2) Yes で起動すると、トランスクリプト上は <code>/ultrareview</code> として記録され、追跡 URL(claude.ai/code のセッション)とともに "Ultrareview launched … (~5-10 min, runs in the cloud)"、フッターに <code>◇ 1 cloud session</code> が出る。主モデルは "Findings will arrive as a task notification when it completes." と言って入力待ちに戻り、その間も端末は使える。(3) <code>/tasks</code> を開くと "ultrareview · 50s · running / Setup → Find → Verify → Dedupe / 10 found · 0 verified" と段階と件数が見え、Stop もここから。(4) 起動から約 7 分半(23:26 → 23:34)で "Cloud review completed" の通知が届き、findings 3 件(critical 2 + nit 1)が通知本文として主モデルに渡った。<strong><code>--fix</code> を付けていないのに主モデル(haiku)はそのまま修正に着手</strong>し、manual モードなので "Do you want to make this edit to user_db.py?" の確認が出た(今回は Esc で拒否。accept edits / auto mode なら修正が進む)。</p>
-      <div class="term"><div class="term-bar">claude — /code-review ultra (確認)</div><pre><span style="color:#AFD7FF">▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔</span>
+      <p class="cell-desc">実測の流れ: (1) <code>/code-review ultra</code> を実行すると課金確認ダイアログ "Run ultrareview in the cloud?" が出る(Free ultrareview 1 of 3 / Reviewing feature/user-db against main / Scope: 2 files changed / This will upload your repository to Claude Code on the web)。(2) Yes で起動すると、トランスクリプト上は <code>/ultrareview</code> として記録され、追跡 URL(claude.ai/code のセッション)とともに "Ultrareview launched … (~5-10 min, runs in the cloud)"、フッターに <code>◇ 1 cloud session</code> が出る。主モデルは "Findings will arrive as a task notification when it completes." と言って入力待ちに戻り、その間も端末は使える。(3) <code>/tasks</code> を開くと "ultrareview · 50s · running / Setup → Find → Verify → Dedupe / 10 found · 0 verified" と段階と件数が見え、Stop もここからできる。(4) 起動から約 7 分半(23:26 → 23:34)で "Cloud review completed" の通知が届き、findings 3 件(critical 2 + nit 1)が通知本文として主モデルに渡った。<strong><code>--fix</code> を付けていないのに主モデル(haiku)はそのまま修正に着手</strong>し、manual モードなので "Do you want to make this edit to user_db.py?" の確認が出た(今回は Esc で拒否したが、acceptEdits や auto モードなら修正が進む)。</p>
+      <div class="term"><div class="term-bar">claude — /code-review ultra(確認)</div><pre><span style="color:#AFD7FF">▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔</span>
    <span style="color:#AFD7FF;font-weight:700">Run ultrareview in the cloud?</span>
    <span style="color:#949494">Free ultrareview 1 of 3.</span>
 
@@ -1495,7 +1495,7 @@ Explain what the function `$ARGUMENTS` does, in two sentences, and point out any
      <span style="color:#949494">2. </span>No   <span style="color:#949494"> </span>
 
    <span style="color:#949494;font-style:italic">Enter to confirm · Esc to cancel</span></pre></div>
-      <div class="term"><div class="term-bar">claude — /code-review ultra (実行中)</div><pre><span style="color:#4E4E4E;background:#3A3A3A">❯</span><span style="background:#3A3A3A"> </span><span style="color:#FFFFFF;background:#3A3A3A">/ultrareview</span>
+      <div class="term"><div class="term-bar">claude — /code-review ultra(実行中)</div><pre><span style="color:#4E4E4E;background:#3A3A3A">❯</span><span style="background:#3A3A3A"> </span><span style="color:#FFFFFF;background:#3A3A3A">/ultrareview</span>
 <span style="color:#949494">  ⎿  </span>Free ultrareview 1 of 3.
      Ultrareview launched for feature/user-db → main (~5-10 min, runs in the cloud). Track:
      <span style="color:#8FB3D6">https://claude.ai/code/session_****?from=cli</span>
@@ -1509,7 +1509,7 @@ Explain what the function `$ARGUMENTS` does, in two sentences, and point out any
 ❯
 <span style="color:#00AFAF">──────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
   <span style="color:#949494">⏸ manual mode on · </span><span style="color:#00D7D7">◇ 1 cloud session</span><span style="color:#949494"> · ← for agents · ↓ to manage</span>                                      <span style="color:#87D787">/rc</span></pre></div>
-      <div class="term"><div class="term-bar">claude — /tasks (ultrareview 実行中)</div><pre><span style="color:#AFD7FF">▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔</span>
+      <div class="term"><div class="term-bar">claude — /tasks(ultrareview 実行中)</div><pre><span style="color:#AFD7FF">▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔</span>
    <span style="color:#00D7D7;font-weight:700">◇ ultrareview</span><span style="color:#949494;font-weight:700"> · 50s · running</span>
 
    <span style="color:#949494">Setup → Find → </span><span style="color:#00D7D7">Verify</span><span style="color:#949494"> → Dedupe</span>
@@ -1522,7 +1522,7 @@ Explain what the function `$ARGUMENTS` does, in two sentences, and point out any
      <span style="color:#949494">3. </span>Back
 
    <span style="color:#949494;font-style:italic">Enter to select · Esc to go back</span></pre></div>
-      <div class="term"><div class="term-bar">claude — /code-review ultra (完了通知 → 修正提案)</div><pre><span style="color:#4E4E4E;background:#3A3A3A">❯</span><span style="background:#3A3A3A"> </span><span style="color:#FFFFFF;background:#3A3A3A">/ultrareview</span>
+      <div class="term"><div class="term-bar">claude — /code-review ultra(完了通知 → 修正提案)</div><pre><span style="color:#4E4E4E;background:#3A3A3A">❯</span><span style="background:#3A3A3A"> </span><span style="color:#FFFFFF;background:#3A3A3A">/ultrareview</span>
 <span style="color:#949494">  ⎿  </span>Free ultrareview 1 of 3.
      Ultrareview launched for feature/user-db → main (~5-10 min, runs in the cloud). Track:
      <span style="color:#8FB3D6">https://claude.ai/code/session_****?from=cli</span>
@@ -1562,7 +1562,7 @@ Explain what the function `$ARGUMENTS` does, in two sentences, and point out any
    <span style="color:#949494">3. </span>No
 
  <span style="color:#949494">Esc to cancel · Tab to amend</span></pre></div>
-      <p class="cell-desc">通知本文に含まれていた findings(セッション記録 jsonl から抽出。<code>pr_comment</code> の要約部分のみ、<code>reasoning</code> には再現手順付きの長文が付く)。sample-project に仕込んだ 3 つの脆弱性のうち、ハードコードされたパスワード(+ 認証バイパス・タイミング比較)とコマンドインジェクションの 2 つを検出し、SQL インジェクション(<code>find_user</code>)は feature ブランチの差分外(main 側に既にある)のため対象外だった:</p>
+      <p class="cell-desc">通知本文に含まれていた findings。セッション記録の jsonl から <code>pr_comment</code> の要約部分だけを抽出したもので、<code>reasoning</code> には再現手順付きの長文が付く。sample-project に仕込んだ 3 つの脆弱性のうち、ハードコードされたパスワード(+ 認証バイパス・タイミング比較)とコマンドインジェクションの 2 つを検出し、SQL インジェクション(<code>find_user</code>)は feature ブランチの差分外(main 側にすでにある)のため対象外だった:</p>
       <div class="out-content"><pre><code>[1] login() has multiple critical security defects  (severity: normal, src/user_db.py:13-15)
     The newly added `login()` in src/user_db.py:13-15 has three compounding security defects: (1)
     the `name` argument is never used, so anyone supplying the single hardcoded password
@@ -1594,7 +1594,7 @@ launched 2026-08-23T14:26:42Z (JST 23:26) / completed notification 2026-08-23T14
     <div class="cell-head"><h3 class="typed"><code>/usage</code></h3><span class="cell-meta">画面実測 · 2026-08-17</span></div>
     <div class="cell-body">
       <p class="cell-lede">トークン使用量と、プランのレート上限の消費状況を表示する。</p>
-      <p class="cell-desc">設定パネルの Usage タブが開く。セッションのコスト・トークン量に加え、セッション枠/週間枠の消費率と、何が使用量に効いているかの分析まで表示される(画面は起動直後のセッションのため Total cost 等はゼロ)。</p>
+      <p class="cell-desc">設定パネルの Usage タブが開く。セッションのコスト・トークン量に加え、セッション枠 / 週間枠の消費率と、何が使用量に効いているかの分析まで表示される(画面は起動直後のセッションのため Total cost などはゼロ)。</p>
       <div class="term"><div class="term-bar">claude — /usage</div><pre>   <span style="color:#AFD7FF;font-weight:700">Settings</span>  Status   Config  <span style="color:#000000;background:#AFD7FF;font-weight:700"> Usage </span>  Stats
 
    <span style="font-weight:700">Session</span>
@@ -1637,13 +1637,13 @@ launched 2026-08-23T14:26:42Z (JST 23:26) / completed notification 2026-08-23T14
     <h2>取得方法(再現手順)</h2>
     <ul>
       <li>実行環境: Claude Code CLI v2.1.233 / 2026-08-17 実測。§2 の追加分(/advisor /autocompact /branch /diff /fast /rename /workflows、ultracode、/code-review のヒント、/code-review ultra)は v2.1.241 / 2026-08-23 に <code>capture-extra.sh</code> で採取(セルの日付印で区別)。</li>
-      <li>出力の採取: <code>claude -p "/コマンド" --model &lt;model&gt;</code> のヘッドレス実行の標準出力。(/btw・/compact を除く。両者は対話モードで実測)</li>
-      <li>UI 型の画面の採取: tmux の仮想端末(110×42)で対話モードを起動し、コマンド実行直後に <code>tmux capture-pane -e -p</code> で ANSI カラー付きテキストとして採取し、256色コードを HTML に変換して表示(実際の端末配色の近似)。メールアドレス・セッションID等は伏せ字に置換。</li>
+      <li>出力の採取: <code>claude -p "/コマンド" --model &lt;model&gt;</code> のヘッドレス実行の標準出力(/btw・/compact は対話モードで実測)。</li>
+      <li>UI 型の画面の採取: tmux の仮想端末(110×42)で対話モードを起動し、コマンド実行直後に <code>tmux capture-pane -e -p</code> で ANSI カラー付きテキストとして採取し、256 色コードを HTML に変換して表示(実際の端末配色の近似)。メールアドレス・セッション ID などは伏せ字に置換。</li>
       <li>§1 各セルの「端末画面(実測)」: プロジェクトのクリーンコピーに対する対話モード(haiku、同じく tmux 110×42)での別回の実行を採取したもの。プロンプト・出力の記録とは実行回が異なるため、指摘内容や言語が一致しない場合がある(例: 対話実行ではユーザーのグローバル CLAUDE.md の「日本語で回答」が適用される)。</li>
-      <li>注意: LLM の出力は非決定的であり、ここに載せた出力は「ある1回の実行例」である。また Skill 系コマンドの内部動作は CLI のバージョンにより変わりうる。</li>
-      <li>§1 の Out 中の「#」「-」等の markdown 記法は、モデル出力の原文のままにしてある。</li>
+      <li>注意: LLM の出力は非決定的であり、ここに載せた出力は「ある 1 回の実行例」である。また Skill 系コマンドの内部動作は CLI のバージョンにより変わりうる。</li>
+      <li>§1 の Out 中の「#」「-」などの markdown 記法は、モデル出力の原文のままにしてある。</li>
       <li>端末キャプチャは実端末配色の再現を優先しており、一部の文字色は WCAG AA のコントラスト基準を満たさない。</li>
-      <li><code>/code-review ultra</code>(ultrareview)はクラウドで実行され、<strong>アカウントの無料枠(3 回)を 1 回消費</strong>して採取した。再実行すると残りの無料枠、または利用クレジットを消費する(<code>SKIP_ULTRA=1 ./capture-extra.sh</code> で確認ダイアログの採取だけに留められる)。クラウドセッションの URL は伏せ字。</li>
+      <li><code>/code-review ultra</code>(ultrareview)はクラウドで実行され、<strong>アカウントの無料枠(3 回)を 1 回消費</strong>して採取した。再実行すると残りの無料枠、または利用クレジットを消費する(<code>SKIP_ULTRA=1 ./capture-extra.sh</code> で確認ダイアログの採取だけに留められる)。クラウドセッションの URL は伏せ字に置換。</li>
     </ul>
   </section>
 </main>

@@ -222,9 +222,9 @@ CELLS = {
     '/model': 'model', '/permissions': 'permissions', '/mcp': 'mcp', '/config': 'config',
     '/resume': 'resume', '/tasks': 'tasks', '/rewind': 'rewind', '/plan': 'plan', '/clear': 'clear',
     # capture-extra.sh(2026-08-23 追加分)
-    '/ultra (補完)': ('ultra-autocomplete', 8),
-    '/code-review (引数ヒント)': ('codereview-hint', 5),
-    'ultracode (キーワード検知)': ('ultracode-hint', 5),
+    '/ultra(補完)': ('ultra-autocomplete', 8),
+    '/code-review(引数ヒント)': ('codereview-hint', 5),
+    'ultracode(キーワード検知)': ('ultracode-hint', 5),
     '/workflows': ('workflows', PANEL),
     '/fast': ('fast', PANEL),
     '/diff': ('diff', PANEL),
@@ -232,16 +232,17 @@ CELLS = {
     '/autocompact': ('autocompact', PANEL),
     '/rename': ('rename', r'^❯ /rename'),
     '/branch': ('branch', r'^❯ /branch|^▔{20,}'),
-    '/code-review ultra (確認)': ('ultrareview-confirm', PANEL),
-    '/code-review ultra (実行中)': ('ultrareview-start', r'^❯ /ultrareview'),
-    '/tasks (ultrareview 実行中)': ('tasks-ultra', PANEL),
-    '/code-review ultra (完了通知 → 修正提案)': ('ultrareview-fixprompt', r'^❯ /ultrareview'),
+    '/code-review ultra(確認)': ('ultrareview-confirm', PANEL),
+    '/code-review ultra(実行中)': ('ultrareview-start', r'^❯ /ultrareview'),
+    '/tasks(ultrareview 実行中)': ('tasks-ultra', PANEL),
+    '/code-review ultra(完了通知 → 修正提案)': ('ultrareview-fixprompt', r'^❯ /ultrareview'),
 }
 
 CELLS_CONFIG = {
     # outputStyle 比較
-    'style: Default (sonnet)': ('style-default', r'^❯ このプロジェクトの'),
-    'style: Concise (sonnet)': ('style-concise', r'^❯ このプロジェクトの'),
+    'style: Default (sonnet)': ('style-default', r'^❯ src/hello\.py を'),
+    'style: Concise (sonnet)': ('style-concise', r'^❯ src/hello\.py を'),
+    'style: Explanatory (sonnet)': ('style-explanatory', r'^❯ src/hello\.py を'),
     '/config (output style picker)': ('config-output-style', PANEL),
     '/config (output style = Concise)': ('config-output-style-pick', PANEL),
     # permissions.deny 比較
@@ -252,7 +253,7 @@ CELLS_CONFIG = {
     'touch created.txt (ask)': ('perm-ask', r'^❯ touch created\.txt を実行して'),
     'footer: defaultMode = acceptEdits で起動': ('mode-default-acceptedits', 4),
     'touch created.txt (acceptEdits)': ('perm-acceptedits-run', r'^❯ touch created\.txt'),
-    'footer: --model sonnet で起動 → auto': ('mode-sonnet-start', 4),
+    'footer: defaultMode = auto(sonnet で起動)': ('mode-sonnet-start', 4),
     'touch created.txt (auto)': ('perm-auto-run', r'^❯ touch created\.txt'),
     # sandbox 比較
     'sandbox: off (touch /tmp)': ('sandbox-off', r'^❯ touch /tmp/sandbox-poke\.txt'),
