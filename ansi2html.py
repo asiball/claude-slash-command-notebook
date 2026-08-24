@@ -240,8 +240,9 @@ CELLS = {
 
 CELLS_CONFIG = {
     # outputStyle 比較
-    'style: Default (sonnet)': ('style-default', r'^❯ このプロジェクトの'),
-    'style: Concise (sonnet)': ('style-concise', r'^❯ このプロジェクトの'),
+    'style: Default (sonnet)': ('style-default', r'^❯ src/hello\.py を'),
+    'style: Concise (sonnet)': ('style-concise', r'^❯ src/hello\.py を'),
+    'style: Explanatory (sonnet)': ('style-explanatory', r'^❯ src/hello\.py を'),
     '/config (output style picker)': ('config-output-style', PANEL),
     '/config (output style = Concise)': ('config-output-style-pick', PANEL),
     # permissions.deny 比較

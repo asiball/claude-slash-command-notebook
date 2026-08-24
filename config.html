@@ -272,8 +272,8 @@
   }
   .in-label { color: var(--accent-ink); padding-top: .25rem; }
   .sw-label { color: var(--muted); }
-  .snip-label { color: var(--accent-ink); margin: .55rem 0 .3rem; }
-  .out-label { color: var(--out-ink); margin: 1rem 0 .35rem; }
+  .snip-label { color: var(--accent-ink); margin: 1rem 0 .3rem; }
+  .out-label { color: var(--out-ink); margin: 0 0 .35rem; }
   .snip-label span, .out-label span {
     text-transform: none; letter-spacing: 0; font-weight: 500; color: var(--muted); margin-left: .6em;
   }
@@ -323,6 +323,7 @@
   .panels > .panel.active { visibility: visible; }
   .panel { border-left: 3px solid var(--out); padding-left: .9rem; }
   .panel > :first-child { margin-top: 0; }
+  .panel .out-content pre { margin-bottom: .6rem; }
   .panel .cell-desc { margin-bottom: 0; }
 
   /* collapsible blocks */
@@ -462,7 +463,7 @@
     <p>同じ入力(依頼文)を固定したまま、設定だけを切り替えると Claude Code の出力・挙動がどう変わるかを実測で記録する。各セルの <strong>Config</strong> の選択肢を押すと、その設定で採取した画面(Out)に切り替わる。</p>
     <p>対象は、切り替えたときの差が目に見えて分かる 4 つのキーに絞った: <code>outputStyle</code>(応答文が変わる)・<code>permissions.deny</code>(実行が拒否される)・<code>permissions.defaultMode</code>(確認の出方が変わる)・<code>sandbox</code>(OS レベルで実行が制限される)。採取手順は<a href="#prov">取得方法</a>。</p>
     <div class="meta-chips">
-      <span>比較セル 4(切り替え 9 パターン)</span>
+      <span>比較セル 4(切り替え 10 パターン)</span>
       <span>Claude Code CLI v2.1.241</span>
       <span>2026-08-24 実測(WSL2)</span>
       <span>姉妹ページ: <a href="index.html">Slash Command Notebook</a></span>
@@ -523,78 +524,131 @@
       <span class="cell-meta">model: sonnet(--model)· 画面実測</span>
     </div>
     <div class="cell-body">
-      <p class="cell-lede">同じ質問への応答文が、出力スタイルの設定でどう変わるか。</p>
-      <div class="in-block"><span class="in-label">In(共通)</span><code class="in-cmd">❯ このプロジェクトの .claude 配下の設定ファイルを読んで、何が設定されているか教えて</code></div>
+      <p class="cell-lede">同じ依頼(小さなコード変更と実行確認)への応答の分量と構成が、出力スタイルの設定でどう変わるか。</p>
+      <div class="in-block"><span class="in-label">In(共通)</span><code class="in-cmd">❯ src/hello.py を、コマンドライン引数で名前を受け取って hello, &lt;名前&gt; と表示するように変更して、実行して確認して</code></div>
       <div class="switch-row">
         <span class="sw-label">Config</span>
         <div class="switch" role="tablist" aria-label="outputStyle の設定を切り替え">
         <button type="button" role="tab" id="tab-outputstyle-p0" aria-controls="outputstyle-p0" aria-selected="true" tabindex="0">設定なし(Default)</button>
         <button type="button" role="tab" id="tab-outputstyle-p1" aria-controls="outputstyle-p1" aria-selected="false" tabindex="-1"><code>"outputStyle": "Concise"</code></button>
+        <button type="button" role="tab" id="tab-outputstyle-p2" aria-controls="outputstyle-p2" aria-selected="false" tabindex="-1"><code>"outputStyle": "Explanatory"</code></button>
         </div>
       </div>
       <div class="panels">
       <section class="panel active" id="outputstyle-p0" role="tabpanel" aria-labelledby="tab-outputstyle-p0" tabindex="0">
+      <p class="out-label">Out <span>端末画面</span></p>
+      <div class="term"><div class="term-bar">claude — style: Default (sonnet)</div><pre><span style="color:#4E4E4E;background:#3A3A3A">❯ </span><span style="color:#FFFFFF;background:#3A3A3A">src/hello.py を、コマンドライン引数で名前を受け取って hello, &lt;名前&gt; </span>
+  <span style="color:#FFFFFF">と表示するように変更して、実行して確認して</span>
+
+  <span style="color:#949494">Read </span><span style="color:#949494;font-weight:700">1</span><span style="color:#949494"> file </span>
+
+<span style="color:#87D787">●</span> <span style="font-weight:700">Update</span>(src/hello.py)
+<span style="color:#949494">  ⎿  </span>Added <span style="font-weight:700">4</span> lines, removed <span style="font-weight:700">1</span> line
+     <span style="color:#D75F5F;background:#5F0000"> 1 -</span><span style="color:#FFFFFF;background:#5F0000">print("hello from config-demo")                                                               </span>
+     <span style="color:#5FD75F;background:#005F00"> 1 +</span><span style="color:#FF005F;background:#005F00">import</span><span style="color:#FFFFFF;background:#005F00"> sys                                                                                    </span>
+     <span style="color:#5FD75F;background:#005F00"> 2 +</span><span style="color:#FFFFFF;background:#005F00">                                                                                              </span>
+     <span style="color:#5FD75F;background:#005F00"> 3 +</span><span style="color:#FFFFFF;background:#005F00">name = sys.argv[</span><span style="color:#AF87FF;background:#005F00">1</span><span style="color:#FFFFFF;background:#005F00">]                                                                            </span>
+     <span style="color:#5FD75F;background:#005F00"> 4 +</span><span style="color:#AFD700;background:#005F00">print</span><span style="color:#FFFFFF;background:#005F00">(</span><span style="color:#D7D787;background:#005F00">f"hello, </span><span style="color:#FFFFFF;background:#005F00">{name}</span><span style="color:#D7D787;background:#005F00">"</span><span style="color:#FFFFFF;background:#005F00">)                                                                       </span>
+
+  <span style="color:#949494">Ran </span><span style="color:#949494;font-weight:700">1</span><span style="color:#949494"> shell command </span>
+
+<span style="color:#FFFFFF">●</span> <span style="color:#AFD7FF">src/hello.py</span> を、コマンドライン引数の名前を <span style="color:#AFD7FF">hello, &lt;名前&gt;</span> と表示するよう変更しました。<span style="color:#AFD7FF">python3 src/hello.py </span>
+  <span style="color:#AFD7FF">Taro</span> を実行し、<span style="color:#AFD7FF">hello, Taro</span> が出力されることを確認済みです。
+
+  なお、引数を渡さなかった場合は <span style="color:#AFD7FF">IndexError</span>
+  になります（未検証事項）。エラーメッセージを出すなどの対応が必要であれば教えてください。
+
+<span style="color:#949494">✻</span> <span style="color:#949494">Cogitated for 11s</span>
+
+<span style="color:#808080">──────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
+❯
+<span style="color:#808080">──────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
+                                                                                                         <span style="color:#87D787">/rc</span>
+  <span style="color:#FFD700">⏵⏵ auto mode on</span><span style="color:#949494"> (shift+tab to cycle) · ← for agents</span></pre></div>
       <p class="snip-label">設定 <span>.claude/settings.local.json</span></p>
       <div class="out-content"><pre><code>{ "model": "claude-haiku-4-5" }</code></pre></div>
-      <p class="cell-desc">実測: 前置きの一文と「注意点」の補足を付けて答えた。</p>
-      <p class="out-label">Out <span>端末画面</span></p>
-      <div class="term"><div class="term-bar">claude — style: Default (sonnet)</div><pre><span style="color:#4E4E4E;background:#3A3A3A">❯ </span><span style="color:#FFFFFF;background:#3A3A3A">このプロジェクトの .claude 配下の設定ファイルを読んで、何が設定されているか教えて</span>
-
-  <span style="color:#949494">Searched for </span><span style="color:#949494;font-weight:700">1</span><span style="color:#949494"> pattern, read </span><span style="color:#949494;font-weight:700">2</span><span style="color:#949494"> files </span>
-
-<span style="color:#FFFFFF">●</span> このプロジェクトの <span style="color:#AFD7FF">.claude</span> 配下には2つの設定ファイルがあります。
-
-  <span style="color:#AFD7FF;font-weight:700">.claude/settings.json</span>（プロジェクト共有設定、Gitで管理される想定）
-  - <span style="color:#AFD7FF">model</span>: <span style="color:#AFD7FF">claude-sonnet-5</span>
-  - <span style="color:#AFD7FF">permissions.allow</span>: <span style="color:#AFD7FF">Bash(python3 src/hello.py)</span> の実行を許可
-  - <span style="color:#AFD7FF">permissions.deny</span>: <span style="color:#AFD7FF">./private/**</span> 配下の読み取り(Read)を拒否
-
-  <span style="color:#AFD7FF;font-weight:700">.claude/settings.local.json</span>（ローカル専用設定、通常Git管理外）
-  - <span style="color:#AFD7FF">model</span>: <span style="color:#AFD7FF">claude-haiku-4-5</span>
-
-  <span style="font-weight:700">注意点</span>：<span style="color:#AFD7FF">settings.local.json</span> の方が優先度が高いため、実際にこのプロジェクトで使われるモデルは <span style="color:#AFD7FF">settings.json</span>
-  の <span style="color:#AFD7FF">claude-sonnet-5</span> ではなく <span style="color:#AFD7FF">claude-haiku-4-5</span> になります。
-
-<span style="color:#949494">✻</span> <span style="color:#949494">Churned for 8s</span>
-
-<span style="color:#808080">──────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
-❯
-<span style="color:#808080">──────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
-                                                                                                         <span style="color:#87D787">/rc</span>
-  <span style="color:#FFD700">⏵⏵ auto mode on</span><span style="color:#949494"> (shift+tab to cycle) · ← for agents</span></pre></div>
+      <p class="cell-desc">実測: 編集と実行のあと、変更内容・確認結果・未検証の注意(引数なしだと IndexError)を段落で報告した。</p>
       </section>
       <section class="panel" id="outputstyle-p1" role="tabpanel" aria-labelledby="tab-outputstyle-p1" tabindex="0">
-      <p class="snip-label">設定 <span>.claude/settings.local.json</span></p>
-      <div class="out-content"><pre><code>{ "model": "claude-haiku-4-5", "outputStyle": "Concise" }</code></pre></div>
-      <p class="cell-desc">実測: 前置きが短く各項目が名詞句寄りで、全体は 1 行ほど短い。末尾で Claude 自身が「出力スタイルは Concise で動作」と述べている。</p>
       <p class="out-label">Out <span>端末画面</span></p>
-      <div class="term"><div class="term-bar">claude — style: Concise (sonnet)</div><pre><span style="color:#4E4E4E;background:#3A3A3A">❯ </span><span style="color:#FFFFFF;background:#3A3A3A">このプロジェクトの .claude 配下の設定ファイルを読んで、何が設定されているか教えて</span>
+      <div class="term"><div class="term-bar">claude — style: Concise (sonnet)</div><pre><span style="color:#4E4E4E;background:#3A3A3A">❯ </span><span style="color:#FFFFFF;background:#3A3A3A">src/hello.py を、コマンドライン引数で名前を受け取って hello, &lt;名前&gt; </span>
+  <span style="color:#FFFFFF">と表示するように変更して、実行して確認して</span>
 
-  <span style="color:#949494">Searched for </span><span style="color:#949494;font-weight:700">1</span><span style="color:#949494"> pattern, read </span><span style="color:#949494;font-weight:700">2</span><span style="color:#949494"> files </span>
+  <span style="color:#949494">Read </span><span style="color:#949494;font-weight:700">1</span><span style="color:#949494"> file </span>
 
-<span style="color:#FFFFFF">●</span> <span style="color:#AFD7FF">.claude</span> 配下には2つの設定ファイルがあります。
+<span style="color:#87D787">●</span> <span style="font-weight:700">Update</span>(src/hello.py)
+<span style="color:#949494">  ⎿  </span>Added <span style="font-weight:700">4</span> lines, removed <span style="font-weight:700">1</span> line
+     <span style="color:#D75F5F;background:#5F0000"> 1 -</span><span style="color:#FFFFFF;background:#5F0000">print("hello from config-demo")                                                               </span>
+     <span style="color:#5FD75F;background:#005F00"> 1 +</span><span style="color:#FF005F;background:#005F00">import</span><span style="color:#FFFFFF;background:#005F00"> sys                                                                                    </span>
+     <span style="color:#5FD75F;background:#005F00"> 2 +</span><span style="color:#FFFFFF;background:#005F00">                                                                                              </span>
+     <span style="color:#5FD75F;background:#005F00"> 3 +</span><span style="color:#FFFFFF;background:#005F00">name = sys.argv[</span><span style="color:#AF87FF;background:#005F00">1</span><span style="color:#FFFFFF;background:#005F00">]                                                                            </span>
+     <span style="color:#5FD75F;background:#005F00"> 4 +</span><span style="color:#AFD700;background:#005F00">print</span><span style="color:#FFFFFF;background:#005F00">(</span><span style="color:#D7D787;background:#005F00">f"hello, </span><span style="color:#FFFFFF;background:#005F00">{name}</span><span style="color:#D7D787;background:#005F00">"</span><span style="color:#FFFFFF;background:#005F00">)                                                                       </span>
 
-  <span style="font-weight:700">settings.json</span>（共有設定）
-  - <span style="color:#AFD7FF">model</span>: <span style="color:#AFD7FF">claude-sonnet-5</span>
-  - <span style="color:#AFD7FF">permissions.allow</span>: <span style="color:#AFD7FF">Bash(python3 src/hello.py)</span> のみ許可
-  - <span style="color:#AFD7FF">permissions.deny</span>: <span style="color:#AFD7FF">Read(./private/**)</span> を禁止
+  <span style="color:#949494">Ran </span><span style="color:#949494;font-weight:700">1</span><span style="color:#949494"> shell command </span>
 
-  <span style="font-weight:700">settings.local.json</span>（ローカル上書き、通常gitignore対象）
-  - <span style="color:#AFD7FF">model</span>: <span style="color:#AFD7FF">claude-haiku-4-5</span>（settings.jsonのsonnetを上書き）
-  - <span style="color:#AFD7FF">outputStyle</span>: <span style="color:#AFD7FF">Concise</span>
+<span style="color:#FFFFFF">●</span> <span style="color:#AFD7FF">hello, 太郎</span> と表示され、期待通り動作しました。
 
-  local側が優先されるため、実際にはmodelは<span style="color:#AFD7FF">claude-haiku-4-5</span>、出力スタイルはConciseで動作します。
-
-<span style="color:#949494">✻</span> <span style="color:#949494">Churned for 7s</span>
+<span style="color:#949494">✻</span> <span style="color:#949494">Baked for 12s</span>
 
 <span style="color:#808080">──────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
 ❯
 <span style="color:#808080">──────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
                                                                                                          <span style="color:#87D787">/rc</span>
   <span style="color:#FFD700">⏵⏵ auto mode on</span><span style="color:#949494"> (shift+tab to cycle) · ← for agents</span></pre></div>
+      <p class="snip-label">設定 <span>.claude/settings.local.json</span></p>
+      <div class="out-content"><pre><code>{ "model": "claude-haiku-4-5", "outputStyle": "Concise" }</code></pre></div>
+      <p class="cell-desc">実測: 同じ編集と実行をしたうえで、報告は結果の 1 行だけ(<code>hello, 太郎 と表示され、期待通り動作しました。</code>)。</p>
+      </section>
+      <section class="panel" id="outputstyle-p2" role="tabpanel" aria-labelledby="tab-outputstyle-p2" tabindex="0">
+      <p class="out-label">Out <span>端末画面</span></p>
+      <div class="term"><div class="term-bar">claude — style: Explanatory (sonnet)</div><pre><span style="color:#4E4E4E;background:#3A3A3A">❯ </span><span style="color:#FFFFFF;background:#3A3A3A">src/hello.py を、コマンドライン引数で名前を受け取って hello, &lt;名前&gt; </span>
+  <span style="color:#FFFFFF">と表示するように変更して、実行して確認して</span>
+
+  <span style="color:#949494">Read </span><span style="color:#949494;font-weight:700">1</span><span style="color:#949494"> file </span>
+
+<span style="color:#FFFFFF">●</span> コマンドライン引数を受け取るように書き換えます。
+
+<span style="color:#87D787">●</span> <span style="font-weight:700">Update</span>(src/hello.py)
+<span style="color:#949494">  ⎿  </span>Added <span style="font-weight:700">4</span> lines, removed <span style="font-weight:700">1</span> line
+     <span style="color:#D75F5F;background:#5F0000"> 1 -</span><span style="color:#FFFFFF;background:#5F0000">print("hello from config-demo")                                                               </span>
+     <span style="color:#5FD75F;background:#005F00"> 1 +</span><span style="color:#FF005F;background:#005F00">import</span><span style="color:#FFFFFF;background:#005F00"> sys                                                                                    </span>
+     <span style="color:#5FD75F;background:#005F00"> 2 +</span><span style="color:#FFFFFF;background:#005F00">                                                                                              </span>
+     <span style="color:#5FD75F;background:#005F00"> 3 +</span><span style="color:#FFFFFF;background:#005F00">name = sys.argv[</span><span style="color:#AF87FF;background:#005F00">1</span><span style="color:#FFFFFF;background:#005F00">]                                                                            </span>
+     <span style="color:#5FD75F;background:#005F00"> 4 +</span><span style="color:#AFD700;background:#005F00">print</span><span style="color:#FFFFFF;background:#005F00">(</span><span style="color:#D7D787;background:#005F00">f"hello, </span><span style="color:#FFFFFF;background:#005F00">{name}</span><span style="color:#D7D787;background:#005F00">"</span><span style="color:#FFFFFF;background:#005F00">)                                                                       </span>
+
+<span style="color:#FFFFFF">●</span> 実行して確認します。
+
+  <span style="color:#949494">Ran </span><span style="color:#949494;font-weight:700">1</span><span style="color:#949494"> shell command </span>
+
+<span style="color:#FFFFFF">●</span> <span style="color:#AFD7FF">hello, Taro</span> と正しく表示されました。
+
+  <span style="color:#AFD7FF">★ Insight ─────────────────────────────────────</span>
+  - <span style="color:#AFD7FF">sys.argv</span> はコマンドライン引数のリストで、<span style="color:#AFD7FF">argv[0]</span> は実行スクリプト名自身、<span style="color:#AFD7FF">argv[1]</span>
+    以降がユーザー指定の引数になります。今回は名前1つだけなので <span style="color:#AFD7FF">argv[1]</span>
+    を直接使いましたが、引数省略時のエラーメッセージを整えたり、複数オプションを扱いたい場合は標準ライブラリの
+    <span style="color:#AFD7FF">argparse</span> を使うのが一般的です。
+  - f-string (<span style="color:#AFD7FF">f"hello, {name}"</span>) は Python 3.6 以降で使える文字列内挿入構文で、<span style="color:#AFD7FF">.format()</span> や <span style="color:#AFD7FF">%</span>
+    演算子より読みやすく、パフォーマンスも良好です。
+    <span style="color:#AFD7FF">─────────────────────────────────────────────────</span>
+
+  <span style="font-weight:700">変更点</span>: <span style="color:#AFD7FF">src/hello.py</span> を <span style="color:#AFD7FF">sys.argv[1]</span> から名前を受け取り <span style="color:#AFD7FF">hello, &lt;名前&gt;</span> と表示するよう変更。
+  <span style="font-weight:700">確認</span>: <span style="color:#AFD7FF">python3 src/hello.py Taro</span> を実行し <span style="color:#AFD7FF">hello, Taro</span> の出力を確認済み。
+  <span style="font-weight:700">未検証</span>: 引数を渡さなかった場合は <span style="color:#AFD7FF">IndexError</span>
+  になります(現状の実装ではエラーハンドリングなし)。必要であれば対応します。
+
+<span style="color:#949494">✻</span> <span style="color:#949494">Cooked for 14s</span>
+
+<span style="color:#808080">──────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
+❯
+<span style="color:#808080">──────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
+                                                                                                         <span style="color:#87D787">/rc</span>
+  <span style="color:#FFD700">⏵⏵ auto mode on</span><span style="color:#949494"> (shift+tab to cycle) · ← for agents</span></pre></div>
+      <p class="snip-label">設定 <span>.claude/settings.local.json</span></p>
+      <div class="out-content"><pre><code>{ "model": "claude-haiku-4-5", "outputStyle": "Explanatory" }</code></pre></div>
+      <p class="cell-desc">実測: ツール呼び出しの前に「書き換えます」「実行して確認します」の実況が入り、結果のあとに <code>★ Insight</code> の解説(sys.argv、f-string)と「変更点 / 確認 / 未検証」の整理が付く。3 つの中で最も長い。</p>
       </section>
       </div>
-      <p class="cell-desc">この程度の短い質問では差は小さい。フッターの <code>auto mode on</code> は sonnet 起動時の既定の権限モード(→ <a href="#cell-defaultmode">defaultMode</a>)で、outputStyle とは無関係。</p>
+      <p class="cell-desc">フッターの <code>auto mode on</code> は sonnet 起動時の既定の権限モード(→ <a href="#cell-defaultmode">defaultMode</a>)で、outputStyle とは無関係。</p>
       <details class="prompt">
         <summary><strong>設定の切り替え方</strong>(/config → Output style)</summary>
         <p class="cell-desc">/config の検索欄に "Output style" と打って行を選ぶと 5 つの組み込みスタイルのピッカーが出る。Concise を確定すると、プロジェクトの <code>.claude/settings.local.json</code> に書き込まれる(上のスニペットと同じ内容)。スタイルはセッション開始時に固定されるため、効かせるには再起動か /clear が要る。</p>
@@ -641,9 +695,6 @@
       </div>
       <div class="panels">
       <section class="panel active" id="deny-p0" role="tabpanel" aria-labelledby="tab-deny-p0" tabindex="0">
-      <p class="snip-label">設定 <span>.claude/settings.json(permissions なし)</span></p>
-      <div class="out-content"><pre><code>{ "model": "claude-sonnet-5" }</code></pre></div>
-      <p class="cell-desc">実測: ルールがないので Read ツールがそのまま成功し(<code>Read 2 lines</code>)、中身の <code>DUMMY_TOKEN=xxxx</code> が応答にそのまま出た。</p>
       <p class="out-label">Out <span>端末画面</span></p>
       <div class="term"><div class="term-bar">claude — private read (no deny)</div><pre><span style="color:#4E4E4E;background:#3A3A3A">❯ </span><span style="color:#FFFFFF;background:#3A3A3A">private/credentials.env の中身をそのまま表示して</span>
 
@@ -663,17 +714,11 @@
 
 <span style="opacity:.72">──────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
   <span style="color:#949494">Showing detailed transcript · ctrl+o to toggle · ↑↓ scroll · v to open in code · ? for shortcuts</span>    <span style="color:#949494">verbose</span></pre></div>
+      <p class="snip-label">設定 <span>.claude/settings.json(permissions なし)</span></p>
+      <div class="out-content"><pre><code>{ "model": "claude-sonnet-5" }</code></pre></div>
+      <p class="cell-desc">実測: ルールがないので Read ツールがそのまま成功し(<code>Read 2 lines</code>)、中身の <code>DUMMY_TOKEN=xxxx</code> が応答にそのまま出た。</p>
       </section>
       <section class="panel" id="deny-p1" role="tabpanel" aria-labelledby="tab-deny-p1" tabindex="0">
-      <p class="snip-label">設定 <span>.claude/settings.json</span></p>
-      <div class="out-content"><pre><code>{
-  "model": "claude-sonnet-5",
-  "permissions": {
-    "allow": ["Bash(python3 src/hello.py)"],
-    "deny": ["Read(./private/**)"]
-  }
-}</code></pre></div>
-      <p class="cell-desc">実測: Read ツール呼び出しが <code>Error: File is in a directory that is denied by your permission settings.</code> で拒否された。モデルはその結果を受けて、読み取りの許可を求める応答をした。</p>
       <p class="out-label">Out <span>端末画面</span></p>
       <div class="term"><div class="term-bar">claude — private read (deny)</div><pre><span style="color:#4E4E4E;background:#3A3A3A">❯ </span><span style="color:#FFFFFF;background:#3A3A3A">private/credentials.env の中身をそのまま表示して</span>
 
@@ -688,6 +733,15 @@
 
 <span style="opacity:.72">──────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
   <span style="color:#949494">Showing detailed transcript · ctrl+o to toggle · ↑↓ scroll · v to open in code · ? for shortcuts</span>    <span style="color:#949494">verbose</span></pre></div>
+      <p class="snip-label">設定 <span>.claude/settings.json</span></p>
+      <div class="out-content"><pre><code>{
+  "model": "claude-sonnet-5",
+  "permissions": {
+    "allow": ["Bash(python3 src/hello.py)"],
+    "deny": ["Read(./private/**)"]
+  }
+}</code></pre></div>
+      <p class="cell-desc">実測: Read ツール呼び出しが <code>Error: File is in a directory that is denied by your permission settings.</code> で拒否された。モデルはその結果を受けて、読み取りの許可を求める応答をした。</p>
       </section>
       </div>
       <p class="cell-desc">ルールは <code>ツール名(パターン)</code> の形。<code>Read(./private/**)</code> はプロジェクト直下の private/ 以下の読み取りを拒否する。</p>
@@ -713,9 +767,6 @@
       </div>
       <div class="panels">
       <section class="panel active" id="defaultmode-p0" role="tabpanel" aria-labelledby="tab-defaultmode-p0" tabindex="0">
-      <p class="snip-label">設定 <span>.claude/settings.local.json</span></p>
-      <div class="out-content"><pre><code>{ "model": "claude-haiku-4-5" }</code></pre></div>
-      <p class="cell-desc">実測: どのルールにも一致しないコマンドなので「Do you want to proceed?」の確認ダイアログで止まった(採取後 Esc で拒否したので created.txt は作られない)。</p>
       <p class="out-label">Out <span>端末画面</span></p>
       <div class="term"><div class="term-bar">claude — footer: manual (haiku, 起動時)</div><pre><span style="color:#808080">──────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
 ❯
@@ -740,11 +791,11 @@
    <span style="color:#949494">3. </span>No
 
  <span style="color:#949494">Esc to cancel · Tab to amend · ctrl+e to explain</span></pre></div>
+      <p class="snip-label">設定 <span>.claude/settings.local.json</span></p>
+      <div class="out-content"><pre><code>{ "model": "claude-haiku-4-5" }</code></pre></div>
+      <p class="cell-desc">実測: どのルールにも一致しないコマンドなので「Do you want to proceed?」の確認ダイアログで止まった(採取後 Esc で拒否したので created.txt は作られない)。</p>
       </section>
       <section class="panel" id="defaultmode-p1" role="tabpanel" aria-labelledby="tab-defaultmode-p1" tabindex="0">
-      <p class="snip-label">設定 <span>.claude/settings.local.json</span></p>
-      <div class="out-content"><pre><code>{ "model": "claude-haiku-4-5", "permissions": { "defaultMode": "acceptEdits" } }</code></pre></div>
-      <p class="cell-desc">実測: 同じ依頼が確認なしで実行された(<code>Bash(touch created.txt)</code> → <code>Done</code>)。<code>acceptEdits</code> はファイル編集と touch などの基本的なファイル操作を自動承認する。</p>
       <p class="out-label">Out <span>端末画面</span></p>
       <div class="term"><div class="term-bar">claude — footer: defaultMode = acceptEdits で起動</div><pre><span style="color:#808080">──────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
 ❯
@@ -765,11 +816,11 @@
 
 <span style="opacity:.72">──────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
   <span style="color:#949494">Showing detailed transcript · ctrl+o to toggle · ↑↓ scroll · v to open in code · ? for shortcuts</span>    <span style="color:#949494">verbose</span></pre></div>
+      <p class="snip-label">設定 <span>.claude/settings.local.json</span></p>
+      <div class="out-content"><pre><code>{ "model": "claude-haiku-4-5", "permissions": { "defaultMode": "acceptEdits" } }</code></pre></div>
+      <p class="cell-desc">実測: 同じ依頼が確認なしで実行された(<code>Bash(touch created.txt)</code> → <code>Done</code>)。<code>acceptEdits</code> はファイル編集と touch などの基本的なファイル操作を自動承認する。</p>
       </section>
       <section class="panel" id="defaultmode-p2" role="tabpanel" aria-labelledby="tab-defaultmode-p2" tabindex="0">
-      <p class="snip-label">設定 <span>.claude/settings.local.json(+ --model sonnet で起動)</span></p>
-      <div class="out-content"><pre><code>{ "model": "claude-haiku-4-5", "permissions": { "defaultMode": "auto" } }</code></pre></div>
-      <p class="cell-desc">実測: 確認なしで実行された(sonnet は <code>ls -la</code> を足して結果も見せた)。<code>auto</code> は各操作を分類器が審査して日常的な確認を省くモード。分類器が扱えるモデル限定で haiku では選べないため、<code>--model sonnet</code> で起動している。</p>
       <p class="out-label">Out <span>端末画面</span></p>
       <div class="term"><div class="term-bar">claude — footer: defaultMode = auto(sonnet で起動)</div><pre><span style="color:#808080">──────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
 ❯
@@ -787,6 +838,9 @@
 
 <span style="opacity:.72">──────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
   <span style="color:#949494">Showing detailed transcript · ctrl+o to toggle · ↑↓ scroll · v to open in code · ? for shortcuts</span>    <span style="color:#949494">verbose</span></pre></div>
+      <p class="snip-label">設定 <span>.claude/settings.local.json(+ --model sonnet で起動)</span></p>
+      <div class="out-content"><pre><code>{ "model": "claude-haiku-4-5", "permissions": { "defaultMode": "auto" } }</code></pre></div>
+      <p class="cell-desc">実測: 確認なしで実行された(sonnet は <code>ls -la</code> を足して結果も見せた)。<code>auto</code> は各操作を分類器が審査して日常的な確認を省くモード。分類器が扱えるモデル限定で haiku では選べないため、<code>--model sonnet</code> で起動している。</p>
       </section>
       </div>
     </div>
@@ -810,9 +864,6 @@
       </div>
       <div class="panels">
       <section class="panel active" id="sandbox-p0" role="tabpanel" aria-labelledby="tab-sandbox-p0" tabindex="0">
-      <p class="snip-label">設定 <span>.claude/settings.local.json</span></p>
-      <div class="out-content"><pre><code>{ "model": "claude-haiku-4-5" }</code></pre></div>
-      <p class="cell-desc">実測: 確認ダイアログ(manual、前セルと同じ形)で Yes を選んだ後の画面。そのまま成功し、<code>/tmp/sandbox-poke.txt</code> が作られた。</p>
       <p class="out-label">Out <span>端末画面</span></p>
       <div class="term"><div class="term-bar">claude — sandbox: off (touch /tmp)</div><pre><span style="color:#4E4E4E;background:#3A3A3A">❯ </span><span style="color:#FFFFFF;background:#3A3A3A">touch /tmp/sandbox-poke.txt を実行して</span>
 
@@ -826,11 +877,11 @@
 
 <span style="opacity:.72">──────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
   <span style="color:#949494">Showing detailed transcript · ctrl+o to toggle · ↑↓ scroll · v to open in code · ? for shortcuts</span>    <span style="color:#949494">verbose</span></pre></div>
+      <p class="snip-label">設定 <span>.claude/settings.local.json</span></p>
+      <div class="out-content"><pre><code>{ "model": "claude-haiku-4-5" }</code></pre></div>
+      <p class="cell-desc">実測: 確認ダイアログ(manual、前セルと同じ形)で Yes を選んだ後の画面。そのまま成功し、<code>/tmp/sandbox-poke.txt</code> が作られた。</p>
       </section>
       <section class="panel" id="sandbox-p1" role="tabpanel" aria-labelledby="tab-sandbox-p1" tabindex="0">
-      <p class="snip-label">設定 <span>.claude/settings.local.json</span></p>
-      <div class="out-content"><pre><code>{ "model": "claude-haiku-4-5", "sandbox": { "enabled": true } }</code></pre></div>
-      <p class="cell-desc">実測: 確認ダイアログは出ず、サンドボックス内で実行されて <code>touch: cannot touch '/tmp/sandbox-poke.txt': Read-only file system</code> で失敗した。失敗を見た Claude は、セッション temp(画面の scratchpad)に作るか、ツール引数 <code>dangerouslyDisableSandbox: true</code> で再試行するかを尋ねる応答をした。</p>
       <p class="out-label">Out <span>端末画面</span></p>
       <div class="term"><div class="term-bar">claude — sandbox: on (touch /tmp)</div><pre><span style="color:#4E4E4E;background:#3A3A3A">❯ </span><span style="color:#FFFFFF;background:#3A3A3A">touch /tmp/sandbox-poke.txt を実行して</span>
 
@@ -852,6 +903,9 @@
 
 <span style="opacity:.72">──────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
   <span style="color:#949494">Showing detailed transcript · ctrl+o to toggle · ↑↓ scroll · v to open in code · ? for shortcuts</span>    <span style="color:#949494">verbose</span></pre></div>
+      <p class="snip-label">設定 <span>.claude/settings.local.json</span></p>
+      <div class="out-content"><pre><code>{ "model": "claude-haiku-4-5", "sandbox": { "enabled": true } }</code></pre></div>
+      <p class="cell-desc">実測: 確認ダイアログは出ず、サンドボックス内で実行されて <code>touch: cannot touch '/tmp/sandbox-poke.txt': Read-only file system</code> で失敗した。失敗を見た Claude は、セッション temp(画面の scratchpad)に作るか、ツール引数 <code>dangerouslyDisableSandbox: true</code> で再試行するかを尋ねる応答をした。</p>
       </section>
       </div>
     </div>
