@@ -560,12 +560,11 @@
     <p class="eyebrow">claude code / settings</p>
     <h1>Config Notebook</h1>
     <p>同じ入力(依頼文)を固定したまま、設定だけを切り替えると Claude Code の出力・挙動がどう変わるかを実測で記録する。各セルのトグルで設定の有無・値を選ぶと、その設定で採取した画面(Out)に切り替わる。</p>
-    <p>対象は、切り替えたときの差が目に見えて分かる 4 つのキーに絞った: <code>outputStyle</code>(応答文が変わる)・<code>permissions.deny</code>(実行が拒否される)・<code>permissions.defaultMode</code>(確認の出方が変わる)・<code>sandbox</code>(OS レベルで実行が制限される)。「(未採取)」の枠(sandbox あり)は採取環境が整い次第差し替える(<a href="#prov">取得方法</a>)。</p>
+    <p>対象は、切り替えたときの差が目に見えて分かる 4 つのキーに絞った: <code>outputStyle</code>(応答文が変わる)・<code>permissions.deny</code>(実行が拒否される)・<code>permissions.defaultMode</code>(確認の出方が変わる)・<code>sandbox</code>(OS レベルで実行が制限される)。採取手順は<a href="#prov">取得方法</a>。</p>
     <div class="meta-chips">
       <span>比較セル 4(切り替え 9 パターン)</span>
       <span>採取 2026-08-24 · Claude Code 2.1.241(WSL2)</span>
-      <span>未採取 1 画面(sandbox あり)</span>
-      <span>姉妹ページ: <a href="index.html">Slash Command Notebook</a></span>
+            <span>姉妹ページ: <a href="index.html">Slash Command Notebook</a></span>
     </div>
   </header>
 
@@ -851,7 +850,7 @@
   <article class="cell" id="cell-sandbox">
     <div class="cell-head">
       <h3 class="typed"><code>sandbox</code></h3>
-      <span class="cell-meta">画面実測 · 2026-08-24(sandbox ありは未採取)</span>
+      <span class="cell-meta">model: haiku(local 設定)· 画面実測 · 2026-08-24(WSL2 + bubblewrap)</span>
     </div>
     <div class="cell-body">
       <p class="cell-lede">作業ディレクトリ外への書き込みが、Bash サンドボックスの有無でどう変わるか。サンドボックス有効時は多くのコマンドが確認なしで走る代わりに、書き込みは作業ディレクトリとセッション temp のみに OS レベルで制限される。</p>
@@ -880,8 +879,27 @@
       <section class="panel" id="sandbox-p1" role="tabpanel">
       <p class="snip-label">.claude/settings.local.json</p>
       <div class="out-content"><pre><code>{ "model": "claude-haiku-4-5", "sandbox": { "enabled": true } }</code></pre></div>
-      <div class="term"><div class="term-bar">claude — sandbox: on (touch /tmp)</div><pre>(未採取)</pre></div>
-      <p class="pending">未採取 — 既定(autoAllowBashIfSandboxed: true)では確認なしでサンドボックス内実行され、/tmp への書き込みが OS にブロックされて違反詳細付きで失敗する(はず)。失敗を見た Claude が dangerouslyDisableSandbox での再試行を提案することがある。 bubblewrap と socat を入れた Linux / WSL2(または macOS)で <code>ONLY=sandbox-on ./capture-config.sh</code> → <code>python3 ansi2html.py config</code> を実行するとこの枠に流し込まれる。</p>
+      <div class="term"><div class="term-bar">claude — sandbox: on (touch /tmp)</div><pre><span style="color:#4E4E4E;background:#3A3A3A">❯ </span><span style="color:#FFFFFF;background:#3A3A3A">touch /tmp/sandbox-poke.txt を実行して</span>
+
+<span style="color:#FF87AF">●</span> <span style="font-weight:700">Bash</span>(touch /tmp/sandbox-poke.txt)
+<span style="color:#949494">  ⎿  </span><span style="color:#FF87AF">Error: Exit code 1</span>
+     <span style="color:#FF87AF">touch: cannot touch '/tmp/sandbox-poke.txt': Read-only file system</span>
+
+                                                                    <span style="color:#949494">11:02 PM</span> <span style="color:#949494">claude-haiku-4-5-20251001</span>
+<span style="color:#FFFFFF">●</span> サンドボックス制限により、<span style="color:#AFD7FF">/tmp</span> に直接ファイルを作成することができません（Read-only file system）。
+
+  代わりに、スクラッチパッドディレクトリ <span style="color:#AFD7FF">/tmp/claude-1000/-mnt-d-work-wsl-claude-slash-command-notebook-claude</span>
+  <span style="color:#AFD7FF">-slash-command-notebook-work-config-demo/****************-****/scratchpad</span>
+  に作成することは可能です。
+
+  または、サンドボックス制限を無視する必要がある場合は、Bash実行時に <span style="color:#AFD7FF">dangerouslyDisableSandbox: true</span>
+  を設定することで <span style="color:#AFD7FF">/tmp</span> への直接アクセスが可能になります。どちらをご希望ですか？
+
+<span style="color:#949494">✻</span> <span style="color:#949494">Worked for 12s</span>
+
+<span style="opacity:.72">──────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
+  <span style="color:#949494">Showing detailed transcript · ctrl+o to toggle · ↑↓ scroll · v to open in code · ? for shortcuts</span>    <span style="color:#949494">verbose</span></pre></div>
+      <p class="cell-desc">実測: 既定(autoAllowBashIfSandboxed: true)なので確認ダイアログは出ず、サンドボックス内で実行されて <code>touch: cannot touch '/tmp/sandbox-poke.txt': Read-only file system</code> で失敗した(WSL2 の bubblewrap では /tmp が読み取り専用でマウントされる)。失敗を見た Claude は、書き込み可能なセッション temp(スクラッチパッド)に作るか、<code>dangerouslyDisableSandbox: true</code> で再試行するかを尋ねてきた。</p>
       <p class="cell-desc">前提: macOS は組み込みの Seatbelt で追加インストール不要。Linux / WSL2 は bubblewrap と socat が必要(/sandbox パネルの Dependencies タブで確認できる)。</p>
       </section>
     </div>
@@ -895,7 +913,7 @@
       <li>採取は <code>./capture-config.sh</code>: <code>work/config-demo</code> に Setup のフィクスチャを構築し、セルごとに <code>.claude/settings.local.json</code>(deny 比較のみ <code>settings.json</code>)を書き換えて別セッションを起動し、tmux の仮想端末(110×42、outputStyle 比較は 110×60)から採取する。<code>~/.claude</code> のユーザー設定には触れない(マシン固有の statusLine 表示だけは <code>--settings</code> で空に上書きして起動)。一部だけ採り直すときは <code>ONLY=</code> / <code>SKIP=</code> でセクション名を指定する。</li>
       <li>採取後、<code>python3 ansi2html.py config</code> で本ページの枠を実測キャプチャに差し替える(term-bar のラベルで枠を特定する。「(未採取)」の枠は初回に全行が流し込まれ、以降は既存の先頭行・末尾行を境界に置換)。メールアドレス・セッション ID・ホームディレクトリのパス・採取マシンのユーザー名は同スクリプトで伏せ字化。</li>
       <li>sandbox セルの採取前提: macOS は追加インストール不要(Seatbelt)。Linux / WSL2 は bubblewrap と socat が必要。</li>
-      <li>「実測:」は採取した画面から読み取った内容。「(はず)」と書いた挙動(sandbox ありのみ)は公式ドキュメント(2026-08-24 参照)に基づく想定で、採取後に実測へ置き換える。</li>
+      <li>「実測:」は採取した画面から読み取った内容(応答文は非決定的で、再採取すると文面は変わる)。</li>
     </ul>
   </section>
 </main>
