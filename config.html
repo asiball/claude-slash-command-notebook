@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Config Notebook</title>
-<meta name="description" content="同じ依頼文のまま Claude Code の設定(outputStyle・permissions.deny・permissions.defaultMode・sandbox)を切り替えると出力がどう変わるかを、トグルで見比べる実測ノート(2026-08-24 実測、Claude Code 2.1.241)。">
+<meta name="description" content="同じ依頼文のまま Claude Code の設定(outputStyle・permissions.deny・permissions.defaultMode・sandbox)を切り替えると出力がどう変わるかを、トグルで見比べる実測ノート(Claude Code CLI v2.1.241、2026-08-24 採取)。">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='80' font-size='85' fill='%232F6F6C' font-family='monospace'%3E%E2%9A%99%3C/text%3E%3C/svg%3E">
 <link rel="preload" href="fonts/JetBrainsMono-Regular.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="fonts/JetBrainsMono-Bold.woff2" as="font" type="font/woff2" crossorigin>
@@ -475,8 +475,8 @@
   <header class="page-head" id="top">
     <p class="eyebrow">claude code / settings</p>
     <h1>Config Notebook</h1>
-    <p>同じ入力(依頼文)を固定したまま、設定だけを切り替えると Claude Code の出力・挙動がどう変わるかを実測で記録する。各セルの <strong>Config</strong> の選択肢を押すと、その設定で採取した画面(Out)に切り替わる。</p>
-    <p>対象は、切り替えたときの差が目に見えて分かる 4 つのキーに絞った: <code>outputStyle</code>(応答文が変わる)・<code>permissions.deny</code>(実行が拒否される)・<code>permissions.defaultMode</code>(確認の出方が変わる)・<code>sandbox</code>(OS レベルで実行が制限される)。採取手順は<a href="#prov">取得方法</a>。</p>
+    <p>入力(依頼文)を固定したまま、設定だけを切り替えると Claude Code の出力・挙動がどう変わるかを実測で記録する。各セルの <strong>Config</strong> でボタンを選ぶと、その設定で採取した画面(Out)に切り替わる。</p>
+    <p>対象は、切り替えたときの差が一目で分かる 4 つのキーに絞った: <code>outputStyle</code>(応答文が変わる)・<code>permissions.deny</code>(実行が拒否される)・<code>permissions.defaultMode</code>(確認の出方が変わる)・<code>sandbox</code>(OS レベルで実行が制限される)。採取手順は<a href="#prov">取得方法</a>を参照。</p>
     <div class="meta-chips">
       <span>比較セル 4(切り替え 10 パターン)</span>
       <span>Claude Code CLI v2.1.241</span>
@@ -499,16 +499,16 @@
   </header>
 
   <h2 id="demos"><span class="sec-no">§1</span>設定 × 出力の実測比較</h2>
-  <p class="sec-lede">各パネルには、その採取で使った settings ファイルの中身(切り替えた部分)を添えてある。画面は tmux 仮想端末の ANSI キャプチャ(条件は<a href="#prov">取得方法</a>)で、モデル応答は非決定的 — ここに載せた出力は「ある 1 回の実行例」である。</p>
+  <p class="sec-lede">各パネルには、その採取で使った設定ファイルの中身(切り替えた部分)を添えてある。画面は tmux 仮想端末の ANSI キャプチャ(条件は<a href="#prov">取得方法</a>)。モデル応答は非決定的であり、ここに載せた出力は「ある 1 回の実行例」である。</p>
   <div class="legend">
     <p class="legend-title">端末画面の読み方</p>
     <dl>
       <dt><span class="g">●</span> Bash(…) / Read(…)</dt><dd>ツール呼び出し(緑=成功、ピンク=失敗)。続く <code>⎿</code> がその結果。白の ● はモデルの応答文</dd>
-      <dt><span class="d">10:32 PM claude-haiku-4-5-…</span></dt><dd>右端の薄い行はターンの区切り(時刻と応答したモデル)。ctrl+o の詳細表示のときだけ出る</dd>
+      <dt><span class="d">10:32 PM claude-haiku-4-5-…</span></dt><dd>右端の薄い行はターンの区切り(時刻と応答したモデル)。詳細表示(ctrl+o)のときだけ出る</dd>
       <dt><span class="d">✻ Cogitated for 9s</span></dt><dd>応答にかかった時間(動詞はランダム)</dd>
       <dt><span class="d">⏸ manual mode on</span> / <span class="d">⏵⏵ auto mode on</span></dt><dd>フッター左端は現在の権限モード(→ <a href="#cell-defaultmode">defaultMode</a>)</dd>
       <dt><span class="g">/rc</span></dt><dd>Remote Control(ブラウザからこのセッションに接続)のリンク。設定とは無関係</dd>
-      <dt><span class="d">Showing detailed transcript … verbose</span></dt><dd>ctrl+o の詳細表示で採取した画面。通常表示ではツールの結果や拒否エラーが畳まれる</dd>
+      <dt><span class="d">Showing detailed transcript … verbose</span></dt><dd>詳細表示(ctrl+o)で採取した画面。通常表示ではツールの結果や拒否エラーが畳まれる</dd>
     </dl>
   </div>
 
@@ -526,11 +526,11 @@
 ├── private/credentials.env     # ダミー値 DUMMY_TOKEN=xxxx
 └── .claude/
     ├── settings.json           # { "model": "claude-sonnet-5", "permissions": {...} }
-    └── settings.local.json     # { "model": "claude-haiku-4-5" } を基点にセルごとに書き換え</code></pre></div>
+    └── settings.local.json     # { "model": "claude-haiku-4-5" } をベースにセルごとに書き換え</code></pre></div>
       <ul class="notes">
-        <li><code>.claude/settings.json</code> — プロジェクト共有(git 管理)。チームで揃えたい deny などのルール向き → <strong>deny の比較はこちら</strong>を切り替える。</li>
-        <li><code>.claude/settings.local.json</code> — 個人用(gitignore)。<strong>outputStyle / defaultMode / sandbox の比較はこちら</strong>を切り替える。</li>
-        <li>優先順位: CLI 引数(<code>--model</code> など)&gt; settings.local.json &gt; settings.json &gt; <code>~/.claude/settings.json</code>。local に haiku を置いたまま <code>--model sonnet</code> で起動すれば sonnet になる(<a href="#defaultmode-p2">auto パネル</a>の区切り行に <code>claude-sonnet-5</code> と出ているのがその結果)。</li>
+        <li><code>.claude/settings.json</code> — プロジェクト共有(git 管理)。チームで揃えたい deny などのルール向き。<strong>deny の比較ではこちら</strong>を切り替える。</li>
+        <li><code>.claude/settings.local.json</code> — 個人用(git 管理外)。<strong>outputStyle / defaultMode / sandbox の比較ではこちら</strong>を切り替える。</li>
+        <li>優先順位: CLI 引数(<code>--model</code> など) &gt; settings.local.json &gt; settings.json &gt; <code>~/.claude/settings.json</code>。local に haiku を置いたまま <code>--model sonnet</code> で起動すれば sonnet になる(<a href="#defaultmode-p2">auto パネル</a>の区切り行に <code>claude-sonnet-5</code> と出ているのがその結果)。</li>
       </ul>
     </div>
   </article>
@@ -539,7 +539,7 @@
   <article class="cell" id="cell-outputstyle">
     <div class="cell-head">
       <h3 class="typed"><code>outputStyle</code></h3>
-      <span class="cell-meta">model: sonnet(--model)· 画面実測</span>
+      <span class="cell-meta">model: sonnet(--model) · 画面実測</span>
     </div>
     <div class="cell-body">
       <p class="cell-lede">同じ依頼(小さなコード変更と実行確認)への応答の分量と構成が、出力スタイルの設定でどう変わるか。差が出るのは <code>Ran 1 shell command</code> より下(そこまでの Read → Update の diff は 3 つとも同じ)。</p>
@@ -590,7 +590,7 @@
       <section class="panel" id="outputstyle-p1" role="tabpanel" aria-labelledby="tab-outputstyle-p1" tabindex="0">
       <p class="snip-label">設定 <span>.claude/settings.local.json(+ --model sonnet で起動)</span></p>
       <div class="out-content"><pre><code>{ "model": "claude-haiku-4-5", "outputStyle": "Concise" }</code></pre></div>
-      <p class="cell-desc">実測: 同じ編集と実行をしたうえで、報告は結果の 1 行だけ(<code>hello, 太郎 と表示され、期待通り動作しました。</code>)。</p>
+      <p class="cell-desc">実測: 同じ編集と実行をしたあと、報告は結果の 1 行だけだった(<code>hello, 太郎 と表示され、期待通り動作しました。</code>)。</p>
       <p class="out-label">Out</p>
       <div class="term"><div class="term-bar">claude — style: Concise (sonnet)</div><pre><span style="color:#4E4E4E;background:#3A3A3A">❯ </span><span style="color:#FFFFFF;background:#3A3A3A">src/hello.py を、コマンドライン引数で名前を受け取って hello, &lt;名前&gt; </span>
   <span style="color:#FFFFFF">と表示するように変更して、実行して確認して</span>
@@ -620,7 +620,7 @@
       <section class="panel" id="outputstyle-p2" role="tabpanel" aria-labelledby="tab-outputstyle-p2" tabindex="0">
       <p class="snip-label">設定 <span>.claude/settings.local.json(+ --model sonnet で起動)</span></p>
       <div class="out-content"><pre><code>{ "model": "claude-haiku-4-5", "outputStyle": "Explanatory" }</code></pre></div>
-      <p class="cell-desc">実測: ツール呼び出しの前に「書き換えます」「実行して確認します」の実況が入り、結果のあとに <code>★ Insight</code> の解説(sys.argv、f-string)が付く。3 つの中で最も長い(枠内スクロール)。</p>
+      <p class="cell-desc">実測: ツール呼び出しの前に「書き換えます」「実行して確認します」の実況が入り、結果のあとに <code>★ Insight</code> の解説(sys.argv、f-string)が付いた。3 つの中で最も長い(枠内スクロール)。</p>
       <p class="out-label">Out</p>
       <div class="term-scroll"><div class="term"><div class="term-bar">claude — style: Explanatory (sonnet)</div><pre><span style="color:#4E4E4E;background:#3A3A3A">❯ </span><span style="color:#FFFFFF;background:#3A3A3A">src/hello.py を、コマンドライン引数で名前を受け取って hello, &lt;名前&gt; </span>
   <span style="color:#FFFFFF">と表示するように変更して、実行して確認して</span>
@@ -666,10 +666,10 @@
   <span style="color:#FFD700">⏵⏵ auto mode on</span><span style="color:#949494"> (shift+tab to cycle) · ← for agents</span></pre></div></div>
       </section>
       </div>
-      <p class="cell-desc">Default と Explanatory の報告末尾にある「未検証事項」「変更点 / 確認 / 未検証」の整理は、採取マシンの <code>~/.claude/CLAUDE.md</code>(最終報告でその 3 点をまとめる指示)によるもので、outputStyle の効果ではない。引数名(Taro / 太郎)の違いも非決定性によるもの。フッターの <code>auto mode on</code> は sonnet 起動時の既定の権限モード(→ <a href="#cell-defaultmode">defaultMode</a>)で、outputStyle とは無関係。</p>
+      <p class="cell-desc">Default と Explanatory の報告末尾にある「未検証事項」「変更点 / 確認 / 未検証」の整理は、採取マシンの <code>~/.claude/CLAUDE.md</code>(最終報告でその 3 点をまとめる指示)によるもので、outputStyle の効果ではない。引数の値(Taro / 太郎)の違いも非決定性によるもの。フッターの <code>auto mode on</code> は sonnet 起動時の既定の権限モード(→ <a href="#cell-defaultmode">defaultMode</a>)であり、outputStyle とは無関係。</p>
       <details class="prompt">
         <summary><strong>設定の切り替え方</strong>(/config → Output style)</summary>
-        <p class="cell-desc">/config の検索欄に "Output style" と打って行を選ぶと 5 つの組み込みスタイルのピッカーが出る。Concise を確定すると、プロジェクトの <code>.claude/settings.local.json</code> に書き込まれる(上のスニペットと同じ内容)。スタイルはセッション開始時に固定されるため、効かせるには再起動か /clear が要る。</p>
+        <p class="cell-desc">/config の検索欄に <code>Output style</code> と打ち、該当行を選ぶと組み込みの 5 スタイルを選ぶピッカーが出る。Concise を確定すると、プロジェクトの <code>.claude/settings.local.json</code> に書き込まれる(上のスニペットと同じ内容)。スタイルはセッション開始時に固定されるため、効かせるには起動し直すか /clear が要る。</p>
         <div class="term"><div class="term-bar">claude — /config (output style picker)</div><pre><span style="color:#AFD7FF">▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔</span>
    <span style="color:#AFD7FF;font-weight:700">Preferred output style</span>
 
@@ -699,7 +699,7 @@
   <article class="cell" id="cell-deny">
     <div class="cell-head">
       <h3 class="typed"><code>permissions.deny</code></h3>
-      <span class="cell-meta">model: haiku(local 設定)· 画面実測</span>
+      <span class="cell-meta">model: haiku(local 設定) · 画面実測</span>
     </div>
     <div class="cell-body">
       <p class="cell-lede">同じ読み取り依頼が、deny ルールの有無でどう変わるか。</p>
@@ -715,7 +715,7 @@
       <section class="panel active" id="deny-p0" role="tabpanel" aria-labelledby="tab-deny-p0" tabindex="0">
       <p class="snip-label">設定 <span>.claude/settings.json(permissions なし)</span></p>
       <div class="out-content"><pre><code>{ "model": "claude-sonnet-5" }</code></pre></div>
-      <p class="cell-desc">実測: ルールがないので Read ツールがそのまま成功し(<code>Read 2 lines</code>)、中身の <code>DUMMY_TOKEN=xxxx</code> が応答にそのまま出た。</p>
+      <p class="cell-desc">実測: ルールがないので Read ツールが成功し(<code>Read 2 lines</code>)、中身の <code>DUMMY_TOKEN=xxxx</code> が応答にそのまま出た。</p>
       <p class="out-label">Out</p>
       <div class="term"><div class="term-bar">claude — private read (no deny)</div><pre><span style="color:#4E4E4E;background:#3A3A3A">❯ </span><span style="color:#FFFFFF;background:#3A3A3A">private/credentials.env の中身をそのまま表示して</span>
 
@@ -757,7 +757,7 @@
   <span style="color:#949494">Showing detailed transcript · ctrl+o to toggle · ↑↓ scroll · v to open in code · ? for shortcuts</span>    <span style="color:#949494">verbose</span></pre></div>
       </section>
       </div>
-      <p class="cell-desc">ルールは <code>ツール名(パターン)</code> の形。<code>Read(./private/**)</code> はプロジェクト直下の private/ 以下の読み取りを拒否する。</p>
+      <p class="cell-desc">ルールは <code>ツール名(パターン)</code> の形で書く。<code>Read(./private/**)</code> はプロジェクト直下の private/ 以下の読み取りを拒否する。</p>
     </div>
   </article>
 
@@ -765,10 +765,10 @@
   <article class="cell" id="cell-defaultmode">
     <div class="cell-head">
       <h3 class="typed"><code>permissions.defaultMode</code></h3>
-      <span class="cell-meta">model: haiku(local 設定)· auto のみ sonnet(--model)· 画面実測</span>
+      <span class="cell-meta">model: haiku(local 設定) · auto のみ sonnet(--model) · 画面実測</span>
     </div>
     <div class="cell-body">
-      <p class="cell-lede">同じ Bash 依頼(ファイル作成。読み取り専用コマンドは確認なしで通るため touch を使う)への確認の出方が、権限モードでどう変わるか。フッター左端のバッジが現在のモード(shift+tab でも巡回できる)。</p>
+      <p class="cell-lede">同じ Bash 依頼(ファイル作成)への確認の出方が、権限モードでどう変わるか。読み取り専用コマンドは確認なしで通るため、依頼は touch にしてある。フッター左端のバッジが現在のモード(shift+tab でも順に切り替えられる)。</p>
       <div class="in-block"><span class="in-label">In(共通)</span><code class="in-cmd">❯ touch created.txt を実行して</code></div>
       <div class="switch-row">
         <span class="sw-label">Config</span>
@@ -782,7 +782,7 @@
       <section class="panel active" id="defaultmode-p0" role="tabpanel" aria-labelledby="tab-defaultmode-p0" tabindex="0">
       <p class="snip-label">設定 <span>.claude/settings.local.json</span></p>
       <div class="out-content"><pre><code>{ "model": "claude-haiku-4-5" }</code></pre></div>
-      <p class="cell-desc">実測: どのルールにも一致しないコマンドなので「Do you want to proceed?」の確認ダイアログで止まった(採取後 Esc で拒否したので created.txt は作られない)。manual が既定なのは haiku のとき。sonnet 以上で起動すると設定なしでも auto が既定になる(auto パネルのフッターと同じ)。</p>
+      <p class="cell-desc">実測: どのルールにも一致しないコマンドなので「Do you want to proceed?」の確認ダイアログで止まった(採取後に Esc で拒否したため、created.txt は作られていない)。manual が既定なのは haiku のとき。sonnet 以上で起動すると設定なしでも auto が既定になる(auto パネルのフッターと同じ)。</p>
       <p class="out-label">Out</p>
       <div class="term"><div class="term-bar">claude — footer: manual (haiku, 起動時)</div><pre><span style="color:#808080">──────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
 ❯
@@ -811,7 +811,7 @@
       <section class="panel" id="defaultmode-p1" role="tabpanel" aria-labelledby="tab-defaultmode-p1" tabindex="0">
       <p class="snip-label">設定 <span>.claude/settings.local.json</span></p>
       <div class="out-content"><pre><code>{ "model": "claude-haiku-4-5", "permissions": { "defaultMode": "acceptEdits" } }</code></pre></div>
-      <p class="cell-desc">実測: 同じ依頼が確認なしで実行された(<code>Bash(touch created.txt)</code> → <code>Done</code>)。<code>acceptEdits</code> はファイル編集と touch などの基本的なファイル操作を自動承認する。</p>
+      <p class="cell-desc">実測: 同じ依頼が確認なしで実行された(<code>Bash(touch created.txt)</code> → <code>Done</code>)。<code>acceptEdits</code> は、ファイル編集と、touch などの基本的なファイル操作を自動承認する。</p>
       <p class="out-label">Out</p>
       <div class="term"><div class="term-bar">claude — footer: defaultMode = acceptEdits で起動</div><pre><span style="color:#808080">──────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
 ❯
@@ -836,7 +836,7 @@
       <section class="panel" id="defaultmode-p2" role="tabpanel" aria-labelledby="tab-defaultmode-p2" tabindex="0">
       <p class="snip-label">設定 <span>.claude/settings.local.json(+ --model sonnet で起動)</span></p>
       <div class="out-content"><pre><code>{ "model": "claude-haiku-4-5", "permissions": { "defaultMode": "auto" } }</code></pre></div>
-      <p class="cell-desc">実測: 確認なしで実行された(sonnet は <code>ls -la</code> を足して結果も見せた)。<code>auto</code> は各操作を分類器が審査して日常的な確認を省くモード。分類器が扱えるモデル限定で haiku では選べない(<a href="index.html#cell-codereview-hint-ui">auto mode unavailable for this model</a> と出る)ため、<code>--model sonnet</code> で起動している。</p>
+      <p class="cell-desc">実測: 確認なしで実行された(sonnet は <code>ls -la</code> を足して結果も見せた)。<code>auto</code> は、各操作を分類器が判定して日常的な確認を省くモード。対応モデルが限られ haiku では選べない(<a href="index.html#cell-codereview-hint-ui">auto mode unavailable for this model</a> と出る)ため、<code>--model sonnet</code> で起動している。</p>
       <p class="out-label">Out</p>
       <div class="term"><div class="term-bar">claude — footer: defaultMode = auto(sonnet で起動)</div><pre><span style="color:#808080">──────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
 ❯
@@ -863,10 +863,10 @@
   <article class="cell" id="cell-sandbox">
     <div class="cell-head">
       <h3 class="typed"><code>sandbox</code></h3>
-      <span class="cell-meta">model: haiku(local 設定)· 画面実測</span>
+      <span class="cell-meta">model: haiku(local 設定) · 画面実測</span>
     </div>
     <div class="cell-body">
-      <p class="cell-lede">作業ディレクトリ外への書き込みが、Bash サンドボックスの有無でどう変わるか。有効時は多くのコマンドが確認なしで走る(<code>autoAllowBashIfSandboxed</code> の既定 true)代わりに、書き込みは作業ディレクトリとセッション temp のみに OS レベルで制限される。</p>
+      <p class="cell-lede">作業ディレクトリ外への書き込みが、Bash サンドボックスの有無でどう変わるか。有効にすると多くのコマンドが確認なしで走るようになる(<code>autoAllowBashIfSandboxed</code> の既定が true のため)一方、書き込み先は作業ディレクトリとセッション用の一時ディレクトリ(画面では scratchpad)に OS レベルで制限される。</p>
       <div class="in-block"><span class="in-label">In(共通)</span><code class="in-cmd">❯ touch /tmp/sandbox-poke.txt を実行して</code></div>
       <div class="switch-row">
         <span class="sw-label">Config</span>
@@ -879,7 +879,7 @@
       <section class="panel active" id="sandbox-p0" role="tabpanel" aria-labelledby="tab-sandbox-p0" tabindex="0">
       <p class="snip-label">設定 <span>.claude/settings.local.json</span></p>
       <div class="out-content"><pre><code>{ "model": "claude-haiku-4-5" }</code></pre></div>
-      <p class="cell-desc">実測: 確認ダイアログ(manual、前セルと同じ形)で Yes を選んだ後の画面。そのまま成功し、<code>/tmp/sandbox-poke.txt</code> が作られた。</p>
+      <p class="cell-desc">実測: 確認ダイアログ(manual。<a href="#defaultmode-p0">defaultMode セル</a>と同じ形)で Yes を選んだあとの画面。そのまま成功し、<code>/tmp/sandbox-poke.txt</code> が作られた。</p>
       <p class="out-label">Out</p>
       <div class="term"><div class="term-bar">claude — sandbox: off (touch /tmp)</div><pre><span style="color:#4E4E4E;background:#3A3A3A">❯ </span><span style="color:#FFFFFF;background:#3A3A3A">touch /tmp/sandbox-poke.txt を実行して</span>
 
@@ -897,7 +897,7 @@
       <section class="panel" id="sandbox-p1" role="tabpanel" aria-labelledby="tab-sandbox-p1" tabindex="0">
       <p class="snip-label">設定 <span>.claude/settings.local.json</span></p>
       <div class="out-content"><pre><code>{ "model": "claude-haiku-4-5", "sandbox": { "enabled": true } }</code></pre></div>
-      <p class="cell-desc">実測: 確認ダイアログは出ず、サンドボックス内で実行されて <code>touch: cannot touch '/tmp/sandbox-poke.txt': Read-only file system</code> で失敗した。失敗を見た Claude は、セッション temp(画面の scratchpad)に作るか、ツール引数 <code>dangerouslyDisableSandbox: true</code> で再試行するかを尋ねる応答をした。</p>
+      <p class="cell-desc">実測: 確認ダイアログは出ず、サンドボックス内で実行されて <code>touch: cannot touch '/tmp/sandbox-poke.txt': Read-only file system</code> で失敗した。モデルはその失敗を受けて、セッション用の一時ディレクトリに作るか、ツール引数 <code>dangerouslyDisableSandbox: true</code> で再試行するかを尋ねる応答をした。</p>
       <p class="out-label">Out</p>
       <div class="term"><div class="term-bar">claude — sandbox: on (touch /tmp)</div><pre><span style="color:#4E4E4E;background:#3A3A3A">❯ </span><span style="color:#FFFFFF;background:#3A3A3A">touch /tmp/sandbox-poke.txt を実行して</span>
 
@@ -926,7 +926,7 @@
 
   <h2 id="next"><span class="sec-no">§2</span>自分の環境で試す</h2>
   <section class="next">
-    <p class="sec-lede">プロジェクトの <code>.claude/settings.local.json</code> に必要なキーだけ書いて Claude Code を起動し直す(設定ファイルは起動時に読まれる。deny をチームで共有するなら settings.json 側に置く)。上の 4 セルを 1 つにまとめると:</p>
+    <p class="sec-lede">プロジェクトの <code>.claude/settings.local.json</code> に必要なキーだけ書いて Claude Code を起動し直す(設定ファイルは起動時に読まれるため)。deny をチームで共有するなら settings.json 側に置く。上の 4 セルの設定を 1 つにまとめると次のとおり:</p>
     <div class="out-content"><pre><code>{
   "outputStyle": "Concise",
   "permissions": {
@@ -936,20 +936,20 @@
   "sandbox": { "enabled": true }
 }</code></pre></div>
     <ul class="notes">
-      <li>キーの一覧と優先順位は公式 docs: <a href="https://code.claude.com/docs/en/settings">Settings</a> · <a href="https://code.claude.com/docs/en/permissions">Permissions</a> · <a href="https://code.claude.com/docs/en/sandboxing">Sandboxing</a></li>
-      <li>対話中に切り替えるなら /config(outputStyle)・/permissions(allow / deny)・shift+tab(権限モード)・/sandbox。画面は姉妹ページの <a href="index.html#cell-config-ui">/config</a>・<a href="index.html#cell-permissions-ui">/permissions</a> セル。</li>
+      <li>キーの一覧と優先順位は公式ドキュメント: <a href="https://code.claude.com/docs/en/settings">Settings</a> · <a href="https://code.claude.com/docs/en/permissions">Permissions</a> · <a href="https://code.claude.com/docs/en/sandboxing">Sandboxing</a></li>
+      <li>対話中に切り替えるなら /config(outputStyle)・/permissions(allow / deny)・shift+tab(権限モード)・/sandbox(サンドボックス)。画面は姉妹ページの <a href="index.html#cell-config-ui">/config</a>・<a href="index.html#cell-permissions-ui">/permissions</a> セルを参照。</li>
     </ul>
   </section>
 
   <section class="prov" id="prov">
     <h2>取得方法(再現手順)</h2>
     <ul>
-      <li>実測日 2026-08-24、Claude Code CLI v2.1.241(WSL2 / Ubuntu、Claude Max アカウント)。モデルはフィクスチャの local 設定(<code>claude-haiku-4-5</code>)、outputStyle 比較と auto モードのみ <code>--model sonnet</code>。</li>
-      <li>採取は <code>./capture-config.sh</code>: <code>work/config-demo</code> に Setup のフィクスチャを構築し、セルごとに設定ファイルを書き換えて別セッションを起動し、tmux 仮想端末(110×42、outputStyle 比較は 110×60)の ANSI 出力を <code>python3 ansi2html.py config</code> で HTML 化して差し替える(index.html と同じ方式)。<code>~/.claude</code> のユーザー設定には触れない(マシン固有の statusLine 表示だけ <code>--settings</code> で空に上書き)。</li>
-      <li>deny / defaultMode / sandbox の実行画面は応答後に ctrl+o の詳細トランスクリプト表示に切り替えて採取(通常表示ではツールの結果・拒否エラーが畳まれるため)。outputStyle は応答文の分量を見るため通常表示のまま。権限モードのフッターは起動直後の下 4 行だけを切り出した。</li>
+      <li>実行環境: Claude Code CLI v2.1.241 / 2026-08-24 実測(WSL2 / Ubuntu、Claude Max アカウント)。モデルはフィクスチャの local 設定(<code>claude-haiku-4-5</code>)、outputStyle 比較と auto モードのみ <code>--model sonnet</code>。</li>
+      <li>採取は <code>./capture-config.sh</code>: <code>work/config-demo</code> に Setup のフィクスチャを構築し、セルごとに設定ファイルを書き換えて別セッションを起動し、tmux 仮想端末(110×42、outputStyle 比較は 110×60)の ANSI 出力を <code>python3 ansi2html.py config</code> で HTML 化して差し替える(index.html と同じ方式)。<code>~/.claude</code> のユーザー設定は書き換えない(マシン固有の statusLine 表示だけ、起動時の <code>--settings</code> で空にしている)。</li>
+      <li>deny / defaultMode / sandbox の実行画面は応答後に詳細表示(ctrl+o)に切り替えて採取(通常表示ではツールの結果・拒否エラーが畳まれるため)。outputStyle は応答文の分量を見るため通常表示のまま。権限モードのフッターは起動直後の下 4 行だけを切り出した。</li>
       <li>採取マシンのユーザー設定(<code>~/.claude/settings.json</code>・<code>~/.claude/CLAUDE.md</code>)は有効なまま。CLAUDE.md の「最終報告では変更点・確認内容・未検証事項をまとめる」指示が outputStyle の応答末尾に現れている。</li>
-      <li>メールアドレス・セッション ID・ホームディレクトリのパス・採取マシンのユーザー名は伏せ字化。</li>
-      <li>sandbox あり側の前提: macOS は追加インストール不要(Seatbelt)。Linux / WSL2 は bubblewrap と socat が必要(/sandbox パネルの Dependencies タブで確認できる)。</li>
+      <li>メールアドレス・セッション ID・ホームディレクトリのパス・採取マシンのユーザー名は伏せ字に置換。</li>
+      <li>sandbox を有効にする側の前提: macOS は追加インストール不要(Seatbelt)。Linux / WSL2 は bubblewrap と socat が必要(/sandbox パネルの Dependencies タブで確認できる)。</li>
     </ul>
   </section>
 </main>
