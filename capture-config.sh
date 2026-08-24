@@ -6,7 +6,15 @@
 # 書き換えるのは work/config-demo 配下の設定ファイルのみ(~/.claude には触れない)。
 # sandbox 比較の前提: macOS は追加インストール不要(Seatbelt)、
 # Linux / WSL2 は bubblewrap と socat が必要。
+# 一部だけ採り直すとき: ONLY="sandbox-on style" ./capture-config.sh / SKIP="sandbox-on" ./capture-config.sh
+#   セクション名: mode-manual deny-on output-style deny-off acceptedits auto sandbox-off sandbox-on style
 set -u
+run_section() { # run_section <name> — ONLY / SKIP に従ってそのセクションを実行するか
+  case " ${SKIP:-} " in *" $1 "*) echo "skip: $1" >&2; return 1;; esac
+  [ -z "${ONLY:-}" ] && return 0
+  case " $ONLY " in *" $1 "*) return 0;; esac
+  echo "skip: $1" >&2; return 1
+}
 BASE="$(cd "$(dirname "$0")" && pwd)"
 SP="$BASE/work"
 DIR="$SP/config-demo"
@@ -17,13 +25,13 @@ tmux kill-session -t $S 2>/dev/null
 
 # ---- (a) フィクスチャ構築: work/config-demo を毎回作り直す ----
 rm -rf "$DIR"
-mkdir -p "$DIR/src" "$DIR/secrets" "$DIR/.claude"
+mkdir -p "$DIR/src" "$DIR/private" "$DIR/.claude"
 
 cat > "$DIR/src/hello.py" <<'EOF'
 print("hello from config-demo")
 EOF
 
-cat > "$DIR/secrets/credentials.env" <<'EOF'
+cat > "$DIR/private/credentials.env" <<'EOF'
 DUMMY_TOKEN=xxxx
 EOF
 
@@ -32,7 +40,7 @@ PROJECT_FIXTURE='{
   "model": "claude-sonnet-5",
   "permissions": {
     "allow": ["Bash(python3 src/hello.py)"],
-    "deny": ["Read(./secrets/**)"]
+    "deny": ["Read(./private/**)"]
   }
 }'
 write_project() { printf '%s\n' "$1" > "$DIR/.claude/settings.json"; }
@@ -63,10 +71,15 @@ trap 'exit 143' TERM
 # ---- (b) ヘルパー ----
 # 画面の取得は tmux capture-pane。固定の長い sleep は使わず、フッターの状態をポーリングして進む。
 screen() { tmux capture-pane -t $S -p; }
-idle() { # 入力待ち(応答中でない)か
-  local tail8; tail8="$(screen | tail -8)"
-  echo "$tail8" | grep -qE 'for shortcuts|Try "|shift\+tab to cycle' && ! echo "$tail8" | grep -q 'esc to interrupt'
+idle() { # 入力待ち(応答中でない)か。フッターのヒント文言は版や幅で変わるので複数の候補を見る。
+  # 応答中の目印はスピナー行「* Thinking… (6s · ↓ 146 tokens)」(2.1.241 では esc to interrupt が出ない)
+  local tail10; tail10="$(screen | tail -10)"
+  echo "$tail10" | grep -qE 'for shortcuts|for agents|mode on|edits on|Try "|shift\+tab to cycle' \
+    && ! echo "$tail10" | grep -qE 'esc to interrupt|… \([0-9]+s|↓ [0-9]+ tokens'
 }
+# ユーザー設定の statusLine(コスト・経過時間などマシン固有の表示)は採取のたびに変わるので、
+# CLI 引数で空の statusLine に上書きする(~/.claude やフィクスチャの設定ファイルは触らない)。
+NO_STATUSLINE='{"statusLine":{"type":"command","command":"true"}}'
 wait_prompt() { local n=0; until idle; do n=$((n+1)); [ $n -gt 30 ] && break; sleep 0.5; done; }
 wait_idle() { # wait_idle <最大秒> — 応答が終わって入力待ちに戻るまで待つ
   local max="$1" n=0
@@ -83,14 +96,15 @@ cancel() { tmux send-keys -t $S Escape; sleep 1; tmux send-keys -t $S Escape; sl
 start_claude() { # start_claude [claude の追加引数...] — 新しい tmux セッションで起動し入力待ちまで待つ(高さは ROWS、既定 42)
   tmux kill-session -t $S 2>/dev/null
   tmux new-session -d -s $S -x 110 -y "${ROWS:-42}" -c "$DIR" || { echo "tmux new-session failed" >&2; exit 1; }
-  tmux send-keys -t $S "claude $*" Enter
+  tmux send-keys -t $S "claude --settings '$NO_STATUSLINE' $*" Enter
+  # 起動完了の目印: 信頼確認ダイアログ、または入力待ちフッター(idle と同じ候補)
   local n=0
-  until screen | grep -qE "Try \"|trust|Trust|for shortcuts"; do n=$((n+1)); [ $n -gt 40 ] && break; sleep 1; done
-  [ $n -gt 40 ] && echo "WARN: timed out waiting for claude startup" >&2
+  until screen | grep -qE "trust|Trust" || idle; do n=$((n+1)); [ $n -gt 60 ] && break; sleep 1; done
+  [ $n -gt 60 ] && echo "WARN: timed out waiting for claude startup" >&2
   if screen | grep -qi trust; then
     tmux send-keys -t $S Enter
-    n=0; until screen | grep -qE "Try \"|for shortcuts"; do n=$((n+1)); [ $n -gt 20 ] && break; sleep 1; done
-    [ $n -gt 20 ] && echo "WARN: timed out waiting for trust prompt confirmation" >&2
+    n=0; until idle; do n=$((n+1)); [ $n -gt 30 ] && break; sleep 1; done
+    [ $n -gt 30 ] && echo "WARN: timed out waiting for trust prompt confirmation" >&2
   fi
   wait_prompt
 }
@@ -112,8 +126,13 @@ snap_type() { # snap_type <name> <command> <入力文字列> <key>... — パネ
   tmux capture-pane -t $S -e -p > "$CAP/$name.ansi"
 }
 footer() { # footer <name> — 入力欄とフッター(下 4 行)だけを採取(権限モードのバッジ用)
+  # statusLine を空にしても行自体は残る(右端に /rc のリンクだけ出ることがある)ので、
+  # 色(SGR)とリンク(OSC 8)を剥がして空か /rc だけの行は落とし、残りの下 4 行を採る
   sleep 1.5
-  tmux capture-pane -t $S -e -p | tail -4 > "$CAP/$1.ansi"
+  tmux capture-pane -t $S -e -p | tail -5 | while IFS= read -r line; do
+    plain="$(printf '%s' "$line" | sed 's/\x1b\[[0-9;]*m//g; s/\x1b\][^\x07\x1b]*\(\x07\|\x1b\\\)//g')"
+    printf '%s' "$plain" | grep -qE '^\s*(/rc)?\s*$' || printf '%s\n' "$line"
+  done | tail -4 > "$CAP/$1.ansi"
 }
 send_prompt() { # send_prompt <プロンプト文> — 依頼文を入力して Enter
   cancel; wait_prompt
@@ -169,78 +188,97 @@ ask_until_stop() { # ask_until_stop <name> <プロンプト文> <最大待ち秒
   tmux send-keys -t $S Escape; sleep 1
 }
 
-# ---- (c) permissions.defaultMode: manual(既定フィクスチャ、haiku)----
-start_claude
-footer mode-cycle-0
-# ルール未定義のコマンドで権限確認プロンプトが出た画面(採取後 Escape で拒否して抜ける)。
-# 注: date のような読み取り専用コマンドは組み込み判定で確認なしに実行されるため、
-#     ファイルを作成する touch を使う(採取後に Escape で拒否するので created.txt は作られない)。
-ask_dialog perm-ask "touch created.txt を実行して" 60
-
-# ---- (d) permissions.deny: あり(同セッションで続けて採取)----
-ask perm-deny "secrets/credentials.env の中身をそのまま表示して" 90 verbose
-
-# ---- (e) Output style の切り替え画面: /config → "Output style" 行 → Enter でピッカーを採取し、いったん Esc ----
-snap_type config-output-style "/config" "Output style" Down Enter
-cancel
-# ピッカーで Concise を確定すると .claude/settings.local.json に書かれることを確認(ファイル内容を保存)
-snap_type config-output-style-pick "/config" "Output style" Down Enter Down Down Enter
-cancel; sleep 1
-cp "$DIR/.claude/settings.local.json" "$CAP/outputstyle-local.txt"
-tmux kill-session -t $S 2>/dev/null
+# ---- (c)(d)(e) は既定フィクスチャ(haiku)の同一セッションで続けて採取 ----
+if run_section mode-manual || run_section deny-on || run_section output-style; then
+  start_claude
+  # (c) permissions.defaultMode: manual
+  if run_section mode-manual; then
+    footer mode-cycle-0
+    # ルール未定義のコマンドで権限確認プロンプトが出た画面(採取後 Escape で拒否して抜ける)。
+    # 注: date のような読み取り専用コマンドは組み込み判定で確認なしに実行されるため、
+    #     ファイルを作成する touch を使う(採取後に Escape で拒否するので created.txt は作られない)。
+    ask_dialog perm-ask "touch created.txt を実行して" 60
+  fi
+  # (d) permissions.deny: あり
+  if run_section deny-on; then
+    ask perm-deny "private/credentials.env の中身をそのまま表示して" 90 verbose
+  fi
+  # (e) Output style の切り替え画面: /config → "Output style" 行 → Enter でピッカーを採取し、いったん Esc
+  if run_section output-style; then
+    snap_type config-output-style "/config" "Output style" Down Enter
+    cancel
+    # ピッカーで Concise を確定すると .claude/settings.local.json に書かれることを確認(ファイル内容を保存)
+    snap_type config-output-style-pick "/config" "Output style" Down Enter Down Down Enter
+    cancel; sleep 1
+    cp "$DIR/.claude/settings.local.json" "$CAP/outputstyle-local.txt"
+  fi
+  tmux kill-session -t $S 2>/dev/null
+fi
 
 # ---- (f) permissions.deny: なし(project settings から permissions を外して起動し直す)----
-write_project '{ "model": "claude-sonnet-5" }'
-write_local "$LOCAL_FIXTURE"
-start_claude
-ask perm-deny-off "secrets/credentials.env の中身をそのまま表示して" 90 verbose
-tmux kill-session -t $S 2>/dev/null
-write_project "$PROJECT_FIXTURE"
+if run_section deny-off; then
+  write_project '{ "model": "claude-sonnet-5" }'
+  write_local "$LOCAL_FIXTURE"
+  start_claude
+  ask perm-deny-off "private/credentials.env の中身をそのまま表示して" 90 verbose
+  tmux kill-session -t $S 2>/dev/null
+  write_project "$PROJECT_FIXTURE"
+fi
 
 # ---- (g) permissions.defaultMode: acceptEdits(local に defaultMode を置いて起動)----
-write_local '{ "model": "claude-haiku-4-5", "permissions": { "defaultMode": "acceptEdits" } }'
-start_claude
-footer mode-default-acceptedits
-# accept edits は touch などの基本的なファイル操作を自動承認する → 確認なしで実行されるはず
-ask perm-acceptedits-run "touch created.txt を実行して" 90 verbose
-rm -f "$DIR/created.txt"
-tmux kill-session -t $S 2>/dev/null
+if run_section acceptedits; then
+  write_local '{ "model": "claude-haiku-4-5", "permissions": { "defaultMode": "acceptEdits" } }'
+  start_claude
+  footer mode-default-acceptedits
+  # accept edits は touch などの基本的なファイル操作を自動承認する → 確認なしで実行されるはず
+  ask perm-acceptedits-run "touch created.txt を実行して" 90 verbose
+  rm -f "$DIR/created.txt"
+  tmux kill-session -t $S 2>/dev/null
+fi
 
 # ---- (h) permissions.defaultMode: auto(--model sonnet で起動。2.1.228 以降の既定)----
-write_local "$LOCAL_FIXTURE"
-start_claude --model sonnet
-footer mode-sonnet-start
-ask perm-auto-run "touch created.txt を実行して" 90 verbose
-rm -f "$DIR/created.txt"
-tmux kill-session -t $S 2>/dev/null
+if run_section auto; then
+  write_local "$LOCAL_FIXTURE"
+  start_claude --model sonnet
+  footer mode-sonnet-start
+  ask perm-auto-run "touch created.txt を実行して" 90 verbose
+  rm -f "$DIR/created.txt"
+  tmux kill-session -t $S 2>/dev/null
+fi
 
 # ---- (i) sandbox: なし(manual の確認に Yes → 成功する画面)----
-write_local "$LOCAL_FIXTURE"
-start_claude
-ask_approve sandbox-off "touch /tmp/sandbox-poke.txt を実行して" 90
-rm -f /tmp/sandbox-poke.txt
-tmux kill-session -t $S 2>/dev/null
+if run_section sandbox-off; then
+  write_local "$LOCAL_FIXTURE"
+  start_claude
+  ask_approve sandbox-off "touch /tmp/sandbox-poke.txt を実行して" 90
+  rm -f /tmp/sandbox-poke.txt
+  tmux kill-session -t $S 2>/dev/null
+fi
 
 # ---- (j) sandbox: あり(確認なしで実行 → /tmp への書き込みが OS にブロックされる画面)----
 # 失敗を見た Claude が dangerouslyDisableSandbox での再試行を提案して確認ダイアログで
 # 止まることがあるため、入力待ち/ダイアログのどちらで止まっても採取する。
-write_local '{ "model": "claude-haiku-4-5", "sandbox": { "enabled": true } }'
-start_claude
-ask_until_stop sandbox-on "touch /tmp/sandbox-poke.txt を実行して" 120
-rm -f /tmp/sandbox-poke.txt
-tmux kill-session -t $S 2>/dev/null
+if run_section sandbox-on; then
+  write_local '{ "model": "claude-haiku-4-5", "sandbox": { "enabled": true } }'
+  start_claude
+  ask_until_stop sandbox-on "touch /tmp/sandbox-poke.txt を実行して" 120
+  rm -f /tmp/sandbox-poke.txt
+  tmux kill-session -t $S 2>/dev/null
+fi
 
 # ---- (k) outputStyle 比較(同一プロンプト、Default と Concise で別セッション。--model sonnet: CLI 引数が local の haiku より優先)----
-STYLE_PROMPT="このプロジェクトの .claude 配下の設定ファイルを読んで、何が設定されているか教えて"
-write_local "$LOCAL_FIXTURE"
-ROWS=60 start_claude --model sonnet
-ask style-default "$STYLE_PROMPT" 150
-tmux kill-session -t $S 2>/dev/null
+if run_section style; then
+  STYLE_PROMPT="このプロジェクトの .claude 配下の設定ファイルを読んで、何が設定されているか教えて"
+  write_local "$LOCAL_FIXTURE"
+  ROWS=60 start_claude --model sonnet
+  ask style-default "$STYLE_PROMPT" 150
+  tmux kill-session -t $S 2>/dev/null
 
-write_local '{ "model": "claude-haiku-4-5", "outputStyle": "Concise" }'
-ROWS=60 start_claude --model sonnet
-ask style-concise "$STYLE_PROMPT" 150
-tmux kill-session -t $S 2>/dev/null
+  write_local '{ "model": "claude-haiku-4-5", "outputStyle": "Concise" }'
+  ROWS=60 start_claude --model sonnet
+  ask style-concise "$STYLE_PROMPT" 150
+  tmux kill-session -t $S 2>/dev/null
+fi
 
 write_local "$LOCAL_FIXTURE"
 echo done; ls -la "$CAP"
