@@ -505,6 +505,31 @@
     html { scroll-behavior: auto; }
     * { transition: none !important; }
   }
+
+  /* ---------- toggle cells ---------- */
+  .cfg-in {
+    font-family: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+    font-size: .86rem; background: var(--code-bg); border: 1px solid var(--line);
+    border-left: 3px solid var(--accent); border-radius: 8px;
+    padding: .55rem .9rem; margin: .6rem 0 .2rem; overflow-x: auto; white-space: pre;
+  }
+  .cfg-in .in-label { color: var(--muted); font-size: .72rem; letter-spacing: .08em; margin-right: .6rem; }
+  .switch { display: flex; gap: .45rem; flex-wrap: wrap; margin: .9rem 0 .8rem; }
+  .switch button {
+    font-family: inherit; font-size: .83rem; padding: .4rem .95rem; border-radius: 999px;
+    border: 1px solid var(--line); background: var(--surface); color: var(--muted);
+    cursor: pointer; transition: border-color .15s, color .15s;
+  }
+  .switch button:hover { border-color: var(--accent); color: var(--ink); }
+  .switch button.active { border-color: var(--accent); background: var(--code-bg); color: var(--ink); font-weight: 650; }
+  .switch button code { font-size: .92em; background: none; padding: 0; }
+  .panel { display: none; }
+  .panel.active { display: block; }
+  .snip-label { font-size: .72rem; color: var(--muted); letter-spacing: .06em; margin: .5rem 0 .25rem; }
+  .pending {
+    border: 1px dashed var(--line); border-radius: 8px; padding: .6rem .9rem;
+    color: var(--muted); font-size: .85rem; margin: .4rem 0 .6rem; max-width: 46em;
+  }
 </style>
 </head>
 <body>
@@ -513,169 +538,39 @@
   <nav class="topnav" aria-label="セクション">
     <a class="brand" href="#top"><span>⚙</span> Config Notebook</a>
     <div class="links">
-      <a href="#layers">§1 階層</a>
-      <a href="#files">§2 ファイル</a>
-      <a href="#demos">§3 実測デモ</a>
-      <a href="#catalog">§4 早見表</a>
+      <a href="#demos">比較デモ</a>
       <a href="#prov">取得方法</a>
       <a class="sister" href="index.html">← Slash Command Notebook</a>
     </div>
   </nav>
   <nav class="toc" aria-label="目次">
     <p class="toc-title">目次</p>
-    <a class="toc-h" href="#layers">§1 階層と優先順位</a>
-    <a class="toc-h" href="#files">§2 ファイルの使い分け</a>
-    <a class="toc-h" href="#demos">§3 実測デモ</a>
+    <a class="toc-h" href="#demos">設定 × 出力の実測比較</a>
     <div class="toc-cmds">
       <a href="#cell-config-fixture">Setup</a>
-      <a href="#cell-status-scopes">/status</a>
-      <a href="#cell-config-scopes">/config</a>
-      <a href="#cell-permissions-rules">/permissions</a>
-      <a href="#cell-perm-allow">allow 実行</a>
-      <a href="#cell-perm-ask">ask 確認</a>
-      <a href="#cell-perm-deny">deny 拒否</a>
-      <a href="#cell-perm-modes">権限モード</a>
-      <a href="#cell-config-output-style">Output style</a>
-      <a href="#cell-style-compare">スタイル比較</a>
+      <a href="#cell-outputstyle">outputStyle</a>
+      <a href="#cell-deny">permissions.deny</a>
+      <a href="#cell-defaultmode">defaultMode</a>
+      <a href="#cell-sandbox">sandbox</a>
     </div>
-    <a class="toc-h" href="#catalog">§4 主要キー早見表</a>
     <a class="toc-h" href="#prov">取得方法(再現手順)</a>
     <a class="toc-h" href="index.html">← Slash Command Notebook</a>
   </nav>
   <header class="page-head" id="top">
     <p class="eyebrow">claude code / settings</p>
     <h1>Config Notebook</h1>
-    <p>Claude Code の設定は1つのファイルではなく、複数のファイル(スコープ)に分かれて置かれ、同じキーが重複したときに「どれが勝つか」の優先順位を持つ。公式ドキュメント <a href="https://code.claude.com/docs/en/settings">code.claude.com/docs/en/settings</a> は網羅的だが、階層の全体構造は文章だけではイメージしにくい。</p>
-    <p>本ページはその階層を図解し(§1・§2)、実際に複数スコープの設定を重ねたときの画面(<code>/status</code> の Setting sources、permissions の allow / ask / deny の各挙動)を端末実測で記録する(§3)。§3 の 16 画面は 2026-08-23 に Claude Code 2.1.241 で採取したもの(採取手順は<a href="#prov">取得方法</a>)。姉妹ページの <a href="index.html">Slash Command Notebook</a> と同じ形式・同じ採取手順を使っている。</p>
+    <p>同じ入力(依頼文)を固定したまま、設定だけを切り替えると Claude Code の出力・挙動がどう変わるかを実測で記録する。各セルのトグルで設定の有無・値を選ぶと、その設定で採取した画面(Out)に切り替わる。</p>
+    <p>対象は、切り替えたときの差が目に見えて分かる 4 つのキーに絞った: <code>outputStyle</code>(応答文が変わる)・<code>permissions.deny</code>(実行が拒否される)・<code>permissions.defaultMode</code>(確認の出方が変わる)・<code>sandbox</code>(OS レベルで実行が制限される)。「(未採取)」の枠は後日ローカルで採取して差し替える(<a href="#prov">取得方法</a>)。</p>
     <div class="meta-chips">
-      <span>公式ドキュメント 2026-08-20 参照</span>
-      <span>実測 9 セル · 16 画面 · 2026-08-23</span>
-      <span>Claude Code 2.1.241</span>
+      <span>比較セル 4(切り替え 9 パターン)</span>
+      <span>採取済み 2026-08-23 · Claude Code 2.1.241</span>
+      <span>未採取 5 画面(後日採取)</span>
       <span>姉妹ページ: <a href="index.html">Slash Command Notebook</a></span>
     </div>
   </header>
-  <details class="toc-inline">
-    <summary>セクション別もくじ</summary>
-    <a class="toc-h" href="#layers">§1 階層と優先順位</a>
-    <a class="toc-h" href="#files">§2 ファイルの使い分け</a>
-    <a class="toc-h" href="#demos">§3 実測デモ</a>
-    <div class="toc-cmds">
-      <a href="#cell-config-fixture">Setup</a>
-      <a href="#cell-status-scopes">/status</a>
-      <a href="#cell-config-scopes">/config</a>
-      <a href="#cell-permissions-rules">/permissions</a>
-      <a href="#cell-perm-allow">allow 実行</a>
-      <a href="#cell-perm-ask">ask 確認</a>
-      <a href="#cell-perm-deny">deny 拒否</a>
-      <a href="#cell-perm-modes">権限モード</a>
-      <a href="#cell-config-output-style">Output style</a>
-      <a href="#cell-style-compare">スタイル比較</a>
-    </div>
-    <a class="toc-h" href="#catalog">§4 主要キー早見表</a>
-    <a class="toc-h" href="#prov">取得方法(再現手順)</a>
-  </details>
 
-  <h2 id="layers"><span class="sec-no">§1</span>設定の階層と優先順位</h2>
-  <p class="sec-lede">設定は5つの層が積み重なって解決される。上の層ほど強く、同じキーが複数の層にあるときは上の層の値が採用される。最上位の Managed settings は組織が配布するポリシーで、ユーザー側の設定では上書きできない。</p>
-
-  <div class="stack-wrap">
-    <div class="stack-axis" aria-hidden="true">
-      <span class="axis-strong">強い</span>
-      <span class="axis-line"></span>
-      <span>弱い</span>
-    </div>
-    <div class="layers">
-      <div class="layer top">
-        <div class="l-head">
-          <span class="l-no">1</span>
-          <span class="l-name">Managed settings</span>
-          <span class="l-badge">上書き不可</span>
-        </div>
-        <p class="l-note">組織(管理者)が配布するポリシー。以下より下の層では上書きできない。</p>
-        <p class="l-path">Linux: /etc/claude-code/managed-settings.json</p>
-        <p class="l-path">macOS: /Library/Application Support/ClaudeCode/managed-settings.json</p>
-        <p class="l-path">Windows: C:\ProgramData\ClaudeCode\managed-settings.json</p>
-      </div>
-      <div class="layer">
-        <div class="l-head">
-          <span class="l-no">2</span>
-          <span class="l-name">CLI 引数</span>
-        </div>
-        <p class="l-note"><code>--model</code> などの起動フラグ。その起動のみ有効。</p>
-      </div>
-      <div class="layer">
-        <div class="l-head">
-          <span class="l-no">3</span>
-          <span class="l-name">プロジェクト・個人用(local)</span>
-        </div>
-        <p class="l-path">.claude/settings.local.json</p>
-        <p class="l-note">個人の実験・ローカル事情。Claude Code が自動で .gitignore に追加する。</p>
-      </div>
-      <div class="layer">
-        <div class="l-head">
-          <span class="l-no">4</span>
-          <span class="l-name">プロジェクト共有</span>
-        </div>
-        <p class="l-path">.claude/settings.json</p>
-        <p class="l-note">チームで共有する設定。コミットする。</p>
-      </div>
-      <div class="layer">
-        <div class="l-head">
-          <span class="l-no">5</span>
-          <span class="l-name">ユーザー全体</span>
-        </div>
-        <p class="l-path">~/.claude/settings.json</p>
-        <p class="l-note">全プロジェクトに効く個人のデフォルト。</p>
-      </div>
-    </div>
-  </div>
-  <p class="fig-note">同じキーが複数スコープにあるときは上の層が勝つ。→ <a href="#demos">§3 で実測</a>(3スコープに別々の <code>model</code> を置くと、最上位の local の値が <code>/status</code> に出る)。</p>
-
-  <h2 id="files"><span class="sec-no">§2</span>どのファイルに何を書くか</h2>
-  <p class="sec-lede">§1 の各層のうち、自分で編集するのは settings.json 系の3ファイル。どこに書くかは「誰に効かせたいか」「git に載せてよいか」で決まる。</p>
-
-  <div class="table-wrap"><table>
-    <thead><tr><th scope="col">スコープ</th><th scope="col">パス</th><th scope="col">git 管理</th><th scope="col">典型用途</th></tr></thead>
-    <tbody>
-      <tr>
-        <td>ユーザー全体</td>
-        <td><code>~/.claude/settings.json</code></td>
-        <td>対象外(ホーム直下)</td>
-        <td>個人のデフォルト。model、全プロジェクト共通の permissions・env など</td>
-      </tr>
-      <tr>
-        <td>プロジェクト共有</td>
-        <td><code>.claude/settings.json</code></td>
-        <td>コミットする</td>
-        <td>チームで揃えたい設定。プロジェクトの permissions ルール、hooks など</td>
-      </tr>
-      <tr>
-        <td>プロジェクト・個人用</td>
-        <td><code>.claude/settings.local.json</code></td>
-        <td>しない(Claude Code が自動で .gitignore に追加)</td>
-        <td>個人の実験・ローカル環境の事情による一時的な上書き</td>
-      </tr>
-      <tr>
-        <td>Managed(組織)</td>
-        <td><code>/etc/claude-code/managed-settings.json</code> など(OS 別。§1 参照)</td>
-        <td>対象外(管理者が配布)</td>
-        <td>組織ポリシーの強制。ユーザー側では上書き不可</td>
-      </tr>
-    </tbody>
-  </table></div>
-
-  <div class="aside-box">
-    <p class="aside-title">コラム — 紛らわしいファイルの区別</p>
-    <ul>
-      <li><code>~/.claude/settings.json</code> — 本ページで扱う<strong>設定本体</strong>(ユーザースコープ)。</li>
-      <li><code>~/.claude.json</code> — 別物。ユーザースコープの <strong>MCP サーバー登録</strong>や CLI の状態が入る。settings 階層の一部ではない。</li>
-      <li><code>.mcp.json</code> — プロジェクトで共有する <strong>MCP サーバー定義</strong>。これも settings とは別ファイル。</li>
-      <li><code>CLAUDE.md</code> 系(<code>~/.claude/CLAUDE.md</code>・<code>./CLAUDE.md</code>)— これらは「<strong>メモリ</strong>」(モデルに渡る指示文)であり、settings ではない。</li>
-    </ul>
-  </div>
-
-  <h2 id="demos"><span class="sec-no">§3</span>実測デモ</h2>
-  <p class="sec-lede">以下は <code>capture-config.sh</code> で採取したシナリオ(2026-08-23、Claude Code 2.1.241、tmux 110×42。スタイル比較のみ 110×60)。3スコープ(User / Project / Local)に別々の設定を置いたフィクスチャに対し、優先順位の解決、permissions の allow / ask / deny の3挙動、権限モードの表示、Output style の選択と効果を画面で確認した。対話セルの画面は起動バナーを省き、該当プロンプト以降を載せている。メールアドレス・セッション ID・ホームディレクトリのパスは伏せ字。</p>
+  <h2 id="demos"><span class="sec-no">§1</span>設定 × 出力の実測比較</h2>
+  <p class="sec-lede">ボタンで設定を切り替えると Out の画面が入れ替わる。各パネルには、その採取で使った settings ファイルの中身(切り替えた部分)を添えてある。画面は tmux の仮想端末(110×42)からの ANSI キャプチャで、モデル応答は非決定的 — ここに載せた出力は「ある1回の実行例」である。</p>
 
   <!-- CELL:config-fixture -->
   <article class="cell setup" id="cell-config-fixture">
@@ -685,316 +580,32 @@
       <span class="cell-meta">採取用フィクスチャ · capture-config.sh が毎回再構築</span>
     </div>
     <div class="cell-body">
-      <p class="cell-lede">§3 の各セルは、この最小フィクスチャに対して採取した。</p>
-      <p class="cell-desc">model キーを User / Project / Local の3スコープに別々の値で置き、優先順位の解決を観察できるようにする。permissions はプロジェクト共有の settings.json にだけ置き、allow(確認なしで実行)・deny(拒否)・ルール外(確認プロンプト)の3挙動を1つのフィクスチャで再現する。</p>
+      <p class="cell-lede">各セルの採取はこの最小フィクスチャに対して行う。切り替え対象の設定は、セルごとに <code>.claude/settings.local.json</code>(deny のみ settings.json)を書き換え、別セッションで起動し直して採取する。</p>
       <div class="out-content"><pre><code>work/config-demo/
 ├── src/hello.py                # print("hello from config-demo") のみ
 ├── secrets/credentials.env     # ダミー値 DUMMY_TOKEN=xxxx
 └── .claude/
-    ├── settings.json           # プロジェクト共有(下記)
-    └── settings.local.json     # { "model": "claude-haiku-4-5" }</code></pre></div>
-      <details class="prompt">
-        <summary><strong>.claude/settings.json</strong>(プロジェクト共有)</summary>
-        <pre>{
-  "model": "claude-sonnet-5",
-  "permissions": {
-    "allow": ["Bash(python3 src/hello.py)"],
-    "deny": ["Read(./secrets/**)"]
-  }
-}</pre>
-      </details>
-      <p class="cell-desc">ユーザー設定 <code>~/.claude/settings.json</code> には採取時のみ <code>"model": "claude-opus-5"</code> をマージする(採取後に復元)。権限モードと Output style のセルでは、この local ファイルに <code>permissions.defaultMode</code> や <code>outputStyle</code> を足した版で起動し直している。実測結果: model は3スコープのうち最上位の local が勝って <code>claude-haiku-4-5</code> になり、<code>/status</code> の Setting sources には User / Shared project / Project local の3つが並んだ(下の <a href="#cell-status-scopes">/status セル</a>)。</p>
+    ├── settings.json           # { "model": "claude-sonnet-5", "permissions": {...} }
+    └── settings.local.json     # { "model": "claude-haiku-4-5" } を基点にセルごとに書き換え</code></pre></div>
     </div>
   </article>
 
-  <!-- CELL:status-scopes -->
-  <article class="cell" id="cell-status-scopes">
+  <!-- CELL:outputstyle -->
+  <article class="cell" id="cell-outputstyle">
     <div class="cell-head">
-      <h3 class="typed"><code>/status</code></h3>
-      <span class="cell-meta">画面実測 · 2026-08-23</span>
-    </div>
-    <div class="cell-body">
-      <p class="cell-lede">3スコープ適用時の /status で、Setting sources と実効 model を確認する。</p>
-      <p class="cell-desc">実測: Setting sources に <code>User settings, Shared project settings, Project local settings</code> の3つが並び、Model 行は local の <code>claude-haiku-4-5</code>(user の opus-5・project の sonnet-5 は負ける — §1 の「上の層が勝つ」の実証)。1スコープのみの画面は姉妹ページの <a href="index.html#cell-status-ui">/status 実測</a> を参照。</p>
-      <div class="term"><div class="term-bar">claude — /status (scopes)</div><pre><span style="color:#AFD7FF">▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔</span>
-   <span style="color:#AFD7FF;font-weight:700">Settings</span> <span style="color:#000000;background:#AFD7FF;font-weight:700"> Status </span>  Config   Usage   Stats
-
-   <span style="font-weight:700">Version:</span>          2.1.241
-   <span style="font-weight:700">Session name:</span>     <span style="color:#949494">/rename to add a name</span>
-   <span style="font-weight:700">Session ID:</span>       ****************-****
-   <span style="font-weight:700">Session kind:</span>     interactive
-   <span style="font-weight:700">Peer address:</span>     uds:/tmp/cc-socks/26746.sock
-   <span style="font-weight:700">cwd:</span>              /…/claude-slash-command-notebook/work/config-demo
-   <span style="font-weight:700">Login method:</span>     Claude Max account
-   <span style="font-weight:700">Organization:</span>     ****'s Organization
-   <span style="font-weight:700">Email:</span>            ****@****
-   <span style="font-weight:700"> </span>
-   <span style="font-weight:700">Model:</span>            claude-haiku-4-5
-   <span style="font-weight:700">MCP servers:</span>      <span style="color:#87D787">1 connected</span>, <span style="color:#949494">1 disabled</span> <span style="color:#949494">· /mcp</span>
-   <span style="font-weight:700">Setting sources:</span>  User settings, Shared project settings, Project local settings
-
-   <span style="color:#949494">Esc to cancel</span></pre></div>
-    </div>
-  </article>
-
-  <!-- CELL:config-scopes -->
-  <article class="cell" id="cell-config-scopes">
-    <div class="cell-head">
-      <h3 class="typed"><code>/config</code></h3>
-      <span class="cell-meta">画面実測 · 2026-08-23</span>
-    </div>
-    <div class="cell-body">
-      <p class="cell-lede">フィクスチャ適用時の設定パネル(Config タブ)を記録する。</p>
-      <p class="cell-desc">実測: 検索付きの設定一覧に、複数スコープをマージした後の実効値が表示される。この一覧にはスコープの内訳(どのファイル由来か)は出ないので、スコープの確認は上の <code>/status</code> の Setting sources を見る。デフォルト状態の画面は姉妹ページの <a href="index.html#cell-config-ui">/config 実測</a> と比較できるようにする。</p>
-      <div class="term"><div class="term-bar">claude — /config (scopes)</div><pre><span style="color:#AFD7FF">▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔</span>
-   <span style="color:#AFD7FF;font-weight:700">Settings</span>  Status  <span style="color:#191713;background:#D9D4CA;font-weight:700"> Config </span>  Usage   Stats
-
-   <span style="color:#AFD7FF">╭──────────────────────────────────────────────────────────────────────────────────────────────────────╮</span>
-   <span style="color:#AFD7FF">│</span> ⌕ <span style="color:#949494">Search settings…</span>                                                                                   <span style="color:#AFD7FF">│</span>
-   <span style="color:#AFD7FF">╰──────────────────────────────────────────────────────────────────────────────────────────────────────╯</span>
-
-     Auto-compact                               true
-     Continue automatically at usage limit      true
-     Switch models when a message is flagged    true
-     Show tips                                  true
-     Reduce motion                              false
-     Thinking mode                              true
-     Prompt suggestions                         true
-     Session recap                              true
-     Rewind code (checkpoints)                  true
-     Dynamic workflows                          true
-     Ultracode keyword trigger                  true
-     Dynamic workflow size                      medium (default)
-     Artifacts                                  true
-     Verbose output                             false
-     Terminal progress bar                      true
-     Show turn duration                         true
-     Default permission mode                    Manual
-     Worktree base ref                          fresh
-     Use auto mode during plan                  true
-     Respect .gitignore in file picker          true
-     Skip the /copy picker                      false
-     Copy on select                             true
-     Auto-scroll                                true
-     Open agents view by default                false
-     ← opens agents                             true
-     Auto-update channel                        latest
-     Theme                                      Dark mode
-     Local notifications                        Auto
-     Push when actions required                 false
-     Push when Claude decides                   true
-   <span style="color:#949494">↓ 12 more below</span>
-
-   <span style="color:#949494">Type to filter · Enter/↓ to select · ↑ to tabs · Esc to clear</span></pre></div>
-    </div>
-  </article>
-
-  <!-- CELL:permissions-rules -->
-  <article class="cell" id="cell-permissions-rules">
-    <div class="cell-head">
-      <h3 class="typed"><code>/permissions</code></h3>
-      <span class="cell-meta">画面実測 · 2026-08-23</span>
-    </div>
-    <div class="cell-body">
-      <p class="cell-lede">settings.json に書いた allow / deny ルールが /permissions の一覧に載った画面を記録する(Allow タブと、←/→ で切り替えた Deny タブの2画面)。</p>
-      <p class="cell-desc">実測: Allow タブに <code>Bash(python3 src/hello.py)</code>、Deny タブに <code>Read(./secrets/**)</code> が載った。一覧にはルールの出所(どのスコープ由来か)は表示されない。Allow タブにはこのフィクスチャ由来ではないルール(採取環境に別途あった <code>mcp__computer-use__*</code>)も混ざって並んでおり、/permissions はスコープを問わず有効なルールをまとめて見せることが分かる。ルール未設定(一覧が空)の画面は姉妹ページの <a href="index.html#cell-permissions-ui">/permissions 実測</a> を参照。</p>
-      <div class="term"><div class="term-bar">claude — /permissions (rules)</div><pre><span style="color:#AFD7FF">▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔</span>
-   <span style="color:#AFD7FF;font-weight:700">Permissions</span>  Recently denied  <span style="color:#000000;background:#AFD7FF;font-weight:700"> Allow </span>  Ask   Deny   Workspace
-
-   Claude Code won't ask before using allowed tools.
-   <span style="opacity:.72">╭───────────────────────────────────────────────╮</span>
-   <span style="opacity:.72">│</span> <span style="color:#949494">⌕ Search…</span>                                     <span style="opacity:.72">│</span>
-   <span style="opacity:.72">╰───────────────────────────────────────────────╯</span>
-
-     <span style="color:#949494">1.  </span>Add a new rule…
-     <span style="color:#949494">2.  </span>Bash(python3 src/hello.py)
-     <span style="color:#949494">3.  </span>mcp__computer-use__computer_batch
-     <span style="color:#949494">4.  </span>mcp__computer-use__cursor_position
-     <span style="color:#949494">5.  </span>mcp__computer-use__double_click
-     <span style="color:#949494">6.  </span>mcp__computer-use__hold_key
-     <span style="color:#949494">7.  </span>mcp__computer-use__key
-     <span style="color:#949494">8.  </span>mcp__computer-use__left_click
-     <span style="color:#949494">9.  </span>mcp__computer-use__left_click_drag
-   <span style="color:#949494">↓</span> <span style="color:#949494">10. </span>mcp__computer-use__left_mouse_down
-
-   <span style="color:#949494">←/→ to switch · ↓ to select · Esc to cancel</span></pre></div>
-      <div class="term"><div class="term-bar">claude — /permissions (deny tab)</div><pre><span style="color:#AFD7FF">▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔</span>
-   <span style="color:#AFD7FF;font-weight:700">Permissions</span>  Recently denied   Allow   Ask  <span style="color:#000000;background:#AFD7FF;font-weight:700"> Deny </span>  Workspace
-
-   Claude Code will always reject requests to use denied tools.
-   <span style="opacity:.72">╭──────────────────────────────────────────────────────────╮</span>
-   <span style="opacity:.72">│</span> <span style="color:#949494">⌕ Search…</span>                                                <span style="opacity:.72">│</span>
-   <span style="opacity:.72">╰──────────────────────────────────────────────────────────╯</span>
-
-     <span style="color:#949494">1. </span>Add a new rule…
-     <span style="color:#949494">2. </span>Read(./secrets/**)
-
-   <span style="color:#949494">←/→ to switch · ↓ to select · Esc to cancel</span></pre></div>
-    </div>
-  </article>
-
-  <!-- CELL:perm-allow -->
-  <article class="cell" id="cell-perm-allow">
-    <div class="cell-head">
-      <h3 class="typed"><code>python3 src/hello.py を実行して</code></h3>
-      <span class="cell-meta">画面実測 · 2026-08-23</span>
-    </div>
-    <div class="cell-body">
-      <p class="cell-lede">allow ルールに一致するコマンドが、確認プロンプトなしで実行される様子を記録する(ctrl+o の詳細トランスクリプト表示で採取)。</p>
-      <p class="cell-desc">実測: <code>Bash(python3 src/hello.py)</code> が allow ルール(<a href="#catalog">§4 のルール記法</a>参照)に一致し、権限確認を挟まずに実行されて <code>hello from config-demo</code> が返った。ツール行の右の時刻・モデル名(<code>claude-haiku-4-5-…</code>)からも local 設定のモデルで動いていることが読み取れる。</p>
-      <div class="term"><div class="term-bar">claude — python3 src/hello.py (allow)</div><pre><span style="color:#4E4E4E;background:#3A3A3A">❯ </span><span style="color:#FFFFFF;background:#3A3A3A">python3 src/hello.py を実行して</span>
-
-<span style="color:#87D787">⏺</span> <span style="font-weight:700">Bash</span>(python3 src/hello.py)
-<span style="color:#949494">  ⎿  </span>hello from config-demo
-
-                                                                    <span style="color:#949494">11:24 PM</span> <span style="color:#949494">claude-haiku-4-5-20251001</span>
-<span style="color:#FFFFFF">⏺</span> 完了しました。スクリプトが実行され、「hello from config-demo」と出力されました。
-
-<span style="color:#949494">✻</span> <span style="color:#949494">Crunched for 6s</span>
-
-<span style="opacity:.72">──────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
-  <span style="color:#949494">Showing detailed transcript · ctrl+o to toggle · ↑↓ scroll · v to open in code · ? for shortcuts</span>    <span style="color:#949494">verbose</span></pre></div>
-    </div>
-  </article>
-
-  <!-- CELL:perm-ask -->
-  <article class="cell" id="cell-perm-ask">
-    <div class="cell-head">
-      <h3 class="typed"><code>touch created.txt を実行して</code></h3>
-      <span class="cell-meta">画面実測 · 2026-08-23</span>
-    </div>
-    <div class="cell-body">
-      <p class="cell-lede">どのルールにも一致しない Bash コマンドで、権限確認プロンプトが出る様子を記録する。</p>
-      <p class="cell-desc">実測: <code>touch created.txt</code> は allow にも deny にも一致しないため、実行前に「Do you want to proceed?」の確認ダイアログが出た(デフォルト挙動 = ask。採取後は Esc で拒否)。ダイアログの選択肢 2 は、この場で恒久的な許可を追加する導線になっている。</p>
-      <p class="cell-desc"><strong>実測で分かった注意点:</strong> 当初は <code>date</code> で採取する予定だったが、<code>date</code> は確認なしでそのまま実行された。Claude Code には「読み取り専用」と判定した Bash コマンド(<code>ls</code> <code>cat</code> <code>pwd</code> <code>grep</code> や read-only な <code>git</code> など)をどのモードでもプロンプトなしで実行する組み込みの仕組みがあり(<a href="https://code.claude.com/docs/en/permissions#read-only-commands">公式ドキュメント: Read-only commands</a>)、この集合は設定で変えられない(確認させたい場合は <code>ask</code> / <code>deny</code> ルールを書く)。「ルール未定義 = 必ず聞かれる」ではない点に注意。</p>
-      <div class="term"><div class="term-bar">claude — touch created.txt (ask)</div><pre><span style="color:#4E4E4E;background:#3A3A3A">❯ </span><span style="color:#FFFFFF;background:#3A3A3A">touch created.txt を実行して</span>
-
-<span style="color:#949494"> </span> Creating an empty file called created.txt
-<span style="color:#949494">  ⎿  $ touch created.txt</span>
-
-<span style="color:#AFD7FF">──────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
- <span style="color:#AFD7FF;font-weight:700">Bash command</span>
-
-   touch created.txt
-   <span style="color:#949494">Create an empty file called created.txt</span>
-
- Do you want to proceed?
- <span style="color:#AFD7FF">❯</span> <span style="color:#949494">1. </span><span style="color:#AFD7FF">Yes</span>
-   <span style="color:#949494">2. </span>Yes, and always allow access to <span style="font-weight:700">/…/claude-slash-command-notebook/work/config-demo</span>
-      from this project
-   <span style="color:#949494">3. </span>No
-
- <span style="color:#949494">Esc to cancel · Tab to amend · ctrl+e to explain</span></pre></div>
-    </div>
-  </article>
-
-  <!-- CELL:perm-deny -->
-  <article class="cell" id="cell-perm-deny">
-    <div class="cell-head">
-      <h3 class="typed"><code>secrets/credentials.env を読んで</code></h3>
-      <span class="cell-meta">画面実測 · 2026-08-23</span>
-    </div>
-    <div class="cell-body">
-      <p class="cell-lede">deny ルールに一致する読み取りが拒否される様子を記録する(ctrl+o の詳細トランスクリプト表示で採取)。</p>
-      <p class="cell-desc">実測: <code>Read(./secrets/**)</code> の deny ルールに一致し、<code>secrets/credentials.env</code>(ダミー値のみ)の Read ツール呼び出しが <code>Error: File is in a directory that is denied by your permission settings.</code> で拒否された。通常表示では「Read 1 file」と畳まれてエラー文が見えないため、詳細表示で採取している。モデルはその結果を受けて「権限設定で制限されている」と応答した。</p>
-      <div class="term"><div class="term-bar">claude — secrets read (deny)</div><pre><span style="color:#4E4E4E;background:#3A3A3A">❯ </span><span style="color:#FFFFFF;background:#3A3A3A">secrets/credentials.env の中身をそのまま表示して</span>
-
-<span style="color:#FF87AF">⏺</span> <span style="font-weight:700">Read</span>(/…/claude-slash-command-notebook/work/config-demo/secrets/credentials.env)
-<span style="color:#949494">  ⎿  </span><span style="color:#FF87AF">Error: File is in a directory that is denied by your permission settings.</span>
-
-                                                                    <span style="color:#949494">11:25 PM</span> <span style="color:#949494">claude-haiku-4-5-20251001</span>
-<span style="color:#FFFFFF">⏺</span> 申し訳ありません。<span style="color:#AFD7FF">secrets/credentials.env</span> ファイルは権限設定により読み取りが禁止されています。このファイルは
-  機密情報を含むため、セキュリティ上の理由で保護されています。
-
-  必要な場合は、権限設定を変更する必要があります。
-
-<span style="color:#949494">✻</span> <span style="color:#949494">Worked for 6s</span>
-
-<span style="opacity:.72">──────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
-  <span style="color:#949494">Showing detailed transcript · ctrl+o to toggle · ↑↓ scroll · v to open in code · ? for shortcuts</span>    <span style="color:#949494">verbose</span></pre></div>
-    </div>
-  </article>
-
-  <!-- CELL:perm-modes -->
-  <article class="cell" id="cell-perm-modes">
-    <div class="cell-head">
-      <h3 class="typed"><code>shift+tab</code> / <code>permissions.defaultMode</code></h3>
-      <span class="cell-meta">画面実測 · 2026-08-23</span>
-    </div>
-    <div class="cell-body">
-      <p class="cell-lede">権限モード(manual / accept edits / plan / auto)の見え方と、既定モードの設定方法を記録する。</p>
-      <p class="cell-desc">実測: フッター左端のバッジが現在のモード。haiku(local 設定)で起動すると <code>⏸ manual mode on</code>、shift+tab で <code>⏵⏵ accept edits on</code> → <code>⏸ plan mode on</code> → manual と <strong>3 つを巡回</strong>する。auto mode はこのモデルでは出てこない(入力欄の上に "auto mode unavailable for this model" と表示される — 姉妹ページの <a href="index.html#cell-codereview-hint-ui">/code-review ヒントの画面</a>に写っている)。一方 <code>--model sonnet</code> で起動すると最初から <code>⏵⏵ auto mode on</code>(2.1.228 以降、Pro / Max / Team の既定は auto。分類器モデルが扱えるモデルのみ)。local の <code>.claude/settings.local.json</code> に <code>"permissions": { "defaultMode": "acceptEdits" }</code> を置いて起動すると、haiku でも最初から accept edits で始まる。</p>
-      <div class="term"><div class="term-bar">claude — footer: manual (haiku, 起動時)</div><pre><span style="color:#808080">──────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
-❯
-<span style="color:#808080">──────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
-  <span style="color:#949494">⏸ manual mode on · ? for shortcuts · ← for agents</span>                                                      <span style="color:#87D787">/rc</span></pre></div>
-      <div class="term"><div class="term-bar">claude — footer: shift+tab ×1 → accept edits</div><pre><span style="color:#808080">──────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
-❯
-<span style="color:#808080">──────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
-  <span style="color:#AFAFFF">⏵⏵ accept edits on</span><span style="color:#949494"> (shift+tab to cycle) · ← for agents</span>                                                 <span style="color:#87D787">/rc</span></pre></div>
-      <div class="term"><div class="term-bar">claude — footer: shift+tab ×2 → plan</div><pre><span style="color:#808080">──────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
-❯
-<span style="color:#808080">──────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
-  <span style="color:#5FAFAF">⏸ plan mode on</span><span style="color:#949494"> (shift+tab to cycle) · ← for agents</span>                                                     <span style="color:#87D787">/rc</span></pre></div>
-      <div class="term"><div class="term-bar">claude — footer: defaultMode = acceptEdits で起動</div><pre><span style="color:#808080">──────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
-❯ <span style="opacity:.72">Try "write a test for &lt;filepath&gt;"</span>
-<span style="color:#808080">──────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
-  <span style="color:#AFAFFF">⏵⏵ accept edits on</span><span style="color:#949494"> (shift+tab to cycle) · ← for agents</span>                                                 <span style="color:#87D787">/rc</span></pre></div>
-      <div class="term"><div class="term-bar">claude — footer: --model sonnet で起動 → auto</div><pre><span style="color:#808080">──────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
-❯ <span style="opacity:.72">Try "fix typecheck errors"</span>
-<span style="color:#808080">──────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
-  <span style="color:#FFD700">⏵⏵ auto mode on</span><span style="color:#949494"> (shift+tab to cycle) · ← for agents</span>                                                    <span style="color:#87D787">/rc</span></pre></div>
-      <p class="cell-desc">バッジの意味: manual(<code>default</code>)は操作前に確認、acceptEdits はファイル編集を自動承認、plan は編集を保留して調査と計画のみ、auto は分類器モデルが各操作を審査して日常的な確認を省く(ほかに dontAsk / bypassPermissions)。</p>
-    </div>
-  </article>
-
-  <!-- CELL:config-output-style -->
-  <article class="cell" id="cell-config-output-style">
-    <div class="cell-head">
-      <h3 class="typed"><code>/config</code> → Output style</h3>
-      <span class="cell-meta">画面実測 · 2026-08-23</span>
-    </div>
-    <div class="cell-body">
-      <p class="cell-lede">出力スタイルの選び方と、選択がどのファイルに書かれるかを記録する。</p>
-      <p class="cell-desc">実測: <code>/config</code> の検索欄に "Output style" と打って行を選び Enter すると、5 つの組み込みスタイル(Default / Proactive / Concise / Explanatory / Learning)のピッカーが出る。Concise(2.1.237 追加)を確定すると行の値が <code>Concise</code> になり、<strong>プロジェクトの <code>.claude/settings.local.json</code> に <code>"outputStyle": "Concise"</code> が書き込まれた</strong>(下の Out)。スタイルはセッション開始時に固定されるため、効かせるには再起動か <code>/clear</code> が要る。</p>
-      <div class="term"><div class="term-bar">claude — /config (output style picker)</div><pre><span style="color:#AFD7FF">▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔</span>
-   <span style="color:#AFD7FF;font-weight:700">Preferred output style</span>
-
-   <span style="color:#949494">This changes how Claude Code communicates with you</span>
-
-   <span style="color:#AFD7FF">❯</span> <span style="color:#949494">1. </span><span style="color:#87D787">Default</span> <span style="color:#87D787">✔</span>    <span style="color:#949494">Claude completes coding tasks efficiently and provides concise responses</span>
-     <span style="color:#949494">2. </span>Proactive    <span style="color:#949494">Claude executes immediately, minimizes interruptions, and prefers action over planning</span>
-     <span style="color:#949494">3. </span>Concise      <span style="color:#949494">Claude responds tersely, leading with results and skipping preamble and narration</span>
-     <span style="color:#949494">4. </span>Explanatory  <span style="color:#949494">Claude explains its implementation choices and codebase patterns</span>
-     <span style="color:#949494">5. </span>Learning     <span style="color:#949494">Claude pauses and asks you to write small pieces of code for hands-on practice</span>
-   <span style="color:#949494">Enter to confirm · Esc to cancel</span></pre></div>
-      <div class="term"><div class="term-bar">claude — /config (output style = Concise)</div><pre><span style="color:#AFD7FF">▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔</span>
-   <span style="color:#AFD7FF;font-weight:700">Settings</span>  Status  <span style="color:#191713;background:#D9D4CA;font-weight:700"> Config </span>  Usage   Stats
-
-   <span style="opacity:.72">╭──────────────────────────────────────────────────────────────────────────────────────────────────────╮</span>
-   <span style="opacity:.72">│</span> <span style="color:#949494">⌕ Output style</span>                                                                                       <span style="opacity:.72">│</span>
-   <span style="opacity:.72">╰──────────────────────────────────────────────────────────────────────────────────────────────────────╯</span>
-
-   <span style="color:#AFD7FF">❯ Output style</span>                               <span style="color:#AFD7FF">Concise</span>
-
-   <span style="color:#949494">Enter/Space to change · / to search · Esc to close</span></pre></div>
-      <p class="cell-desc">確定後の <code>.claude/settings.local.json</code>(採取時に <code>cat</code> した内容):</p>
-      <div class="out-content"><pre><code>{
-  "model": "claude-haiku-4-5",
-  "outputStyle": "Concise"
-}</code></pre></div>
-    </div>
-  </article>
-
-  <!-- CELL:style-compare -->
-  <article class="cell" id="cell-style-compare">
-    <div class="cell-head">
-      <h3 class="typed"><code>outputStyle</code>: Default と Concise で同じ質問</h3>
+      <h3 class="typed"><code>outputStyle</code></h3>
       <span class="cell-meta">model: sonnet(--model)· 画面実測 · 2026-08-23</span>
     </div>
     <div class="cell-body">
-      <p class="cell-lede">同じプロンプト「このプロジェクトの .claude 配下の設定ファイルを読んで、何が設定されているか教えて」を、local の <code>outputStyle</code> だけを変えた 2 セッション(Default / Concise)に投げて比較する。</p>
-      <p class="cell-desc">実測: どちらも Glob 1 回・Read 2 回で同じ事実(project は sonnet-5 + allow/deny、local は haiku-4-5)を見出しと箇条書きで返し、<strong>この程度の短い質問では差は小さい</strong>。Concise 側は前置きの文が減り、各項目が名詞句寄りで全体が 1〜2 行短い程度。なお両セッションとも <code>--model sonnet</code> で起動しているため <code>⏵⏵ auto mode on</code> で始まり、local の haiku は CLI 引数に負けている(§1 の第 2 層)。応答文は非決定的で、再実行すると文面は変わる。</p>
+      <p class="cell-lede">同じ質問への応答文が、出力スタイルの設定でどう変わるか。</p>
+      <div class="cfg-in"><span class="in-label">In(共通)</span>❯ このプロジェクトの .claude 配下の設定ファイルを読んで、何が設定されているか教えて</div>
+      <div class="switch" role="tablist">
+        <button type="button" role="tab" data-panel="outputstyle-p0" class="active" aria-selected="true">設定なし(Default)</button>
+        <button type="button" role="tab" data-panel="outputstyle-p1" aria-selected="false"><code>"outputStyle": "Concise"</code></button>
+      </div>
+      <section class="panel active" id="outputstyle-p0" role="tabpanel">
+      <p class="snip-label">.claude/settings.local.json</p>
+      <div class="out-content"><pre><code>{ "model": "claude-haiku-4-5" }</code></pre></div>
       <div class="term"><div class="term-bar">claude — style: Default (sonnet)</div><pre><span style="color:#4E4E4E;background:#3A3A3A">❯ </span><span style="color:#FFFFFF;background:#3A3A3A">このプロジェクトの .claude 配下の設定ファイルを読んで、何が設定されているか教えて</span>
 
   <span style="color:#949494">Searched for </span><span style="color:#949494;font-weight:700">1</span><span style="color:#949494"> pattern, read </span><span style="color:#949494;font-weight:700">2</span><span style="color:#949494"> files </span>
@@ -1019,6 +630,10 @@
 ❯
 <span style="color:#808080">──────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
   <span style="color:#FFD700">⏵⏵ auto mode on</span><span style="color:#949494"> (shift+tab to cycle) · ← for agents</span>                                                    <span style="color:#87D787">/rc</span></pre></div>
+      </section>
+      <section class="panel" id="outputstyle-p1" role="tabpanel">
+      <p class="snip-label">.claude/settings.local.json</p>
+      <div class="out-content"><pre><code>{ "model": "claude-haiku-4-5", "outputStyle": "Concise" }</code></pre></div>
       <div class="term"><div class="term-bar">claude — style: Concise (sonnet)</div><pre><span style="color:#4E4E4E;background:#3A3A3A">❯ </span><span style="color:#FFFFFF;background:#3A3A3A">このプロジェクトの .claude 配下の設定ファイルを読んで、何が設定されているか教えて</span>
 
   <span style="color:#949494">Searched for </span><span style="color:#949494;font-weight:700">1</span><span style="color:#949494"> pattern, read </span><span style="color:#949494;font-weight:700">2</span><span style="color:#949494"> files </span>
@@ -1044,81 +659,215 @@
 ❯
 <span style="color:#808080">──────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
   <span style="color:#FFD700">⏵⏵ auto mode on</span><span style="color:#949494"> (shift+tab to cycle) · ← for agents</span>                                                    <span style="color:#87D787">/rc</span></pre></div>
+      </section>
+      <p class="cell-desc">実測: この程度の短い質問では差は小さい。Concise 側は前置きの文が減り、各項目が名詞句寄りで全体が 1〜2 行短い。応答文は非決定的で、再実行すると文面は変わる。</p>
+      <details class="prompt">
+        <summary><strong>設定の切り替え方</strong>(/config → Output style の画面と、書き込まれたファイル)</summary>
+        <p class="cell-desc">/config の検索欄に "Output style" と打って行を選ぶと 5 つの組み込みスタイルのピッカーが出る。Concise を確定すると、プロジェクトの <code>.claude/settings.local.json</code> に書き込まれる。スタイルはセッション開始時に固定されるため、効かせるには再起動か /clear が要る。</p>
+        <div class="term"><div class="term-bar">claude — /config (output style picker)</div><pre><span style="color:#AFD7FF">▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔</span>
+   <span style="color:#AFD7FF;font-weight:700">Preferred output style</span>
+
+   <span style="color:#949494">This changes how Claude Code communicates with you</span>
+
+   <span style="color:#AFD7FF">❯</span> <span style="color:#949494">1. </span><span style="color:#87D787">Default</span> <span style="color:#87D787">✔</span>    <span style="color:#949494">Claude completes coding tasks efficiently and provides concise responses</span>
+     <span style="color:#949494">2. </span>Proactive    <span style="color:#949494">Claude executes immediately, minimizes interruptions, and prefers action over planning</span>
+     <span style="color:#949494">3. </span>Concise      <span style="color:#949494">Claude responds tersely, leading with results and skipping preamble and narration</span>
+     <span style="color:#949494">4. </span>Explanatory  <span style="color:#949494">Claude explains its implementation choices and codebase patterns</span>
+     <span style="color:#949494">5. </span>Learning     <span style="color:#949494">Claude pauses and asks you to write small pieces of code for hands-on practice</span>
+   <span style="color:#949494">Enter to confirm · Esc to cancel</span></pre></div>
+        <div class="term"><div class="term-bar">claude — /config (output style = Concise)</div><pre><span style="color:#AFD7FF">▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔</span>
+   <span style="color:#AFD7FF;font-weight:700">Settings</span>  Status  <span style="color:#191713;background:#D9D4CA;font-weight:700"> Config </span>  Usage   Stats
+
+   <span style="opacity:.72">╭──────────────────────────────────────────────────────────────────────────────────────────────────────╮</span>
+   <span style="opacity:.72">│</span> <span style="color:#949494">⌕ Output style</span>                                                                                       <span style="opacity:.72">│</span>
+   <span style="opacity:.72">╰──────────────────────────────────────────────────────────────────────────────────────────────────────╯</span>
+
+   <span style="color:#AFD7FF">❯ Output style</span>                               <span style="color:#AFD7FF">Concise</span>
+
+   <span style="color:#949494">Enter/Space to change · / to search · Esc to close</span></pre></div>
+        <p class="cell-desc">確定後の <code>.claude/settings.local.json</code>:</p>
+        <div class="out-content"><pre><code>{
+  "model": "claude-haiku-4-5",
+  "outputStyle": "Concise"
+}</code></pre></div>
+      </details>
     </div>
   </article>
 
-  <h2 id="catalog"><span class="sec-no">§4</span>主要キー早見表</h2>
-  <p class="sec-lede">settings.json のトップレベルキーのうち主要なもの。キー一覧は CLI バージョンで変わるため網羅はせず、完全な一覧は<a href="https://code.claude.com/docs/en/settings-reference">公式ドキュメント(settings reference)</a>を参照(2026-08-23 時点。バージョン付きのものは <a href="https://github.com/anthropics/claude-code/blob/main/CHANGELOG.md">CHANGELOG</a> で追加が確認できるキー)。</p>
+  <!-- CELL:deny -->
+  <article class="cell" id="cell-deny">
+    <div class="cell-head">
+      <h3 class="typed"><code>permissions.deny</code></h3>
+      <span class="cell-meta">model: haiku(local 設定)· 画面実測 · 2026-08-23(一部未採取)</span>
+    </div>
+    <div class="cell-body">
+      <p class="cell-lede">同じ読み取り依頼が、deny ルールの有無でどう変わるか。</p>
+      <div class="cfg-in"><span class="in-label">In(共通)</span>❯ secrets/credentials.env の中身をそのまま表示して</div>
+      <div class="switch" role="tablist">
+        <button type="button" role="tab" data-panel="deny-p0" class="active" aria-selected="true">設定なし</button>
+        <button type="button" role="tab" data-panel="deny-p1" aria-selected="false"><code>"deny": ["Read(./secrets/**)"]</code></button>
+      </div>
+      <section class="panel active" id="deny-p0" role="tabpanel">
+      <p class="snip-label">.claude/settings.json(permissions なし)</p>
+      <div class="out-content"><pre><code>{ "model": "claude-sonnet-5" }</code></pre></div>
+      <div class="term"><div class="term-bar">claude — secrets read (no deny)</div><pre>(未採取)</pre></div>
+      <p class="pending">未採取 — ルールがなければファイルは普通に読まれる(はず)。 ローカルで <code>./capture-config.sh</code> → <code>python3 ansi2html.py config</code> を実行するとこの枠に流し込まれる。</p>
+      </section>
+      <section class="panel" id="deny-p1" role="tabpanel">
+      <p class="snip-label">.claude/settings.json</p>
+      <div class="out-content"><pre><code>{
+  "model": "claude-sonnet-5",
+  "permissions": {
+    "allow": ["Bash(python3 src/hello.py)"],
+    "deny": ["Read(./secrets/**)"]
+  }
+}</code></pre></div>
+      <div class="term"><div class="term-bar">claude — secrets read (deny)</div><pre><span style="color:#4E4E4E;background:#3A3A3A">❯ </span><span style="color:#FFFFFF;background:#3A3A3A">secrets/credentials.env の中身をそのまま表示して</span>
 
-  <div class="cat-group">
-    <div class="table-wrap"><table>
-      <thead><tr><th scope="col">キー</th><th scope="col">意味</th></tr></thead>
-      <tbody>
-        <tr><td><code>permissions</code></td><td>ツール実行の allow / ask / deny ルール、<code>additionalDirectories</code>(追加の作業ディレクトリ)、<code>defaultMode</code>(既定の権限モード)。→ ルール記法は下記</td></tr>
-        <tr><td><code>hooks</code></td><td>ツール実行の前後などのタイミングで任意のコマンドを実行する</td></tr>
-        <tr><td><code>env</code></td><td>セッションに適用する環境変数</td></tr>
-        <tr><td><code>model</code></td><td>既定で使うモデル</td></tr>
-        <tr><td><code>availableModels</code></td><td>切り替え候補として提示するモデルの一覧</td></tr>
-        <tr><td><code>statusLine</code></td><td>ステータスラインのカスタム表示</td></tr>
-        <tr><td><code>outputStyle</code></td><td>応答の出力スタイル。組み込みは Default / Proactive / Concise(2.1.237 追加)/ Explanatory / Learning とカスタム定義。<code>/config</code> → Output style で選ぶと <code>.claude/settings.local.json</code> に書かれる。→ <a href="#cell-config-output-style">§3 で実測</a></td></tr>
-        <tr><td><code>permissions.defaultMode</code></td><td>セッション開始時の権限モード: <code>default</code>(Manual)/ <code>acceptEdits</code> / <code>plan</code> / <code>auto</code> / <code>dontAsk</code> / <code>bypassPermissions</code>。→ <a href="#cell-perm-modes">§3 で実測</a></td></tr>
-        <tr><td><code>useAutoModeDuringPlan</code></td><td>プランモード中のシェル実行を auto mode の分類器に任せる(既定 true)</td></tr>
-        <tr><td><code>effortLevel</code></td><td><code>/effort</code> で選んだ推論努力レベルの保存先(low〜max)</td></tr>
-        <tr><td><code>tui</code></td><td>端末レンダラー: <code>"fullscreen"</code>(新しい全画面描画)か <code>"classic"</code></td></tr>
-        <tr><td><code>fastMode</code></td><td>Fast mode(Opus 5 / 4.8 の高速出力)を既定で有効にする</td></tr>
-        <tr><td><code>disableWorkflows</code> / <code>workflowSizeGuideline</code></td><td>動的ワークフロー(ultracode)を無効化 / 既定の規模(small / medium / large / unrestricted、2.1.219 から既定 medium)</td></tr>
-        <tr><td><code>agentPushNotifEnabled</code> / <code>inputNeededNotifEnabled</code></td><td>Claude の判断でのプッシュ通知 / 入力待ち時のプッシュ通知(モバイルアプリ連携)</td></tr>
-        <tr><td><code>remoteControlAtStartup</code></td><td>起動時に Remote Control(claude.ai / モバイルからの操作)へ自動接続する</td></tr>
-        <tr><td><code>alwaysThinkingEnabled</code></td><td>拡張思考を全セッションで有効にするか</td></tr>
-        <tr><td><code>keybindingFlavor</code> / <code>spellcheck</code> / <code>emojiCompletionEnabled</code></td><td>入力欄の挙動: Ctrl+W の削除単位(<code>"readline"</code>、2.1.238)/ スペルチェック下線(2.1.235)/ <code>:shortcode:</code> の絵文字補完(2.1.217)</td></tr>
-        <tr><td><code>crossSessionInbound</code> / <code>dialogExpiry</code></td><td>他セッションからのメッセージの受け入れ方 / ダイアログの期限(2.1.224、<code>/config</code> の "Dialog expiry" 行)</td></tr>
-        <tr><td><code>axScreenReader</code></td><td>スクリーンリーダー向けのプレーンテキスト描画(2.1.208)</td></tr>
-        <tr><td><code>apiKeyHelper</code></td><td>API キーを生成・取得するスクリプトの指定</td></tr>
-        <tr><td><code>cleanupPeriodDays</code></td><td>ローカルデータの保持日数</td></tr>
-        <tr><td><code>autoUpdatesChannel</code></td><td>自動更新のチャンネル</td></tr>
-        <tr><td><code>defaultShell</code></td><td>Bash ツールで使うシェル</td></tr>
-        <tr><td><code>companyAnnouncements</code></td><td>起動時に表示する組織のアナウンス</td></tr>
-      </tbody>
-    </table></div>
-  </div>
+<span style="color:#FF87AF">⏺</span> <span style="font-weight:700">Read</span>(/…/claude-slash-command-notebook/work/config-demo/secrets/credentials.env)
+<span style="color:#949494">  ⎿  </span><span style="color:#FF87AF">Error: File is in a directory that is denied by your permission settings.</span>
 
-  <h3 id="config-rows" class="sub">/config の行 ↔ settings キー</h3>
-  <p class="sec-lede"><code>/config</code> の Config タブ(2.1.241 で 41 行。<a href="#cell-config-scopes">§3 の画面</a>)は settings の一部を GUI で編集するもの。主な行と対応キーの例(対応が公式リファレンスで確認できなかった行は「UI のみ」)。</p>
-  <div class="cat-group">
-    <div class="table-wrap"><table>
-      <thead><tr><th scope="col">/config の行</th><th scope="col">settings キー</th></tr></thead>
-      <tbody>
-        <tr><td>Model</td><td><code>model</code></td></tr>
-        <tr><td>Output style</td><td><code>outputStyle</code>(選択は settings.local.json に保存される — §3 で実測)</td></tr>
-        <tr><td>Default permission mode / Use auto mode during plan</td><td><code>permissions.defaultMode</code> / <code>useAutoModeDuringPlan</code></td></tr>
-        <tr><td>Dynamic workflows / Dynamic workflow size / Ultracode keyword trigger</td><td><code>disableWorkflows</code>(または <code>enableWorkflows</code>)/ <code>workflowSizeGuideline</code> / <code>ultracode</code></td></tr>
-        <tr><td>Thinking mode</td><td><code>alwaysThinkingEnabled</code></td></tr>
-        <tr><td>Auto-compact</td><td><code>autoCompactEnabled</code></td></tr>
-        <tr><td>Rewind code (checkpoints)</td><td><code>fileCheckpointingEnabled</code></td></tr>
-        <tr><td>Artifacts</td><td><code>enableArtifact</code>(個人)/ <code>disableArtifact</code>(組織で無効化)</td></tr>
-        <tr><td>Verbose output / Show turn duration / Terminal progress bar</td><td><code>verbose</code> / <code>showTurnDuration</code> / <code>terminalProgressBarEnabled</code></td></tr>
-        <tr><td>Auto-update channel / Theme / Language / Editor mode</td><td><code>autoUpdatesChannel</code> / <code>theme</code> / <code>language</code> / <code>editorMode</code></td></tr>
-        <tr><td>Push when actions required / Push when Claude decides</td><td><code>inputNeededNotifEnabled</code> / <code>agentPushNotifEnabled</code></td></tr>
-        <tr><td>Enable Remote Control for all sessions / Dialog expiry</td><td><code>remoteControlAtStartup</code> / <code>dialogExpiry</code></td></tr>
-        <tr><td>Respect .gitignore in file picker / Auto-scroll / Auto-connect to IDE</td><td><code>respectGitignore</code> / <code>autoScrollEnabled</code> / <code>autoConnectIde</code></td></tr>
-        <tr><td>Worktree base ref / Skip the /copy picker / Copy on select / Open agents view by default / Show PR status footer / Claude in Chrome enabled by default</td><td>UI のみ(settings reference に対応キーの記載なし)</td></tr>
-      </tbody>
-    </table></div>
-  </div>
+                                                                    <span style="color:#949494">11:25 PM</span> <span style="color:#949494">claude-haiku-4-5-20251001</span>
+<span style="color:#FFFFFF">⏺</span> 申し訳ありません。<span style="color:#AFD7FF">secrets/credentials.env</span> ファイルは権限設定により読み取りが禁止されています。このファイルは
+  機密情報を含むため、セキュリティ上の理由で保護されています。
 
-  <p class="sec-lede">permissions のルールは <code>ツール名(パターン)</code> の形式で書く。例: <code>Bash(npm run test:*)</code>(npm run test 系のコマンドを許可)、<code>Read(./secrets/**)</code>(secrets 配下の読み取りを対象に)。同じ記法を allow / ask / deny のどの配列に入れるかで挙動が変わる — 一致時の実際の画面は §3 の <a href="#cell-perm-allow">allow セル</a>・<a href="#cell-perm-ask">ask セル</a>・<a href="#cell-perm-deny">deny セル</a>で実測している。</p>
+  必要な場合は、権限設定を変更する必要があります。
+
+<span style="color:#949494">✻</span> <span style="color:#949494">Worked for 6s</span>
+
+<span style="opacity:.72">──────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
+  <span style="color:#949494">Showing detailed transcript · ctrl+o to toggle · ↑↓ scroll · v to open in code · ? for shortcuts</span>    <span style="color:#949494">verbose</span></pre></div>
+      <p class="cell-desc">実測: Read ツール呼び出しが <code>Error: File is in a directory that is denied by your permission settings.</code> で拒否された(通常表示ではエラー文が畳まれるため、ctrl+o の詳細表示で採取)。モデルはその結果を受けて「権限設定で制限されている」と応答した。</p>
+      </section>
+    </div>
+  </article>
+
+  <!-- CELL:defaultmode -->
+  <article class="cell" id="cell-defaultmode">
+    <div class="cell-head">
+      <h3 class="typed"><code>permissions.defaultMode</code></h3>
+      <span class="cell-meta">画面実測 · 2026-08-23(一部未採取)</span>
+    </div>
+    <div class="cell-body">
+      <p class="cell-lede">同じ Bash 依頼(ファイル作成)への確認の出方が、権限モードでどう変わるか。フッター左端のバッジが現在のモード(shift+tab でも巡回できる)。</p>
+      <div class="cfg-in"><span class="in-label">In(共通)</span>❯ touch created.txt を実行して</div>
+      <div class="switch" role="tablist">
+        <button type="button" role="tab" data-panel="defaultmode-p0" class="active" aria-selected="true">manual(既定)</button>
+        <button type="button" role="tab" data-panel="defaultmode-p1" aria-selected="false"><code>"defaultMode": "acceptEdits"</code></button>
+        <button type="button" role="tab" data-panel="defaultmode-p2" aria-selected="false">auto(sonnet 起動時の既定)</button>
+      </div>
+      <section class="panel active" id="defaultmode-p0" role="tabpanel">
+      <p class="snip-label">設定なし(haiku で起動)</p>
+      <div class="out-content"><pre><code>{ "model": "claude-haiku-4-5" }</code></pre></div>
+      <div class="term"><div class="term-bar">claude — footer: manual (haiku, 起動時)</div><pre><span style="color:#808080">──────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
+❯
+<span style="color:#808080">──────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
+  <span style="color:#949494">⏸ manual mode on · ? for shortcuts · ← for agents</span>                                                      <span style="color:#87D787">/rc</span></pre></div>
+      <div class="term"><div class="term-bar">claude — touch created.txt (ask)</div><pre><span style="color:#4E4E4E;background:#3A3A3A">❯ </span><span style="color:#FFFFFF;background:#3A3A3A">touch created.txt を実行して</span>
+
+<span style="color:#949494"> </span> Creating an empty file called created.txt
+<span style="color:#949494">  ⎿  $ touch created.txt</span>
+
+<span style="color:#AFD7FF">──────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
+ <span style="color:#AFD7FF;font-weight:700">Bash command</span>
+
+   touch created.txt
+   <span style="color:#949494">Create an empty file called created.txt</span>
+
+ Do you want to proceed?
+ <span style="color:#AFD7FF">❯</span> <span style="color:#949494">1. </span><span style="color:#AFD7FF">Yes</span>
+   <span style="color:#949494">2. </span>Yes, and always allow access to <span style="font-weight:700">/…/claude-slash-command-notebook/work/config-demo</span>
+      from this project
+   <span style="color:#949494">3. </span>No
+
+ <span style="color:#949494">Esc to cancel · Tab to amend · ctrl+e to explain</span></pre></div>
+      <p class="cell-desc">実測: どのルールにも一致しないコマンドなので「Do you want to proceed?」の確認ダイアログが出た(採取後 Esc で拒否)。なお <code>date</code> のような読み取り専用コマンドは組み込み判定で確認なしに実行されるため、ファイルを作成する touch を使っている。</p>
+      </section>
+      <section class="panel" id="defaultmode-p1" role="tabpanel">
+      <p class="snip-label">.claude/settings.local.json</p>
+      <div class="out-content"><pre><code>{ "model": "claude-haiku-4-5", "permissions": { "defaultMode": "acceptEdits" } }</code></pre></div>
+      <div class="term"><div class="term-bar">claude — footer: defaultMode = acceptEdits で起動</div><pre><span style="color:#808080">──────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
+❯ <span style="opacity:.72">Try "write a test for &lt;filepath&gt;"</span>
+<span style="color:#808080">──────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
+  <span style="color:#AFAFFF">⏵⏵ accept edits on</span><span style="color:#949494"> (shift+tab to cycle) · ← for agents</span>                                                 <span style="color:#87D787">/rc</span></pre></div>
+      <div class="term"><div class="term-bar">claude — touch created.txt (acceptEdits)</div><pre>(未採取)</pre></div>
+      <p class="pending">未採取 — accept edits はファイル編集と touch などの基本的なファイル操作を自動承認する — 同じ依頼が確認なしで実行される(はず)。 ローカルで <code>./capture-config.sh</code> → <code>python3 ansi2html.py config</code> を実行するとこの枠に流し込まれる。</p>
+      </section>
+      <section class="panel" id="defaultmode-p2" role="tabpanel">
+      <p class="snip-label">設定なし(--model sonnet で起動)</p>
+      <div class="out-content"><pre><code># settings.local.json は { "model": "claude-haiku-4-5" } のまま
+# CLI 引数 --model sonnet が local 設定より優先される</code></pre></div>
+      <div class="term"><div class="term-bar">claude — footer: --model sonnet で起動 → auto</div><pre><span style="color:#808080">──────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
+❯ <span style="opacity:.72">Try "fix typecheck errors"</span>
+<span style="color:#808080">──────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
+  <span style="color:#FFD700">⏵⏵ auto mode on</span><span style="color:#949494"> (shift+tab to cycle) · ← for agents</span>                                                    <span style="color:#87D787">/rc</span></pre></div>
+      <div class="term"><div class="term-bar">claude — touch created.txt (auto)</div><pre>(未採取)</pre></div>
+      <p class="pending">未採取 — auto は分類器モデルが各操作を審査して日常的な確認を省く(2.1.228 以降、Pro / Max / Team の既定。分類器が扱えるモデルのみで、haiku では選べない)。 ローカルで <code>./capture-config.sh</code> → <code>python3 ansi2html.py config</code> を実行するとこの枠に流し込まれる。</p>
+      </section>
+    </div>
+  </article>
+
+  <!-- CELL:sandbox -->
+  <article class="cell" id="cell-sandbox">
+    <div class="cell-head">
+      <h3 class="typed"><code>sandbox</code></h3>
+      <span class="cell-meta">未採取(後日ローカルで採取)</span>
+    </div>
+    <div class="cell-body">
+      <p class="cell-lede">作業ディレクトリ外への書き込みが、Bash サンドボックスの有無でどう変わるか。サンドボックス有効時は多くのコマンドが確認なしで走る代わりに、書き込みは作業ディレクトリとセッション temp のみに OS レベルで制限される。</p>
+      <div class="cfg-in"><span class="in-label">In(共通)</span>❯ touch /tmp/sandbox-poke.txt を実行して</div>
+      <div class="switch" role="tablist">
+        <button type="button" role="tab" data-panel="sandbox-p0" class="active" aria-selected="true">設定なし</button>
+        <button type="button" role="tab" data-panel="sandbox-p1" aria-selected="false"><code>"sandbox": { "enabled": true }</code></button>
+      </div>
+      <section class="panel active" id="sandbox-p0" role="tabpanel">
+      <p class="snip-label">.claude/settings.local.json</p>
+      <div class="out-content"><pre><code>{ "model": "claude-haiku-4-5" }</code></pre></div>
+      <div class="term"><div class="term-bar">claude — sandbox: off (touch /tmp)</div><pre>(未採取)</pre></div>
+      <p class="pending">未採取 — manual の確認ダイアログに Yes と答えると普通に成功する(はず)。 ローカルで <code>./capture-config.sh</code> → <code>python3 ansi2html.py config</code> を実行するとこの枠に流し込まれる。</p>
+      </section>
+      <section class="panel" id="sandbox-p1" role="tabpanel">
+      <p class="snip-label">.claude/settings.local.json</p>
+      <div class="out-content"><pre><code>{ "model": "claude-haiku-4-5", "sandbox": { "enabled": true } }</code></pre></div>
+      <div class="term"><div class="term-bar">claude — sandbox: on (touch /tmp)</div><pre>(未採取)</pre></div>
+      <p class="pending">未採取 — 既定(autoAllowBashIfSandboxed: true)では確認なしでサンドボックス内実行され、/tmp への書き込みが OS にブロックされて違反詳細付きで失敗する(はず)。失敗を見た Claude が dangerouslyDisableSandbox での再試行を提案することがある。 ローカルで <code>./capture-config.sh</code> → <code>python3 ansi2html.py config</code> を実行するとこの枠に流し込まれる。</p>
+      <p class="cell-desc">前提: macOS は組み込みの Seatbelt で追加インストール不要。Linux / WSL2 は bubblewrap と socat が必要(/sandbox パネルの Dependencies タブで確認できる)。</p>
+      </section>
+    </div>
+  </article>
+
 
   <section class="prov" id="prov">
     <h2>取得方法(再現手順)</h2>
     <ul>
-      <li>採取日: 2026-08-23。Claude Code 2.1.241(macOS、Claude Max アカウント)。モデルは原則 <code>--model</code> を付けず、フィクスチャの local 設定(<code>claude-haiku-4-5</code>)に任せている。例外はスタイル比較と auto mode の確認で、<code>--model sonnet</code> を付けて起動している(CLI 引数が local より優先されることの実証を兼ねる)。</li>
-      <li>採取は <code>./capture-config.sh</code>: <code>work/config-demo</code> に §3 Setup のフィクスチャを構築し、tmux の仮想端末(110×42)で対話モードを起動して、各画面を <code>tmux capture-pane -e</code> で ANSI カラー付きテキストとして採取する(パネル系 6 画面 + 対話系 5 画面 + フッターのみ 5 画面)。allow / deny の対話セルは応答後に ctrl+o で詳細トランスクリプト表示に切り替えて採取している。待ち時間は固定の sleep ではなく、フッターが入力待ちに戻るまでのポーリングで決めている。権限モード・Output style のデモはセッションを再起動し、<code>.claude/settings.local.json</code> を書き換えてから起動する(スクリプト終了時に fixture の値へ戻す)。</li>
-      <li>採取後、<code>python3 ansi2html.py config</code> で本ページの枠を実測キャプチャに差し替える(term-bar のラベルで枠を特定する。初回はパネル区切り線/プロンプト行から下をトリミングして全行、2回目以降は既存セルの先頭行・末尾行を境界に置換)。メールアドレス・セッション ID・ホームディレクトリのパスは同スクリプトで伏せ字化。</li>
-      <li><strong>注意: capture-config.sh は採取中に一時的に <code>~/.claude/settings.json</code> を変更し、終了時に復元する。</strong>普段使いの環境を汚さないよう、コンテナ等の隔離環境での実行を推奨。</li>
-      <li>§1・§2・§4 の記述は公式ドキュメント(2026-08-20 参照)に基づく。§3 の「実測:」は採取した画面から読み取った内容で、画面は非決定的(モデルの文面・起動時のお知らせ・採取環境由来のルール表示など)な部分を含む。</li>
+      <li>採取日: 2026-08-23。Claude Code 2.1.241(macOS、Claude Max アカウント)。モデルはフィクスチャの local 設定(<code>claude-haiku-4-5</code>)、outputStyle 比較と auto モードのみ <code>--model sonnet</code>。</li>
+      <li>採取は <code>./capture-config.sh</code>: <code>work/config-demo</code> に Setup のフィクスチャを構築し、セルごとに <code>.claude/settings.local.json</code>(deny 比較のみ <code>settings.json</code>)を書き換えて別セッションを起動し、tmux の仮想端末(110×42)から採取する。<code>~/.claude</code> のユーザー設定には触れない。</li>
+      <li>採取後、<code>python3 ansi2html.py config</code> で本ページの枠を実測キャプチャに差し替える(term-bar のラベルで枠を特定する。「(未採取)」の枠は初回に全行が流し込まれ、以降は既存の先頭行・末尾行を境界に置換)。メールアドレス・セッション ID・ホームディレクトリのパスは同スクリプトで伏せ字化。</li>
+      <li>sandbox セルの採取前提: macOS は追加インストール不要(Seatbelt)。Linux / WSL2 は bubblewrap と socat が必要。</li>
+      <li>「実測:」は採取した画面から読み取った内容。「(はず)」と書いた挙動は公式ドキュメント(2026-08-24 参照)に基づく想定で、採取後に実測へ置き換える。</li>
     </ul>
   </section>
 </main>
+
+<script>
+(function () {
+  // トグル: .switch のボタンで同じ cell-body 内の .panel を切り替える
+  document.querySelectorAll('.cell-body .switch').forEach(function (sw) {
+    var btns = Array.prototype.slice.call(sw.querySelectorAll('button'));
+    btns.forEach(function (b) {
+      b.addEventListener('click', function () {
+        btns.forEach(function (x) { x.classList.remove('active'); x.setAttribute('aria-selected', 'false'); });
+        b.classList.add('active');
+        b.setAttribute('aria-selected', 'true');
+        var body = sw.closest('.cell-body');
+        Array.prototype.forEach.call(body.querySelectorAll('.panel'), function (p) { p.classList.remove('active'); });
+        var target = document.getElementById(b.getAttribute('data-panel'));
+        if (target) target.classList.add('active');
+      });
+    });
+  });
+})();
+</script>
 
 <script>
 (function () {

@@ -4,7 +4,7 @@
 
 - 公開ページ (GitHub Pages): https://asiball.github.io/claude-slash-command-notebook/
 - ページソース: `index.html` が正本(GitHub Pages がリポジトリ直下からそのまま配信する。編集はこのファイルに直接行う)
-- 姉妹ページ: `config.html`(Config Notebook — 設定ファイルの階層・優先順位・permissions の実測)
+- 姉妹ページ: `config.html`(Config Notebook — 同じ入力に対し設定の切り替えで出力がどう変わるかの実測比較。outputStyle / permissions.deny / permissions.defaultMode / sandbox)
 
 ## フォルダ構成
 
@@ -20,7 +20,7 @@
 ├── capture-skill-a.sh            # §1 の端末画面 前半 → work/tui2/
 ├── capture-skill-b.sh            # §1 の端末画面 後半 → work/tui2/
 ├── capture-extra.sh              # §2 追加分(新しめコマンド・ultra 系・/code-review ultra 本実行)→ work/tui-color/
-├── capture-config.sh             # Config Notebook 用の画面採取 → work/config-tui/*.ansi
+├── capture-config.sh             # Config Notebook 用の画面採取(設定切り替え比較)→ work/config-tui/*.ansi
 ├── ansi2html.py                  # ANSI→HTML 変換とセル差し替え(引数なし=index.html、`config` 指定で config.html)
 └── work/                         # 一時成果物(git 管理外。丸ごと削除して再実行してよい)
     ├── sample-project/           # デモ対象(ページ §1 冒頭の Setup セルの構成と対応。setup-sample.sh 実行のたびに再構築)
@@ -30,8 +30,7 @@
     ├── tui-color/                # §2 ANSI キャプチャ
     ├── tui2/                     # §1 端末画面キャプチャ
     ├── config-demo/              # Config Notebook のデモ対象(capture-config.sh 実行のたびに再構築)
-    ├── config-tui/               # Config Notebook の ANSI キャプチャ
-    └── config-backup/            # capture-config.sh が ~/.claude/settings.json を退避する場所
+    └── config-tui/               # Config Notebook の ANSI キャプチャ
 ```
 
 `work/` 配下は `setup-sample.sh` 以降の各スクリプトが生成するもので、リポジトリにはコミットされない(`.gitignore` 済み)。
@@ -66,15 +65,15 @@ python3 ansi2html.py     # 6. ANSI→HTML 変換し、§2 の画面セルのみ�
 姉妹ページ `config.html` の画面セルは、上とは別の2手順で採取・反映する:
 
 ```bash
-./capture-config.sh          # 1. 設定スコープ / permissions / 権限モード / Output style の実測画面を採取(work/config-demo を再構築 → work/config-tui/*.ansi、16 画面)
+./capture-config.sh          # 1. 設定切り替え比較の実測画面を採取(work/config-demo を再構築 → work/config-tui/*.ansi、14 画面)
 python3 ansi2html.py config  # 2. ANSI→HTML 変換し、config.html の画面セルを差し替え
 ```
 
 - 初回はセルが「(未採取)」プレースホルダのため、境界探索なしで差し替わる(`ok-full` と表示。パネル系は区切り線「▔▔▔」から、対話系はそのセルのプロンプト行から下をトリミング)。2回目以降は index.html と同じく既存セルの先頭行・末尾行を境界として置換する。
-- 採取は 16 画面(`/status` `/config` `/permissions` の Allow タブ・Deny タブ、allow 実行・ask 確認・deny 拒否の対話 3 つ、権限モードのフッター 5 つ、Output style のピッカー 2 つ、Default / Concise の比較 2 つ)。権限モードと Output style は `.claude/settings.local.json` を書き換えてセッションを起動し直す(終了時に fixture の値へ戻す)。比較の 2 セッションは `--model sonnet` で起動し、縦 60 行の tmux で採る。allow / deny の対話は応答後に ctrl+o の詳細トランスクリプト表示に切り替えて採取する(ツール呼び出しの中身・拒否エラーを見せるため)。
+- 採取は 14 画面。セルごとに `work/config-demo/.claude/settings.local.json`(deny 比較のみ `settings.json`)を書き換えてセッションを起動し直し、同じ依頼文への挙動の違いを採る(終了時に fixture の値へ戻す)。outputStyle 比較と auto モードは `--model sonnet` で起動し、比較の 2 セッションは縦 60 行の tmux で採る。実行系の対話は応答後に ctrl+o の詳細トランスクリプト表示に切り替えて採取する(ツール呼び出しの中身・拒否エラー・sandbox の違反詳細を見せるため)。
 - ask 確認のデモは `touch created.txt` を使う。`date` のような読み取り専用コマンドは Claude Code の組み込み判定で確認なしに実行されるため、プロンプトが出ない(実測 2026-08-22、CLI 2.1.239)。採取後は Esc で拒否するので `created.txt` は作られない。
 - `ansi2html.py` の `MASKS` にはホームディレクトリ配下の絶対パス(`/Users/<name>/…`)の伏せ字も含まれる(`/status` の cwd や権限ダイアログに出るため)。
-- `capture-config.sh` は user スコープのデモのため **`~/.claude/settings.json` を一時変更する**(`"model": "claude-opus-5"` を JSON マージで追記)。変更前の内容は `work/config-backup/` に退避され、スクリプト終了時(異常終了・中断を含む)に `trap` で必ず復元されるが、ユーザー設定に触れる以上、コンテナや VM などの隔離環境での実行を推奨。
+- `capture-config.sh` が書き換えるのは `work/config-demo` 配下の設定ファイルのみで、**`~/.claude` のユーザー設定には触れない**。sandbox 比較の前提: macOS は追加インストール不要(Seatbelt)、Linux / WSL2 は bubblewrap と socat が必要。sandbox「あり」側は、失敗を見た Claude が `dangerouslyDisableSandbox` での再試行を提案して確認ダイアログで止まることがあるため、入力待ち/ダイアログのどちらで止まっても採取して Esc で抜ける。
 
 ## HTML の更新と公開
 
