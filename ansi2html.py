@@ -231,24 +231,24 @@ CELLS = {
 }
 
 CELLS_CONFIG = {
-    '/status (scopes)': ('status-scopes', PANEL),
-    '/config (scopes)': ('config-scopes', PANEL),
-    '/permissions (rules)': ('permissions-rules', PANEL),
-    '/permissions (deny tab)': ('permissions-deny', PANEL),
-    'python3 src/hello.py (allow)': ('perm-allow', r'^❯ python3 src/hello\.py を実行して'),
-    'touch created.txt (ask)': ('perm-ask', r'^❯ touch created\.txt を実行して'),
-    'secrets read (deny)': ('perm-deny', r'^❯ secrets/credentials\.env の中身をそのまま表示して'),
-    # 権限モード(入力欄+フッターの 4 行)
-    'footer: manual (haiku, 起動時)': ('mode-cycle-0', 4),
-    'footer: shift+tab ×1 → accept edits': ('mode-cycle-1', 4),
-    'footer: shift+tab ×2 → plan': ('mode-cycle-2', 4),
-    'footer: defaultMode = acceptEdits で起動': ('mode-default-acceptedits', 4),
-    'footer: --model sonnet で起動 → auto': ('mode-sonnet-start', 4),
-    # Output style
-    '/config (output style picker)': ('config-output-style', PANEL),
-    '/config (output style = Concise)': ('config-output-style-pick', PANEL),
+    # outputStyle 比較
     'style: Default (sonnet)': ('style-default', r'^❯ このプロジェクトの'),
     'style: Concise (sonnet)': ('style-concise', r'^❯ このプロジェクトの'),
+    '/config (output style picker)': ('config-output-style', PANEL),
+    '/config (output style = Concise)': ('config-output-style-pick', PANEL),
+    # permissions.deny 比較
+    'secrets read (no deny)': ('perm-deny-off', r'^❯ secrets/credentials\.env'),
+    'secrets read (deny)': ('perm-deny', r'^❯ secrets/credentials\.env の中身をそのまま表示して'),
+    # permissions.defaultMode 比較(footer は入力欄+フッターの 4 行)
+    'footer: manual (haiku, 起動時)': ('mode-cycle-0', 4),
+    'touch created.txt (ask)': ('perm-ask', r'^❯ touch created\.txt を実行して'),
+    'footer: defaultMode = acceptEdits で起動': ('mode-default-acceptedits', 4),
+    'touch created.txt (acceptEdits)': ('perm-acceptedits-run', r'^❯ touch created\.txt'),
+    'footer: --model sonnet で起動 → auto': ('mode-sonnet-start', 4),
+    'touch created.txt (auto)': ('perm-auto-run', r'^❯ touch created\.txt'),
+    # sandbox 比較
+    'sandbox: off (touch /tmp)': ('sandbox-off', r'^❯ touch /tmp/sandbox-poke\.txt'),
+    'sandbox: on (touch /tmp)': ('sandbox-on', r'^❯ touch /tmp/sandbox-poke\.txt'),
 }
 
 # target → (HTML ファイル名, work/ 配下のキャプチャディレクトリ, セル辞書)
